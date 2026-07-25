@@ -8,8 +8,17 @@ These rules apply to route-level pages under `src/routes/`.
 - A route should answer one primary user question and expose a clear next action.
 - Above-the-fold content should be understandable in roughly ten seconds without relying on oversized cards.
 - Prefer one high-value contextual insight over generic greetings or decorative banners.
-- Maintain direct navigation between business impact, electrical root cause, opportunity, action, verification, billing, and reporting.
+- Maintain direct navigation between portfolio, business impact, electrical root cause, opportunity, action, verification, data confidence, billing, and reporting.
 - Management workspaces should combine graphical summaries with traceable detail instead of becoming either chart walls or spreadsheet-only pages.
+
+## Portfolio
+
+- Benchmark sites only after stating or implying the normalization basis: production, weather, occupancy, area, site type, or another meaningful denominator.
+- Keep estimated opportunity, approved value, verified saving, actual cost, budget variance, demand utilization, renewable share, alarm consequence, and data confidence as separate metrics.
+- Use graphical ranking to support decisions, then provide a precise matrix and selected-site profile for traceability.
+- Bubble size, color, axes, benchmark bands, and ranking order must have explicit meaning.
+- Portfolio confidence must inherit site measurement quality; a low-confidence site must not silently rank as equally trusted.
+- Allow direct drill-down from a portfolio site to the live site overview when that site is available in the demo simulation.
 
 ## Overview
 
@@ -55,5 +64,10 @@ Show current demand, projected interval demand, contract limit, remaining margin
 
 ## Data health
 
-- Show freshness, completeness, estimated/substituted intervals, time synchronization, meter identity, and source provenance.
+- Show meter identity, role, source path, quality state, completeness, estimated coverage, freshness, time synchronization, calibration, ownership, and affected calculations.
+- Support visible issue types including missing, estimated, substituted, reset, rollover, duplicate, stale, time drift, and abnormal values.
+- A blocking issue must explain which invoice, KPI, M&V result, opportunity, or operational decision is blocked.
+- Keep original data, corrected data, method, reason, actor, approval, timestamp, and recalculation impact conceptually distinct.
+- Provenance should show source device → field transport → gateway → historian/aggregation → calculation/model/tariff → user decision.
 - Allow users to move from a data-quality issue to the affected financial or engineering calculation.
+- Data-health thresholds shown in the demo are explicit product configuration, not universal regulatory requirements.
