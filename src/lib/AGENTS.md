@@ -4,17 +4,20 @@ These rules apply to shared logic under `src/lib/`.
 
 ## Single source of truth
 
-- Keep site, time range, scenario, telemetry, alarm, opportunity, data-quality, and formatting logic centralized.
+- Keep site, time range, scenario, telemetry, alarm, opportunity, data-quality, tariff, invoice, and formatting logic centralized.
 - Route files may derive display values but should not create independent contradictory versions of the same domain state.
 - Preserve deterministic seed data where practical so screenshots, tests, and guided demos remain repeatable.
 
 ## Simulation
 
-- Scenario changes must produce coherent effects across electrical state, telemetry, alarms, demand, cost, opportunities, and data health.
+- Scenario changes must produce coherent effects across electrical state, telemetry, source mix, production, weather, tariff band, alarms, demand, cost, opportunities, billing, and data health.
 - Avoid random values that can create impossible or contradictory system states.
+- Industrial load should follow plausible operating drivers such as shift schedule, production index, occupancy, weather, solar availability, and equipment cycling.
+- Grid import must reconcile with site load, on-site generation, and renewable contribution.
+- Energy accumulation, cost accumulation, carbon, peak demand, and tariff band must use dimensionally consistent calculations.
 - Keep totals and child contributions reconcilable within a documented tolerance.
 - Simulation updates must be lightweight, stable, and cleaned up correctly when components unmount.
-- Persist only user-facing demo context that is useful across reloads, such as selected site, range, or scenario.
+- Persist only user-facing demo context that is useful across reloads, such as selected site, range, scenario, workflow state, or selected invoice.
 
 ## Measurements and units
 
@@ -27,14 +30,23 @@ Each measurement should have or imply:
 - aggregation period where relevant;
 - calculation/version context where relevant.
 
-Use consistent conversions and precision. Energy, power, demand, cost, carbon, voltage, current, power factor, frequency, THD, and loading must remain dimensionally credible.
+Use consistent conversions and precision. Energy, power, demand, cost, carbon, voltage, current, power factor, frequency, THD, loading, and tariff quantities must remain dimensionally credible.
 
 ## Data quality
 
 Supported visible states should include `GOOD`, `UNCERTAIN`, `STALE`, `BAD`, `SUBSTITUTED`, `ESTIMATED`, and `MANUAL` where relevant. These states must not render identically.
 
-## Financial logic
+- Missing or estimated billing intervals must affect invoice readiness and must never be hidden behind an overall health percentage.
+- A resolved or accepted exception retains its reason, responsible actor, and audit context.
+
+## Financial and invoicing logic
 
 - Keep currency formatting in Indonesian context and preserve explicit IDR values.
-- Distinguish estimated annual opportunity, approved value, implemented value, verified saving, avoided demand charge, billing discrepancy, and recovered amount.
+- Distinguish calculated charge, approved invoice, issued receivable, collected payment, outstanding balance, overdue balance, billing discrepancy, recovered amount, estimated annual opportunity, and verified saving.
+- Do not count draft or blocked invoices as issued receivables.
+- Build invoice totals from auditable line items such as time-of-use energy, billing demand, reactive-energy penalty, fixed charge, credit, adjustment, tax, previous balance, and payment allocation.
+- Every invoice line must identify the tariff rule and measurement source used to calculate it.
+- Billing demand must state its interval and selection rule.
+- Tariff versions require effective dates and must not be silently changed after a billing period is closed.
+- Demo tariff and tax values must be labeled illustrative unless they are verified against the applicable utility contract and jurisdiction.
 - Do not label a value verified without a baseline/reporting-period comparison and a stated confidence or verification method.
