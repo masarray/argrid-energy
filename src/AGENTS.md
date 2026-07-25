@@ -4,7 +4,7 @@ These rules apply to everything under `src/`.
 
 ## Visual language
 
-- Premium comes from precise alignment, compact spacing, hierarchy, fine borders, tabular numerals, realistic data behavior, and fast interaction—not decoration.
+- Premium comes from precise alignment, compact spacing, hierarchy, fine borders, tabular numerals, realistic data behavior, and fast interaction, not decoration.
 - Keep information dense but organized. Prefer compact panels, tables, contextual drawers, and progressive disclosure.
 - Avoid oversized cards, large hero type, heavy bold fonts, excessive whitespace, glassmorphism, neon styling, strong glow, particles, moving backgrounds, decorative gradients, and bouncing or constant pulsing animation.
 - Use compact radii, generally 6–10 px. Large 16–24 px rounded cards must not become the default.
@@ -12,11 +12,22 @@ These rules apply to everything under `src/`.
 - Normal conditions use restrained neutral treatment. Reserve strong color for selected context, active energy flow, warning, alarm, stale data, and critical state.
 - Never use color as the only state indicator. Pair it with geometry, text, icon, border, pattern, or a status label.
 
+## Taste Skill redesign locks
+
+- Audit the current screen before changing code. Identify hierarchy, contrast, density, repetition, and broken theme boundaries first.
+- Apply one accent family per page. Do not introduce unrelated CTA, chart, or selected-state colors.
+- Keep one radius system per workspace. Compact 6–8 px radii are the default; pills are reserved for statuses and compact controls.
+- Enforce a page-level theme lock. Management pages are light end-to-end, including navigation chrome. Operations, electrical one-line, power-quality, and alarm-investigation pages are dark end-to-end.
+- Dark and light workspaces must have equivalent contrast and hierarchy quality. Do not reuse light-theme text tokens on dark navigation or dark-theme surfaces on light management pages.
+- On redesigns, preserve domain behavior and working interactions while removing generic nested-card patterns and equal-weight module grids.
+
 ## Workspace themes
 
 - Management, portfolio, opportunities, savings, billing, reports, and sustainability default to the light management workspace.
 - Electrical network, power-quality investigation, event replay, and alarm investigation default to the dark operations workspace.
 - Theme changes follow workspace context; they are not decorative full-product rebranding.
+- The management sidebar uses a light neutral shell with dark text and a restrained selected state.
+- The operations sidebar uses graphite with high-contrast text and visually joins the HMI canvas without merging into it.
 
 ## Interaction and behavior
 
