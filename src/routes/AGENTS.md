@@ -46,9 +46,16 @@ Show current demand, projected interval demand, contract limit, remaining margin
 
 ## Power quality and alarms
 
-- Keep event timestamp, magnitude, duration, phase, source meter, affected assets, severity, and investigation status.
-- Power-quality evidence should correlate waveform/RMS context, electrical location, related meters, equipment response, operational impact, and probable origin.
-- Red is reserved for critical/trip conditions. Avoid alarm fatigue through grouping, acknowledgement, and disciplined priority semantics.
+- Keep event timestamp, type, residual or maximum magnitude, duration, phase, voltage level, source meter, sample rate, trigger threshold, affected assets, severity, and investigation status.
+- One physical incident may create multiple device alarms. Group alarms by common cause and chronology before presenting counts to operators.
+- Acknowledgement confirms operator awareness; it does not resolve the condition, validate probable origin, or close the investigation.
+- Power-quality evidence should correlate RMS envelope, instantaneous waveform, electrical location, synchronized meters, equipment response, operational impact, probable origin, confidence, and investigation owner.
+- RMS and waveform panels should share event selection and replay cursor where practical.
+- Correlation conclusions must explain arrival order, residual depth, duration, time-sync error, source quality, and why competing origin hypotheses are weaker.
+- Equipment response must distinguish ride-through, automatic recovery, trip, controller reboot, process interruption, and no-change states.
+- Estimated operational exposure is not a verified loss. State assumptions and preserve this distinction.
+- Red is reserved for critical/trip conditions. Avoid alarm fatigue through grouping, acknowledgement, disciplined priority semantics, and one clear next action.
+- Any workflow action remains simulation-only and must not change protection settings, operate switchgear, or write to field devices.
 
 ## Billing and invoicing
 
