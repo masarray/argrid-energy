@@ -38,13 +38,13 @@ type AppPath =
   | "/"
   | "/electrical"
   | "/analytics"
+  | "/demand"
   | "/opportunities"
   | "/alarms"
   | "/billing"
   | "/sustainability";
 
 type NavItem = { to: AppPath; label: string; icon: typeof LayoutDashboard };
-
 type NavGroup = { label: string; items: NavItem[] };
 
 const navGroups: NavGroup[] = [
@@ -53,6 +53,7 @@ const navGroups: NavGroup[] = [
     items: [
       { to: "/", label: "Overview", icon: LayoutDashboard },
       { to: "/analytics", label: "Energy Analytics", icon: Activity },
+      { to: "/demand", label: "Demand & Cost", icon: Gauge },
       { to: "/opportunities", label: "Opportunities", icon: Lightbulb },
     ],
   },
@@ -74,6 +75,9 @@ const navGroups: NavGroup[] = [
 
 const searchableAssets: Array<{ label: string; detail: string; to: AppPath }> = [
   { label: "Cikarang Manufacturing Complex", detail: "Enterprise site · West Java", to: "/" },
+  { label: "Demand interval forecast", detail: "Contract-limit and financial exposure", to: "/demand" },
+  { label: "Chiller Plant F-04", detail: "18% peak-demand contribution", to: "/demand" },
+  { label: "Compressor Room F-05", detail: "Flexible demand-response load", to: "/demand" },
   { label: "MSB-Main", detail: "20 kV incomer · electrical network", to: "/electrical" },
   { label: "Transformer TR-01", detail: "6 MVA · 84% loading", to: "/electrical" },
   { label: "Feeder F-07", detail: "Utility & Aux · voltage sag", to: "/electrical" },
@@ -97,25 +101,31 @@ const guidedSteps: Array<{
   scenario: DemoScenarioId;
 }> = [
   {
-    title: "1 · Demand risk detected",
-    body: "ArGrid projects a contract-demand exceedance and translates it into financial exposure.",
+    title: "1 · Enterprise condition",
+    body: "Begin with live electrical operation, energy performance, cost exposure, and verified value.",
     to: "/",
     scenario: "peak-demand",
   },
   {
-    title: "2 · Locate the electrical cause",
-    body: "Move from business impact to the contributing feeder without losing site and scenario context.",
+    title: "2 · Predict demand exposure",
+    body: "Inspect the interval trajectory, contributing feeders, tariff exposure, and a simulation-only response plan.",
+    to: "/demand",
+    scenario: "peak-demand",
+  },
+  {
+    title: "3 · Locate the electrical cause",
+    body: "Move from financial impact to the contributing feeder without losing site and scenario context.",
     to: "/electrical",
     scenario: "peak-demand",
   },
   {
-    title: "3 · Prioritize corrective action",
+    title: "4 · Prioritize corrective action",
     body: "Review the opportunity, confidence, payback, evidence, and accountable owner.",
     to: "/opportunities",
     scenario: "efficiency-loss",
   },
   {
-    title: "4 · Verify commercial value",
+    title: "5 · Verify commercial value",
     body: "Close the story with auditable savings, billing status, and a management-ready outcome.",
     to: "/billing",
     scenario: "normal",
@@ -148,14 +158,21 @@ export function AppShell({
     running,
     setRunning,
   } = useDemoSimulation();
+
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(() => window.innerWidth <= 1366);
   const [search, setSearch] = useState("");
   const [guideOpen, setGuideOpen] = useState(false);
   const [guideStep, setGuideStep] = useState(0);
+
   const normalizedSearch = search.trim().toLowerCase();
   const operationsWorkspace = path.startsWith("/electrical") || path.startsWith("/alarms");
-  const activeWorkspace = path.startsWith("/billing") ? "finance" : operationsWorkspace ? "operations" : "management";
+  const activeWorkspace = path.startsWith("/billing")
+    ? "finance"
+    : operationsWorkspace
+      ? "operations"
+      : "management";
+
   const searchResults = useMemo(
     () =>
       normalizedSearch.length < 2
@@ -183,14 +200,20 @@ export function AppShell({
 
   const renderSidebar = (collapsed: boolean) => (
     <>
-      <div className={`h-[52px] flex items-center border-b border-sidebar-border ${collapsed ? "justify-center px-2" : "gap-2.5 px-3"}`}>
+      <div
+        className={`h-[52px] flex items-center border-b border-sidebar-border ${
+          collapsed ? "justify-center px-2" : "gap-2.5 px-3"
+        }`}
+      >
         <div className="size-8 rounded-md border border-primary/25 bg-primary/10 flex items-center justify-center overflow-hidden shrink-0">
           <img src={logoMark} alt="ArGrid" className="size-6 object-contain" />
         </div>
         {!collapsed && (
           <div className="leading-tight min-w-0">
             <div className="font-display font-medium text-[13px] tracking-tight">ArGrid</div>
-            <div className="text-[9.5px] text-muted-foreground uppercase tracking-[0.14em]">Energy Management</div>
+            <div className="text-[9.5px] text-muted-foreground uppercase tracking-[0.14em]">
+              Energy Management
+            </div>
           </div>
         )}
       </div>
@@ -198,7 +221,11 @@ export function AppShell({
       <nav className={`flex-1 py-3 ${collapsed ? "px-2" : "px-2.5"}`} aria-label="Primary navigation">
         {navGroups.map((group) => (
           <div key={group.label} className="mb-4 last:mb-0">
-            {!collapsed && <div className="px-2 pb-1.5 text-[9.5px] uppercase tracking-[0.14em] text-muted-foreground/70">{group.label}</div>}
+            {!collapsed && (
+              <div className="px-2 pb-1.5 text-[9.5px] uppercase tracking-[0.14em] text-muted-foreground/70">
+                {group.label}
+              </div>
+            )}
             <div className="space-y-0.5">
               {group.items.map((item) => {
                 const active = item.to === "/" ? path === "/" : path.startsWith(item.to);
@@ -217,11 +244,15 @@ export function AppShell({
                         : "text-muted-foreground hover:text-foreground hover:bg-sidebar-accent/55"
                     }`}
                   >
-                    {active && <span className="absolute left-0 top-1.5 bottom-1.5 w-[2px] rounded-r bg-primary" />}
+                    {active && (
+                      <span className="absolute left-0 top-1.5 bottom-1.5 w-[2px] rounded-r bg-primary" />
+                    )}
                     <Icon className="size-4 shrink-0" strokeWidth={active ? 2.1 : 1.6} />
                     {!collapsed && <span className="flex-1 truncate">{item.label}</span>}
                     {!collapsed && item.to === "/alarms" && kpis.activeAlarms > 0 && (
-                      <span className="text-[9.5px] tabular px-1.5 py-0.5 rounded border border-red/25 bg-red/10 text-red">{kpis.activeAlarms}</span>
+                      <span className="text-[9.5px] tabular px-1.5 py-0.5 rounded border border-red/25 bg-red/10 text-red">
+                        {kpis.activeAlarms}
+                      </span>
                     )}
                   </Link>
                 );
@@ -233,14 +264,18 @@ export function AppShell({
 
       <div className={`border-t border-sidebar-border ${collapsed ? "p-2" : "p-3 space-y-2"}`}>
         {collapsed ? (
-          <div className="size-8 mx-auto rounded-md flex items-center justify-center" title={`Data health ${telemetry.dataHealth.toFixed(1)}%`}>
+          <div
+            className="size-8 mx-auto rounded-md flex items-center justify-center"
+            title={`Data health ${telemetry.dataHealth.toFixed(1)}%`}
+          >
             <Database className="size-4 text-green" />
           </div>
         ) : (
           <>
             <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
               <Database className="size-3.5" />
-              Data health <span className="tabular text-foreground ml-auto">{telemetry.dataHealth.toFixed(1)}%</span>
+              Data health
+              <span className="tabular text-foreground ml-auto">{telemetry.dataHealth.toFixed(1)}%</span>
             </div>
             <div className="h-1 rounded-full bg-sidebar-accent overflow-hidden">
               <div className="h-full bg-green" style={{ width: `${telemetry.dataHealth}%` }} />
@@ -255,7 +290,11 @@ export function AppShell({
   );
 
   return (
-    <div className={`min-h-screen flex text-foreground ${operationsWorkspace ? "workspace-operations" : "workspace-management"}`}>
+    <div
+      className={`min-h-screen flex text-foreground ${
+        operationsWorkspace ? "workspace-operations" : "workspace-management"
+      }`}
+    >
       <aside
         className={`hidden lg:flex shrink-0 border-r border-sidebar-border bg-sidebar flex-col relative z-20 transition-[width] duration-200 ${
           sidebarCollapsed ? "w-[60px]" : "w-[220px]"
@@ -268,13 +307,22 @@ export function AppShell({
           className="absolute -right-3 top-[68px] size-6 rounded-full border border-sidebar-border bg-sidebar flex items-center justify-center text-muted-foreground hover:text-foreground"
           aria-label={sidebarCollapsed ? "Expand navigation" : "Collapse navigation"}
         >
-          {sidebarCollapsed ? <PanelLeftOpen className="size-3.5" /> : <PanelLeftClose className="size-3.5" />}
+          {sidebarCollapsed ? (
+            <PanelLeftOpen className="size-3.5" />
+          ) : (
+            <PanelLeftClose className="size-3.5" />
+          )}
         </button>
       </aside>
 
       {mobileNavOpen && (
         <div className="fixed inset-0 z-50 lg:hidden" role="dialog" aria-modal="true" aria-label="Navigation menu">
-          <button type="button" aria-label="Close navigation" className="absolute inset-0 bg-black/60" onClick={() => setMobileNavOpen(false)} />
+          <button
+            type="button"
+            aria-label="Close navigation"
+            className="absolute inset-0 bg-black/60"
+            onClick={() => setMobileNavOpen(false)}
+          />
           <aside className="relative h-full w-[250px] border-r border-sidebar-border bg-sidebar flex flex-col">
             <button
               type="button"
@@ -384,7 +432,7 @@ export function AppShell({
             <input
               value={search}
               onChange={(event) => setSearch(event.target.value)}
-              placeholder="Search site, switchboard, feeder, meter, alarm…"
+              placeholder="Search site, demand, switchboard, feeder, alarm…"
               className="w-full h-8 pl-8 pr-3 rounded-md bg-surface-2 border border-border text-[11.5px] placeholder:text-muted-foreground/70 focus:outline-none focus:border-primary/50"
               aria-label="Search demo assets"
             />
@@ -421,15 +469,27 @@ export function AppShell({
             >
               <PlayCircle className="size-3.5" /> Guided demo
             </button>
-            <div className="hidden 2xl:flex items-center gap-1.5 px-2 text-[10px] text-muted-foreground tabular" title={lastUpdated.toLocaleString()}>
+            <div
+              className="hidden 2xl:flex items-center gap-1.5 px-2 text-[10px] text-muted-foreground tabular"
+              title={lastUpdated.toLocaleString()}
+            >
               <Play className={`size-3 ${running ? "text-green" : "text-amber"}`} />
               {lastUpdated.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
             </div>
-            <Link to="/alarms" className="relative size-8 rounded-md hover:bg-surface-2 flex items-center justify-center" aria-label="Open alarms">
+            <Link
+              to="/alarms"
+              className="relative size-8 rounded-md hover:bg-surface-2 flex items-center justify-center"
+              aria-label="Open alarms"
+            >
               <Bell className="size-4 text-muted-foreground" />
-              {kpis.criticalAlarms > 0 && <span className="absolute top-1.5 right-1.5 size-1.5 rounded-full bg-red" />}
+              {kpis.criticalAlarms > 0 && (
+                <span className="absolute top-1.5 right-1.5 size-1.5 rounded-full bg-red" />
+              )}
             </Link>
-            <div className="size-8 rounded-md flex items-center justify-center" title={`Data health ${telemetry.dataHealth.toFixed(1)}%`}>
+            <div
+              className="size-8 rounded-md flex items-center justify-center"
+              title={`Data health ${telemetry.dataHealth.toFixed(1)}%`}
+            >
               <ShieldCheck className="size-4 text-green" />
             </div>
             <div className="hidden sm:block h-4 w-px bg-border mx-1" />
@@ -448,7 +508,13 @@ export function AppShell({
               <div className="flex items-center gap-2 text-[10px] uppercase tracking-[0.14em] text-muted-foreground">
                 <span>{site.region}</span>
                 <ChevronRight className="size-3" />
-                <span>{operationsWorkspace ? "Operations workspace" : activeWorkspace === "finance" ? "Finance workspace" : "Management workspace"}</span>
+                <span>
+                  {operationsWorkspace
+                    ? "Operations workspace"
+                    : activeWorkspace === "finance"
+                      ? "Finance workspace"
+                      : "Management workspace"}
+                </span>
               </div>
               <h1 className="font-display text-[20px] font-medium tracking-tight leading-tight mt-1">{title}</h1>
               {subtitle && <div className="text-[11.5px] text-muted-foreground mt-0.5">{subtitle}</div>}
@@ -461,19 +527,32 @@ export function AppShell({
       </div>
 
       {guideOpen && (
-        <section className="fixed bottom-4 right-4 z-50 w-[min(360px,calc(100vw-32px))] rounded-lg border border-border-strong bg-surface shadow-xl" aria-live="polite">
+        <section
+          className="fixed bottom-4 right-4 z-50 w-[min(360px,calc(100vw-32px))] rounded-lg border border-border-strong bg-surface shadow-xl"
+          aria-live="polite"
+        >
           <div className="flex items-center justify-between border-b border-border px-4 h-10">
             <div className="text-[10px] uppercase tracking-[0.14em] text-primary">Guided value story</div>
-            <button type="button" className="size-7 rounded-md flex items-center justify-center hover:bg-surface-2" onClick={() => setGuideOpen(false)} aria-label="Close guided demo">
+            <button
+              type="button"
+              className="size-7 rounded-md flex items-center justify-center hover:bg-surface-2"
+              onClick={() => setGuideOpen(false)}
+              aria-label="Close guided demo"
+            >
               <X className="size-3.5" />
             </button>
           </div>
           <div className="p-4">
             <div className="text-[13px] font-medium">{guidedSteps[guideStep].title}</div>
-            <p className="mt-1.5 text-[11.5px] leading-relaxed text-muted-foreground">{guidedSteps[guideStep].body}</p>
+            <p className="mt-1.5 text-[11.5px] leading-relaxed text-muted-foreground">
+              {guidedSteps[guideStep].body}
+            </p>
             <div className="mt-4 flex items-center gap-1.5">
               {guidedSteps.map((step, index) => (
-                <span key={step.title} className={`h-1 flex-1 rounded-full ${index <= guideStep ? "bg-primary" : "bg-surface-3"}`} />
+                <span
+                  key={step.title}
+                  className={`h-1 flex-1 rounded-full ${index <= guideStep ? "bg-primary" : "bg-surface-3"}`}
+                />
               ))}
             </div>
             <div className="mt-4 flex items-center justify-between">
@@ -486,11 +565,19 @@ export function AppShell({
                 Previous
               </button>
               {guideStep < guidedSteps.length - 1 ? (
-                <button type="button" onClick={() => moveGuide(guideStep + 1)} className="h-8 px-3 rounded-md bg-primary text-primary-foreground text-[11px] font-medium">
+                <button
+                  type="button"
+                  onClick={() => moveGuide(guideStep + 1)}
+                  className="h-8 px-3 rounded-md bg-primary text-primary-foreground text-[11px] font-medium"
+                >
                   Next scene
                 </button>
               ) : (
-                <button type="button" onClick={() => setGuideOpen(false)} className="h-8 px-3 rounded-md bg-primary text-primary-foreground text-[11px] font-medium">
+                <button
+                  type="button"
+                  onClick={() => setGuideOpen(false)}
+                  className="h-8 px-3 rounded-md bg-primary text-primary-foreground text-[11px] font-medium"
+                >
                   Finish demo
                 </button>
               )}
