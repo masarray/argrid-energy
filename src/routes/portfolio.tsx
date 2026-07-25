@@ -96,7 +96,7 @@ function Portfolio() {
   const navigate = useNavigate();
   const { siteId, setSiteId, scenarioId, scenario } = useDemoSimulation();
   const sites = useMemo(() => buildPortfolioSites(siteId, scenarioId), [scenarioId, siteId]);
-  const [selectedId, setSelectedId] = useState(siteId);
+  const [selectedId, setSelectedId] = useState<PortfolioSite["id"]>(siteId);
   const selected = sites.find((site) => site.id === selectedId) ?? sites[0];
   const trend = useMemo(() => getPortfolioTrend(), []);
 
