@@ -8,7 +8,7 @@ on:
 
 permissions:
   actions: read
-  contents: read
+  contents: write
   pages: write
   id-token: write
 
@@ -37,26 +37,16 @@ jobs:
             | grep -E 'src/|error TS|##\[error\]|npm ERR|Error:|ELIFECYCLE|Failed|✖' \
             | tail -n 120 || true
 
-  inspect-runs:
-    name: Inspect recent Actions runs
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
-    steps:
-      - name: List recent workflow runs
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          gh api "repos/${GITHUB_REPOSITORY}/actions/runs?per_page=20" \
-            --jq '.workflow_runs[] | [.id, .name, .event, .status, (.conclusion // "pending"), .head_branch, .head_sha[0:7], .run_number] | @tsv'
-
-  diagnose:
-    name: Diagnose build and Pages packaging
+  prepare-fix:
+    name: Validate and prepare portfolio typing fix
     runs-on: ubuntu-latest
     timeout-minutes: 15
-
     steps:
-      - name: Checkout repository
+      - name: Checkout main
         uses: actions/checkout@v6
+        with:
+          ref: main
+          fetch-depth: 0
 
       - name: Setup Node.js
         uses: actions/setup-node@v6
@@ -64,29 +54,60 @@ jobs:
           node-version: 22
           package-manager-cache: false
 
-      - name: Show tool versions
+      - name: Apply narrow typing correction
         run: |
-          node --version
-          npm --version
+          python - <<'PY'
+          from pathlib import Path
+          path = Path('src/routes/portfolio.tsx')
+          text = path.read_text()
+          old = 'const [selectedId, setSelectedId] = useState(siteId);'
+          new = 'const [selectedId, setSelectedId] = useState<PortfolioSite["id"]>(siteId);'
+          if old not in text:
+              raise SystemExit('Expected portfolio selection declaration was not found')
+          path.write_text(text.replace(old, new, 1))
+          PY
+          git diff --check
+          git diff -- src/routes/portfolio.tsx
 
       - name: Install dependencies
         run: npm install --no-audit --no-fund
 
+      - name: Validate fix
+        run: npm run check
+
+      - name: Push clean fix branch
+        run: |
+          git config user.name "ArGrid CI Diagnostic"
+          git config user.email "actions@users.noreply.github.com"
+          git checkout -b fix/portfolio-selection-types-20260726
+          git add src/routes/portfolio.tsx
+          git commit -m "Fix portfolio site selection typing"
+          git push origin HEAD:refs/heads/fix/portfolio-selection-types-20260726
+
+  diagnose:
+    name: Diagnose build and Pages packaging
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          package-manager-cache: false
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
       - name: Lint diagnostics
         run: npm run lint
-
       - name: TypeScript diagnostics
         run: npx tsc --noEmit
-
       - name: Vite bundle diagnostics
         run: npx vite build
-
       - name: Verify dist output
         run: test -f dist/index.html
-
       - name: Configure GitHub Pages diagnostics
         uses: actions/configure-pages@v6
-
       - name: Upload Pages artifact diagnostics
         uses: actions/upload-pages-artifact@v5
         with:
