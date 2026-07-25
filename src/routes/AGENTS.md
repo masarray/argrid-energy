@@ -51,6 +51,10 @@ Show current demand, projected interval demand, contract limit, remaining margin
 - Acknowledgement confirms operator awareness; it does not resolve the condition, validate probable origin, or close the investigation.
 - Power-quality evidence should correlate RMS envelope, instantaneous waveform, electrical location, synchronized meters, equipment response, operational impact, probable origin, confidence, and investigation owner.
 - RMS and waveform panels should share event selection and replay cursor where practical.
+- Replay controls should expose play/pause, restart, speed, progress, deterministic stop behavior, and manual cursor override.
+- Electrical, incident, and PQ routes must preserve selected feeder, event, and incident-group context when navigating between workspaces.
+- Investigation reports must be generated from the same event, meter-correlation, equipment-response, chronology, and workflow state used by the visible workspace.
+- Exported demo reports must state that they are not certified PQ reports, protection studies, insurance-loss statements, or switching authorizations.
 - Correlation conclusions must explain arrival order, residual depth, duration, time-sync error, source quality, and why competing origin hypotheses are weaker.
 - Equipment response must distinguish ride-through, automatic recovery, trip, controller reboot, process interruption, and no-change states.
 - Estimated operational exposure is not a verified loss. State assumptions and preserve this distinction.
