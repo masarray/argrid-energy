@@ -17,10 +17,8 @@ import {
   AlertTriangle,
   ArrowRight,
   BadgeCheck,
-  Building2,
   Clock3,
   Database,
-  Factory,
   Gauge,
   Leaf,
   ShieldCheck,
@@ -110,7 +108,19 @@ function SourceRow({
   );
 }
 
-function AllocationRow({ label, value, share, detail, tone = "normal" }: { label: string; value: string; share: number; detail: string; tone?: "normal" | "warning" }) {
+function AllocationRow({
+  label,
+  value,
+  share,
+  detail,
+  tone = "normal",
+}: {
+  label: string;
+  value: string;
+  share: number;
+  detail: string;
+  tone?: "normal" | "warning";
+}) {
   return (
     <div className="border-b border-border py-2.5 last:border-0 last:pb-0">
       <div className="flex items-center justify-between gap-3">
