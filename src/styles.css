@@ -80,7 +80,7 @@
   --secondary: oklch(0.27 0.01 240);
   --secondary-foreground: oklch(0.92 0.005 240);
   --muted: oklch(0.25 0.008 240);
-  --muted-foreground: oklch(0.68 0.014 240);
+  --muted-foreground: oklch(0.7 0.012 240);
   --accent: oklch(0.3 0.02 220);
   --accent-foreground: oklch(0.95 0.005 240);
   --destructive: oklch(0.62 0.22 25);
@@ -103,12 +103,12 @@
   --chart-4: oklch(0.72 0.19 55);
   --chart-5: oklch(0.7 0.15 290);
 
-  --sidebar: oklch(0.15 0.008 240);
-  --sidebar-foreground: oklch(0.9 0.005 240);
+  --sidebar: oklch(0.135 0.009 240);
+  --sidebar-foreground: oklch(0.94 0.005 240);
   --sidebar-primary: oklch(0.76 0.135 207);
   --sidebar-primary-foreground: oklch(0.15 0.01 240);
-  --sidebar-accent: oklch(0.235 0.01 240);
-  --sidebar-accent-foreground: oklch(0.95 0.005 240);
+  --sidebar-accent: oklch(0.235 0.012 240);
+  --sidebar-accent-foreground: oklch(0.98 0.004 240);
   --sidebar-border: oklch(0.255 0.008 240);
   --sidebar-ring: oklch(0.76 0.135 207);
 }
@@ -151,14 +151,16 @@
   --chart-4: oklch(0.58 0.08 238);
   --chart-5: oklch(0.54 0.125 290);
 
-  --sidebar: oklch(0.18 0.012 245);
-  --sidebar-foreground: oklch(0.93 0.005 240);
-  --sidebar-primary: oklch(0.72 0.13 205);
-  --sidebar-primary-foreground: oklch(0.15 0.01 240);
-  --sidebar-accent: oklch(0.24 0.015 245);
-  --sidebar-accent-foreground: oklch(0.97 0.004 240);
-  --sidebar-border: oklch(0.27 0.012 245);
-  --sidebar-ring: oklch(0.72 0.13 205);
+  /* Management uses a coherent light product shell. The dark HMI shell is
+   * reserved for operations, event investigation, and power-quality work. */
+  --sidebar: oklch(0.985 0.004 235);
+  --sidebar-foreground: oklch(0.255 0.02 245);
+  --sidebar-primary: oklch(0.54 0.13 216);
+  --sidebar-primary-foreground: oklch(0.99 0.002 230);
+  --sidebar-accent: oklch(0.935 0.024 216);
+  --sidebar-accent-foreground: oklch(0.245 0.025 245);
+  --sidebar-border: oklch(0.86 0.011 235);
+  --sidebar-ring: oklch(0.54 0.13 216);
 }
 
 @layer base {
@@ -230,6 +232,71 @@
     linear-gradient(90deg, var(--color-border) 1px, transparent 1px);
   background-size: 24px 24px;
   background-position: -1px -1px;
+}
+
+/* Taste Skill theme lock: each workspace has one coherent page theme.
+ * Management navigation is light and product-oriented. Operations navigation
+ * stays graphite and visually joins the HMI canvas without losing contrast. */
+.workspace-management aside.bg-sidebar {
+  background: var(--sidebar) !important;
+  color: var(--sidebar-foreground);
+  border-color: var(--sidebar-border) !important;
+  box-shadow: 1px 0 0 color-mix(in oklab, var(--sidebar-border) 85%, transparent);
+}
+
+.workspace-management aside.bg-sidebar [class*="text-muted-foreground"] {
+  color: color-mix(in oklab, var(--sidebar-foreground) 64%, transparent) !important;
+}
+
+.workspace-management aside.bg-sidebar .text-foreground {
+  color: var(--sidebar-foreground) !important;
+}
+
+.workspace-management aside.bg-sidebar nav a {
+  color: color-mix(in oklab, var(--sidebar-foreground) 72%, transparent);
+}
+
+.workspace-management aside.bg-sidebar nav a:hover {
+  color: var(--sidebar-foreground);
+  background: color-mix(in oklab, var(--sidebar-accent) 70%, var(--sidebar));
+}
+
+.workspace-management aside.bg-sidebar nav a.bg-sidebar-accent {
+  color: var(--sidebar-accent-foreground) !important;
+  background: var(--sidebar-accent) !important;
+  box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--sidebar-primary) 16%, transparent);
+  font-weight: 600;
+}
+
+.workspace-operations aside.bg-sidebar {
+  background: var(--sidebar) !important;
+  color: var(--sidebar-foreground);
+  border-color: var(--sidebar-border) !important;
+  box-shadow: 1px 0 0 color-mix(in oklab, var(--sidebar-border) 78%, transparent);
+}
+
+.workspace-operations aside.bg-sidebar [class*="text-muted-foreground"] {
+  color: color-mix(in oklab, var(--sidebar-foreground) 68%, transparent) !important;
+}
+
+.workspace-operations aside.bg-sidebar .text-foreground {
+  color: var(--sidebar-foreground) !important;
+}
+
+.workspace-operations aside.bg-sidebar nav a {
+  color: color-mix(in oklab, var(--sidebar-foreground) 72%, transparent);
+}
+
+.workspace-operations aside.bg-sidebar nav a:hover {
+  color: var(--sidebar-foreground);
+  background: color-mix(in oklab, var(--sidebar-accent) 84%, transparent);
+}
+
+.workspace-operations aside.bg-sidebar nav a.bg-sidebar-accent {
+  color: var(--sidebar-accent-foreground) !important;
+  background: var(--sidebar-accent) !important;
+  box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--sidebar-primary) 14%, transparent);
+  font-weight: 600;
 }
 
 /* Explicit scoped declarations prevent the custom utility from resolving to
@@ -323,10 +390,6 @@
   .panel,
   .kpi-tile {
     border-radius: 6px;
-  }
-
-  table {
-    min-width: 620px;
   }
 }
 
