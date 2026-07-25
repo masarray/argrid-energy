@@ -16,19 +16,20 @@ import {
 } from "recharts";
 import {
   Activity,
-  AlertTriangle,
   ArrowLeft,
-  BadgeCheck,
   Cable,
   CheckCircle2,
   Clock3,
   Crosshair,
   FileCheck2,
+  FileDown,
   Gauge,
   GitBranch,
   History,
+  Pause,
   Play,
   RadioTower,
+  RotateCcw,
   ShieldAlert,
   ShieldCheck,
   Waves,
@@ -39,6 +40,12 @@ import { AppShell } from "@/components/app-shell";
 import { KpiTile, Panel } from "@/components/argrid-ui";
 import { fmtIDR } from "@/lib/argrid-data";
 import { useDemoSimulation } from "@/lib/demo-simulation";
+import {
+  buildInvestigationReport,
+  downloadInvestigationReport,
+  readIncidentContext,
+  storeIncidentContext,
+} from "@/lib/incident-context";
 import {
   getIncidentTimeline,
   getIticScatter,
@@ -58,7 +65,7 @@ export const Route = createFileRoute("/alarms/power-quality")({
       { title: "Power Quality Investigation — ArGrid" },
       {
         name: "description",
-        content: "Correlated RMS, waveform, electrical context, equipment response, and investigation evidence for power-quality events.",
+        content: "Correlated RMS, waveform, electrical context, equipment response, replay, and investigation evidence for power-quality events.",
       },
     ],
   }),
@@ -66,6 +73,9 @@ export const Route = createFileRoute("/alarms/power-quality")({
 
 const tabs = ["Event Evidence", "Meter Correlation", "Equipment Response", "Investigation"] as const;
 type Tab = (typeof tabs)[number];
+
+const REPLAY_MIN_MS = -40;
+const REPLAY_MAX_MS = 320;
 
 const chartAxis = {
   stroke: "var(--color-muted-foreground)",
@@ -114,9 +124,14 @@ function responseClass(state: EquipmentResponse["stateAfterEvent"]) {
 function PowerQualityInvestigation() {
   const { scenarioId, setScenarioId, scenario } = useDemoSimulation();
   const events = useMemo(() => getPowerQualityEvents(scenarioId), [scenarioId]);
-  const [selectedId, setSelectedId] = useState(events[0].id);
+  const [selectedId, setSelectedId] = useState(() => {
+    const stored = readIncidentContext().eventId;
+    return events.some((event) => event.id === stored) ? String(stored) : events[0].id;
+  });
   const [activeTab, setActiveTab] = useState<Tab>("Event Evidence");
   const [cursorMs, setCursorMs] = useState(160);
+  const [playing, setPlaying] = useState(false);
+  const [replaySpeed, setReplaySpeed] = useState(1);
   const [message, setMessage] = useState("");
   const [statusOverrides, setStatusOverrides] = useState<Record<string, InvestigationStatus>>(() => {
     try {
@@ -143,6 +158,29 @@ function PowerQualityInvestigation() {
     offset: meter.startOffsetMs,
   }));
 
+  useEffect(() => {
+    storeIncidentContext({
+      eventId: selected.id,
+      feederId: selected.feederId,
+      incidentGroupId: selected.incidentGroupId,
+    });
+  }, [selected.feederId, selected.id, selected.incidentGroupId]);
+
+  useEffect(() => {
+    if (!playing) return;
+    const timer = window.setInterval(() => {
+      setCursorMs((current) => {
+        const next = current + 8 * replaySpeed;
+        if (next >= REPLAY_MAX_MS) {
+          setPlaying(false);
+          return REPLAY_MAX_MS;
+        }
+        return next;
+      });
+    }, 80);
+    return () => window.clearInterval(timer);
+  }, [playing, replaySpeed]);
+
   const advanceStatus = () => {
     const order: InvestigationStatus[] = ["New", "Acknowledged", "Investigating", "Confirmed", "Closed"];
     const next = order[Math.min(order.length - 1, order.indexOf(selected.status) + 1)];
@@ -153,20 +191,36 @@ function PowerQualityInvestigation() {
   const openVoltageSagScenario = () => {
     setScenarioId("voltage-sag");
     setSelectedId("PQ-260715-143217");
-    setMessage("Voltage-sag scenario activated. Historical event evidence remains deterministic for replay.");
+    setCursorMs(REPLAY_MIN_MS);
+    setPlaying(true);
+    setMessage("Voltage-sag scenario activated and deterministic replay started.");
+  };
+
+  const restartReplay = () => {
+    setCursorMs(REPLAY_MIN_MS);
+    setPlaying(false);
+  };
+
+  const exportReport = () => {
+    const html = buildInvestigationReport(selected, selected.status, timeline);
+    downloadInvestigationReport(`${selected.id}-ArGrid-investigation.html`, html);
+    setMessage(`Engineering investigation report exported for ${selected.id}.`);
   };
 
   return (
     <AppShell
       title="Power Quality Investigation"
-      subtitle="Synchronized RMS, waveform, electrical context, equipment response, and engineering evidence"
+      subtitle="Synchronized RMS, waveform, electrical context, equipment response, replay, and engineering evidence"
       toolbar={
         <div className="flex items-center gap-2">
-          <div className="flex h-8 items-center gap-1.5 rounded-md border border-border bg-surface px-2.5 text-[10px] text-muted-foreground">
+          <div className="hidden h-8 items-center gap-1.5 rounded-md border border-border bg-surface px-2.5 text-[10px] text-muted-foreground xl:flex">
             <RadioTower className="size-3.5 text-primary" /> {selected.sourceMeter} · sync ±2.3 ms
           </div>
+          <button type="button" onClick={exportReport} className="flex h-8 items-center gap-1.5 rounded-md border border-border bg-surface px-2.5 text-[10px] font-medium hover:bg-surface-2">
+            <FileDown className="size-3.5" /> Export report
+          </button>
           <button type="button" onClick={openVoltageSagScenario} className="h-8 rounded-md border border-primary/30 bg-primary/10 px-2.5 text-[10px] font-medium text-primary">
-            Activate sag scenario
+            Replay sag scenario
           </button>
         </div>
       }
@@ -183,6 +237,7 @@ function PowerQualityInvestigation() {
               onChange={(event: ChangeEvent<HTMLSelectElement>) => {
                 setSelectedId(event.target.value);
                 setCursorMs(160);
+                setPlaying(false);
                 setMessage("");
               }}
               className="h-7 min-w-[270px] rounded-md border border-border bg-surface-2 px-2 text-[10px] text-foreground"
@@ -214,7 +269,11 @@ function PowerQualityInvestigation() {
               </div>
               <p className="mt-1 text-[12px] leading-relaxed"><strong>{selected.probableOrigin}.</strong> {selected.operationalImpact}</p>
             </div>
-            <Link to="/electrical" className="flex h-8 shrink-0 items-center gap-1.5 rounded-md bg-primary px-3 text-[10.5px] font-medium text-primary-foreground">
+            <Link
+              to="/electrical"
+              onClick={() => storeIncidentContext({ eventId: selected.id, feederId: selected.feederId, incidentGroupId: selected.incidentGroupId })}
+              className="flex h-8 shrink-0 items-center gap-1.5 rounded-md bg-primary px-3 text-[10.5px] font-medium text-primary-foreground"
+            >
               Open electrical context <GitBranch className="size-3.5" />
             </Link>
           </div>
@@ -226,7 +285,7 @@ function PowerQualityInvestigation() {
               {tab}
             </button>
           ))}
-          <span className="ml-auto hidden pr-2 text-[9px] text-muted-foreground lg:inline">Cursor and event selection remain synchronized across evidence panels.</span>
+          <span className="ml-auto hidden pr-2 text-[9px] text-muted-foreground lg:inline">Event, feeder, cursor, and report evidence remain synchronized.</span>
         </div>
 
         {message && <div className="flex items-center gap-2 rounded-md border border-primary/25 bg-primary/8 px-3 py-2 text-[10px]"><History className="size-3.5 text-primary" />{message}</div>}
@@ -254,7 +313,7 @@ function PowerQualityInvestigation() {
 
             <Panel title="Electrical Context" className="xl:col-span-4" actions={<span className="text-[9.5px] text-muted-foreground">selected path</span>}>
               <div className="rounded-md border border-border bg-background/30 p-3">
-                <svg viewBox="0 0 360 230" className="h-[210px] w-full" role="img" aria-label="Mini one-line showing F-07 event location">
+                <svg viewBox="0 0 360 230" className="h-[210px] w-full" role="img" aria-label={`Mini one-line showing ${selected.feederId} event location`}>
                   <rect x="118" y="8" width="124" height="34" rx="4" fill="var(--color-surface-2)" stroke="var(--color-border-strong)" />
                   <text x="180" y="22" textAnchor="middle" fill="var(--color-muted-foreground)" fontSize="8">UTILITY 20 kV</text>
                   <text x="180" y="35" textAnchor="middle" fill="var(--color-foreground)" fontSize="10">PM-MAIN-01 · 91.4% Un</text>
@@ -263,10 +322,10 @@ function PowerQualityInvestigation() {
                   <circle cx="180" cy="98" r="9" fill="none" stroke="var(--color-cyan)" />
                   <line x1="180" y1="107" x2="180" y2="126" stroke="var(--color-cyan)" strokeWidth="2" />
                   <line x1="44" y1="126" x2="316" y2="126" stroke="var(--color-cyan)" strokeWidth="3" />
-                  <text x="46" y="118" fill="var(--color-muted-foreground)" fontSize="8">MSB-MAIN · PROPAGATED SAG</text>
+                  <text x="46" y="118" fill="var(--color-muted-foreground)" fontSize="8">MSB-MAIN · CORRELATED EVENT</text>
                   {[75, 145, 215, 285].map((x, index) => {
                     const selectedFeeder = index === 3;
-                    return <g key={x}><line x1={x} y1="126" x2={x} y2="168" stroke={selectedFeeder ? "var(--color-red)" : "var(--color-cyan)"} strokeWidth={selectedFeeder ? 3 : 1.5} /><rect x={x - 28} y="168" width="56" height="40" rx="3" fill="var(--color-surface-2)" stroke={selectedFeeder ? "var(--color-red)" : "var(--color-border-strong)"} /><text x={x} y="183" textAnchor="middle" fill="var(--color-foreground)" fontSize="8">{selectedFeeder ? "F-07" : `F-0${index + 4}`}</text><text x={x} y="197" textAnchor="middle" fill={selectedFeeder ? "var(--color-red)" : "var(--color-green)"} fontSize="7.5">{selectedFeeder ? "82% Un" : "NORMAL"}</text></g>;
+                    return <g key={x}><line x1={x} y1="126" x2={x} y2="168" stroke={selectedFeeder ? "var(--color-red)" : "var(--color-cyan)"} strokeWidth={selectedFeeder ? 3 : 1.5} /><rect x={x - 28} y="168" width="56" height="40" rx="3" fill="var(--color-surface-2)" stroke={selectedFeeder ? "var(--color-red)" : "var(--color-border-strong)"} /><text x={x} y="183" textAnchor="middle" fill="var(--color-foreground)" fontSize="8">{selectedFeeder ? selected.feederId : `F-0${index + 4}`}</text><text x={x} y="197" textAnchor="middle" fill={selectedFeeder ? "var(--color-red)" : "var(--color-green)"} fontSize="7.5">{selectedFeeder ? `${selected.minimumVoltagePct.toFixed(0)}% Un` : "NORMAL"}</text></g>;
                   })}
                 </svg>
               </div>
@@ -296,11 +355,18 @@ function PowerQualityInvestigation() {
 
             <Panel title="Event Replay & Chronology" className="xl:col-span-4">
               <div className="rounded-md border border-border bg-surface-2 p-3">
-                <div className="flex items-center gap-3">
-                  <button type="button" className="flex size-7 items-center justify-center rounded-md border border-border bg-surface" aria-label="Play deterministic event replay"><Play className="size-3" /></button>
-                  <input type="range" min="-40" max="320" value={cursorMs} onChange={(event) => setCursorMs(Number(event.target.value))} className="flex-1" aria-label="Power-quality replay cursor" />
-                  <span className="w-14 text-right text-[9.5px] tabular text-primary">{cursorMs} ms</span>
+                <div className="flex items-center gap-2">
+                  <button type="button" onClick={() => setPlaying((value) => !value)} className={`flex size-7 items-center justify-center rounded-md border ${playing ? "border-primary/35 bg-primary/10 text-primary" : "border-border bg-surface"}`} aria-label={playing ? "Pause event replay" : "Play deterministic event replay"}>
+                    {playing ? <Pause className="size-3" /> : <Play className="size-3" />}
+                  </button>
+                  <button type="button" onClick={restartReplay} className="flex size-7 items-center justify-center rounded-md border border-border bg-surface" aria-label="Restart event replay"><RotateCcw className="size-3" /></button>
+                  <input type="range" min={REPLAY_MIN_MS} max={REPLAY_MAX_MS} value={cursorMs} onChange={(event) => { setCursorMs(Number(event.target.value)); setPlaying(false); }} className="min-w-0 flex-1" aria-label="Power-quality replay cursor" />
+                  <select value={replaySpeed} onChange={(event) => setReplaySpeed(Number(event.target.value))} className="h-7 rounded border border-border bg-surface px-1 text-[9px]" aria-label="Replay speed">
+                    <option value={0.5}>0.5×</option><option value={1}>1×</option><option value={2}>2×</option>
+                  </select>
+                  <span className="w-14 text-right text-[9.5px] tabular text-primary">{Math.round(cursorMs)} ms</span>
                 </div>
+                <div className="mt-2 h-1 overflow-hidden rounded-full bg-surface-3"><div className="h-full bg-primary" style={{ width: `${((cursorMs - REPLAY_MIN_MS) / (REPLAY_MAX_MS - REPLAY_MIN_MS)) * 100}%` }} /></div>
               </div>
               <div className="mt-3 space-y-2">
                 {timeline.map((item) => (
@@ -331,8 +397,8 @@ function PowerQualityInvestigation() {
 
             <Panel title="Correlation Conclusion" className="xl:col-span-5">
               <div className="rounded-md border border-primary/30 bg-primary/8 p-3">
-                <div className="flex items-center gap-2 text-[11px] font-medium"><Crosshair className="size-4 text-primary" />Downstream origin is most probable</div>
-                <p className="mt-2 text-[10px] leading-relaxed text-muted-foreground">PM-PQ-07 triggers first, PM-AUX-071 records a deeper residual, while the main incomer and adjacent F-06 see shallower propagation. This pattern is inconsistent with a site-wide utility-origin sag.</p>
+                <div className="flex items-center gap-2 text-[11px] font-medium"><Crosshair className="size-4 text-primary" />{selected.probableOrigin}</div>
+                <p className="mt-2 text-[10px] leading-relaxed text-muted-foreground">The conclusion is derived from trigger order, residual depth, duration, adjacent-feeder response, and synchronized equipment evidence. Confidence remains explicit rather than presented as certainty.</p>
               </div>
               <div className="mt-3 space-y-2">
                 {selected.notes.map((note) => <div key={note} className="flex items-start gap-2 text-[10px]"><CheckCircle2 className="mt-0.5 size-3.5 shrink-0 text-green" /><span>{note}</span></div>)}
@@ -382,9 +448,9 @@ function PowerQualityInvestigation() {
             <Panel title="Investigation Hypotheses" className="xl:col-span-7">
               <div className="space-y-2">
                 {[
-                  { rank: 1, title: "Local high-current disturbance on MCC-AUX-07", confidence: 86, evidence: "First trigger and deepest residual occur at F-07/downstream meters; adjacent feeders see shallow propagation." },
+                  { rank: 1, title: selected.probableOrigin, confidence: selected.confidencePct, evidence: "First trigger and deepest residual occur at the local/downstream meters; adjacent and upstream meters show shallower propagation." },
                   { rank: 2, title: "Large motor or contactor-group restart", confidence: 67, evidence: "Contactor dropout and automatic restart coincide with the recovery window." },
-                  { rank: 3, title: "Utility-origin upstream sag", confidence: 18, evidence: "Incomer residual remains above 91% and starts after the F-07 trigger, weakening an upstream-origin hypothesis." },
+                  { rank: 3, title: "Utility-origin upstream sag", confidence: 18, evidence: "Incomer residual remains above 91% and starts after the local trigger, weakening an upstream-origin hypothesis." },
                 ].map((hypothesis) => (
                   <div key={hypothesis.rank} className={`rounded-md border p-3 ${hypothesis.rank === 1 ? "border-primary/30 bg-primary/8" : "border-border bg-surface-2"}`}>
                     <div className="flex items-center gap-2"><span className="flex size-5 items-center justify-center rounded-full border border-border bg-surface text-[9px] tabular">{hypothesis.rank}</span><span className="flex-1 text-[10.5px] font-semibold">{hypothesis.title}</span><span className="text-[10px] tabular text-primary">{hypothesis.confidence}%</span></div>
@@ -411,9 +477,9 @@ function PowerQualityInvestigation() {
 
             <Panel title="Recommended Engineering Actions" className="xl:col-span-12">
               <div className="grid gap-2 md:grid-cols-3">
-                <ActionCard icon={Wrench} title="Inspect MCC-AUX-07 contactor group" body="Review coil voltage, dropout records, mechanical condition, and restart-sequence logs before changing settings." onClick={() => setMessage("Inspection draft prepared for MCC-AUX-07. No work order was issued.")} />
-                <ActionCard icon={Waves} title="Repeat event correlation" body="Capture high-resolution current and voltage during a controlled auxiliary restart to validate the origin hypothesis." onClick={() => setMessage("Controlled measurement plan added to AG-INV-1042.")} />
-                <ActionCard icon={Cable} title="Review ride-through coordination" body="Compare VFD, PLC power supply, contactor, and UPS ride-through limits against the measured residual and duration." onClick={() => setMessage("Ride-through coordination review added to AG-INV-1042.")} />
+                <ActionCard icon={Wrench} title="Inspect local contactor group" body="Review coil voltage, dropout records, mechanical condition, and restart-sequence logs before changing settings." onClick={() => setMessage(`Inspection draft prepared for ${selected.feederId}. No work order was issued.`)} />
+                <ActionCard icon={Waves} title="Repeat event correlation" body="Capture high-resolution current and voltage during a controlled auxiliary restart to validate the origin hypothesis." onClick={() => setMessage(`Controlled measurement plan added to ${selected.incidentGroupId}.`)} />
+                <ActionCard icon={Cable} title="Review ride-through coordination" body="Compare VFD, PLC power supply, contactor, and UPS ride-through limits against the measured residual and duration." onClick={() => setMessage(`Ride-through coordination review added to ${selected.incidentGroupId}.`)} />
               </div>
               <div className="mt-3 rounded-md border border-border bg-surface-2 px-3 py-2 text-[9.5px] text-muted-foreground">All controls are demonstration workflow actions. No protection setting, switching command, or field-device write is executed.</div>
             </Panel>
