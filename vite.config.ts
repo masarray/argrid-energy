@@ -1,6 +1,5 @@
 import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
-import { tanstackRouter } from "@tanstack/router-plugin/vite";
 import { defineConfig } from "vite";
 import tsConfigPaths from "vite-tsconfig-paths";
 
@@ -18,12 +17,7 @@ function githubPagesBase() {
 
 export default defineConfig({
   base: githubPagesBase(),
-  plugins: [
-    tanstackRouter({ target: "react", autoCodeSplitting: true }),
-    react(),
-    tailwindcss(),
-    tsConfigPaths(),
-  ],
+  plugins: [react(), tailwindcss(), tsConfigPaths()],
   build: {
     sourcemap: true,
     chunkSizeWarningLimit: 900,
