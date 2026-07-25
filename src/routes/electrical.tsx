@@ -1,5 +1,5 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { Link, createFileRoute } from "@tanstack/react-router";
+import { useEffect, useMemo, useState } from "react";
 import {
   Activity,
   ChevronRight,
@@ -7,17 +7,17 @@ import {
   Gauge,
   History,
   Maximize2,
-  Play,
   Search,
   ShieldAlert,
+  Waves,
   Wrench,
-  Zap,
 } from "lucide-react";
 import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid } from "recharts";
 import { AppShell } from "@/components/app-shell";
 import { Panel, StatusPill } from "@/components/argrid-ui";
 import { feeders, powerFlow24h, fmtNum } from "@/lib/argrid-data";
 import { useDemoSimulation } from "@/lib/demo-simulation";
+import { readIncidentContext, storeIncidentContext } from "@/lib/incident-context";
 
 export const Route = createFileRoute("/electrical")({
   component: ElectricalNetwork,
@@ -40,7 +40,10 @@ type DrawerTab = (typeof drawerTabs)[number];
 
 function ElectricalNetwork() {
   const { telemetry, lastUpdated, site, scenarioId, scenario } = useDemoSimulation();
-  const [selectedId, setSelectedId] = useState("F-07");
+  const [selectedId, setSelectedId] = useState(() => {
+    const stored = readIncidentContext().feederId;
+    return feeders.some((feeder) => feeder.id === stored) ? String(stored) : "F-07";
+  });
   const [viewMode, setViewMode] = useState<ViewMode>("Operations");
   const [drawerTab, setDrawerTab] = useState<DrawerTab>("Overview");
   const [replayOpen, setReplayOpen] = useState(false);
@@ -66,6 +69,7 @@ function ElectricalNetwork() {
   );
 
   const selected = operationalFeeders.find((feeder) => feeder.id === selectedId) ?? operationalFeeders[0];
+  const selectedHasPqEvidence = selected.id === "F-07";
   const totalKW = baseTotalKW * site.powerScale;
   const selectedKW = selected.kw * site.powerScale * (scenarioId === "peak-demand" && selected.id === "F-04" ? 1.12 : 1);
   const selectedPf = selected.status === "critical" ? 0.88 : selected.status === "warning" ? 0.92 : 0.96;
@@ -82,6 +86,13 @@ function ElectricalNetwork() {
     [scenarioId, selected.kw, site.powerScale],
   );
 
+  useEffect(() => {
+    storeIncidentContext({
+      feederId: selected.id,
+      ...(selected.id === "F-07" ? { eventId: "PQ-260715-143217", incidentGroupId: "INC-PQ-1042" } : {}),
+    });
+  }, [selected.id]);
+
   const displayedValue = (feeder: (typeof operationalFeeders)[number]) => {
     if (viewMode === "Energy") return `${Math.round(feeder.kw * site.powerScale)} kW`;
     if (viewMode === "Power Quality") return `${feeder.status === "critical" ? "4.8" : feeder.status === "warning" ? "3.7" : "2.2"}% THD`;
@@ -91,77 +102,49 @@ function ElectricalNetwork() {
 
   return (
     <AppShell title="Electrical Network" subtitle="Situational awareness, event investigation, and engineering evidence · MSB-Main">
-      <div className="mb-3 min-h-[44px] rounded-lg border border-border bg-surface px-3 py-2 flex flex-wrap items-center gap-2">
-        <div className="flex items-center gap-1.5 text-[10.5px] text-muted-foreground mr-1">
+      <div className="mb-3 flex min-h-[44px] flex-wrap items-center gap-2 rounded-lg border border-border bg-surface px-3 py-2">
+        <div className="mr-1 flex items-center gap-1.5 text-[10.5px] text-muted-foreground">
           <span>{site.name}</span><ChevronRight className="size-3" /><span>20 kV</span><ChevronRight className="size-3" /><span className="text-foreground">MSB-Main</span>
         </div>
-        <div className="hidden lg:block h-4 w-px bg-border" />
+        <div className="hidden h-4 w-px bg-border lg:block" />
         <select className="h-7 rounded-md border border-border bg-surface-2 px-2 text-[10.5px]" aria-label="Select voltage level">
-          <option>20 kV / 400 V</option>
-          <option>20 kV</option>
-          <option>400 V</option>
+          <option>20 kV / 400 V</option><option>20 kV</option><option>400 V</option>
         </select>
         <div className="flex rounded-md border border-border bg-surface-2 p-0.5">
           {viewModes.map((mode) => (
-            <button
-              key={mode}
-              type="button"
-              onClick={() => setViewMode(mode)}
-              className={`h-6 rounded px-2 text-[9.5px] ${viewMode === mode ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}
-            >
+            <button key={mode} type="button" onClick={() => setViewMode(mode)} className={`h-6 rounded px-2 text-[9.5px] ${viewMode === mode ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}>
               {mode}
             </button>
           ))}
         </div>
         <div className="relative ml-auto min-w-[190px]">
-          <Search className="absolute left-2 top-1/2 -translate-y-1/2 size-3 text-muted-foreground" />
-          <input
-            value={search}
-            onChange={(event) => setSearch(event.target.value)}
-            placeholder="Search feeder…"
-            className="h-7 w-full rounded-md border border-border bg-surface-2 pl-7 pr-2 text-[10.5px] focus:outline-none focus:border-primary/50"
-          />
+          <Search className="absolute left-2 top-1/2 size-3 -translate-y-1/2 text-muted-foreground" />
+          <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search feeder…" className="h-7 w-full rounded-md border border-border bg-surface-2 pl-7 pr-2 text-[10.5px] focus:border-primary/50 focus:outline-none" />
         </div>
-        <button type="button" onClick={() => setSelectedId("F-07")} className="h-7 rounded-md border border-border px-2 text-[10px] flex items-center gap-1.5 hover:bg-surface-2">
-          <Maximize2 className="size-3" /> Fit
-        </button>
-        <button
-          type="button"
-          onClick={() => setReplayOpen((value) => !value)}
-          className={`h-7 rounded-md border px-2 text-[10px] flex items-center gap-1.5 ${replayOpen ? "border-primary/30 bg-primary/10 text-primary" : "border-border hover:bg-surface-2"}`}
-        >
-          <History className="size-3" /> Replay
-        </button>
+        <button type="button" onClick={() => setSelectedId("F-07")} className="flex h-7 items-center gap-1.5 rounded-md border border-border px-2 text-[10px] hover:bg-surface-2"><Maximize2 className="size-3" /> Fit</button>
+        <button type="button" onClick={() => setReplayOpen((value) => !value)} className={`flex h-7 items-center gap-1.5 rounded-md border px-2 text-[10px] ${replayOpen ? "border-primary/30 bg-primary/10 text-primary" : "border-border hover:bg-surface-2"}`}><History className="size-3" /> Replay</button>
       </div>
 
-      <div className="grid grid-cols-1 xl:grid-cols-12 gap-3">
-        <Panel
-          title="Interactive One-Line — MSB-Main"
-          className="xl:col-span-8 h-[610px]"
-          actions={<span className="text-[10px] text-muted-foreground tabular">{scenario.name} · {lastUpdated.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })}</span>}
-        >
-          <div className="relative w-full h-full grid-bg rounded-md overflow-hidden">
-            <svg viewBox="0 0 900 520" className="w-full h-full" role="img" aria-label="Interactive electrical single-line diagram for MSB-Main">
+      <div className="grid grid-cols-1 gap-3 xl:grid-cols-12">
+        <Panel title="Interactive One-Line — MSB-Main" className="h-[610px] xl:col-span-8" actions={<span className="text-[10px] tabular text-muted-foreground">{scenario.name} · {lastUpdated.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })}</span>}>
+          <div className="grid-bg relative h-full w-full overflow-hidden rounded-md">
+            <svg viewBox="0 0 900 520" className="h-full w-full" role="img" aria-label="Interactive electrical single-line diagram for MSB-Main">
               <rect x="365" y="14" width="170" height="48" rx="4" fill="var(--color-surface-2)" stroke="var(--color-border-strong)" />
               <text x="450" y="33" textAnchor="middle" fill="var(--color-muted-foreground)" fontSize="9.5">UTILITY SOURCE · 20 kV</text>
               <text x="450" y="50" textAnchor="middle" fill="var(--color-foreground)" fontSize="12" fontWeight="600">{telemetry.currentPower.toFixed(2)} MW · {telemetry.powerFactor.toFixed(3)} PF</text>
-
               <line x1="450" y1="62" x2="450" y2="88" stroke="var(--color-cyan)" strokeWidth="2" />
               <circle cx="450" cy="99" r="11" fill="none" stroke="var(--color-cyan)" strokeWidth="1.5" />
               <circle cx="450" cy="112" r="11" fill="none" stroke="var(--color-cyan)" strokeWidth="1.5" />
               <line x1="450" y1="123" x2="450" y2="145" stroke="var(--color-cyan)" strokeWidth="2" />
               <text x="470" y="105" fill="var(--color-muted-foreground)" fontSize="9">TR-01/02 · 2 × 4 MVA</text>
               <text x="470" y="118" fill="var(--color-muted-foreground)" fontSize="8.5">84% loading · 31% capacity margin</text>
-
               <circle cx="450" cy="151" r="3" fill="var(--color-foreground)" />
               <circle cx="450" cy="174" r="3" fill="var(--color-foreground)" />
               <line x1="450" y1="154" x2="450" y2="171" stroke="var(--color-green)" strokeWidth="3" />
               <text x="466" y="167" fill="var(--color-green)" fontSize="8.5">52-MAIN · CLOSED</text>
               <line x1="450" y1="177" x2="450" y2="196" stroke="var(--color-cyan)" strokeWidth="2" />
-
               <line x1="62" y1="196" x2="838" y2="196" stroke="var(--color-cyan)" strokeWidth="4" />
               <text x="64" y="187" fill="var(--color-muted-foreground)" fontSize="9">BUS A · 400 V · ENERGIZED</text>
-
               <line x1="450" y1="62" x2="450" y2="196" stroke="var(--color-primary)" strokeWidth="5" opacity="0.11" />
 
               {operationalFeeders.map((feeder, index) => {
@@ -173,8 +156,7 @@ function ElectricalNetwork() {
                   <g key={feeder.id} onClick={() => setSelectedId(feeder.id)} className="cursor-pointer" role="button" aria-label={`Select ${feeder.id} ${feeder.name}`}>
                     {selectedNow && <line x1={x} y1="196" x2={x} y2="365" stroke="var(--color-primary)" strokeWidth="8" opacity="0.1" />}
                     <line x1={x} y1="196" x2={x} y2="226" stroke={color} strokeWidth={selectedNow ? 2.4 : 1.6} />
-                    <circle cx={x} cy="230" r="3" fill="var(--color-foreground)" />
-                    <circle cx={x} cy="252" r="3" fill="var(--color-foreground)" />
+                    <circle cx={x} cy="230" r="3" fill="var(--color-foreground)" /><circle cx={x} cy="252" r="3" fill="var(--color-foreground)" />
                     <line x1={x} y1="233" x2={x} y2="249" stroke={stateColor} strokeWidth="3" />
                     <text x={x + 8} y="244" fill={stateColor} fontSize="7.5">CLOSED</text>
                     <line x1={x} y1="255" x2={x} y2="278" stroke={color} strokeWidth={selectedNow ? 2.4 : 1.6} />
@@ -182,8 +164,7 @@ function ElectricalNetwork() {
                     <text x={x} y="294" textAnchor="middle" fill="var(--color-muted-foreground)" fontSize="8.5">{feeder.id}</text>
                     <text x={x} y="310" textAnchor="middle" fill="var(--color-foreground)" fontSize="9.5" fontWeight="600">{feeder.name}</text>
                     <text x={x} y="334" textAnchor="middle" fill={color} fontSize="12" fontWeight="600">{displayedValue(feeder)}</text>
-                    <rect x={x - 31} y="350" width="62" height="5" rx="1" fill="var(--color-surface-3)" />
-                    <rect x={x - 31} y="350" width={62 * (feeder.load / 100)} height="5" rx="1" fill={color} />
+                    <rect x={x - 31} y="350" width="62" height="5" rx="1" fill="var(--color-surface-3)" /><rect x={x - 31} y="350" width={62 * (feeder.load / 100)} height="5" rx="1" fill={color} />
                     <text x={x} y="369" textAnchor="middle" fill="var(--color-muted-foreground)" fontSize="8">{feeder.load}% loading</text>
                     <text x={x} y="381" textAnchor="middle" fill={stateColor} fontSize="7.5">{feeder.status.toUpperCase()}</text>
                   </g>
@@ -199,169 +180,54 @@ function ElectricalNetwork() {
             </svg>
 
             {replayOpen && (
-              <div className="absolute left-3 right-3 bottom-3 rounded-md border border-border-strong bg-surface/95 px-3 py-2">
+              <div className="absolute bottom-3 left-3 right-3 rounded-md border border-border-strong bg-surface/95 px-3 py-2">
                 <div className="flex items-center gap-3">
-                  <button type="button" className="size-7 rounded-md border border-border bg-surface-2 flex items-center justify-center" aria-label="Play event replay"><Play className="size-3" /></button>
-                  <div className="text-[9.5px] text-muted-foreground tabular shrink-0">14:32:17.640</div>
-                  <input type="range" min="0" max="100" value={replayPosition} onChange={(event) => setReplayPosition(Number(event.target.value))} className="flex-1" aria-label="Event replay position" />
-                  <div className="text-[9.5px] text-amber tabular shrink-0">Voltage sag · {replayPosition}%</div>
+                  <div className="text-[9.5px] tabular text-muted-foreground">14:32:17.640</div>
+                  <input type="range" min="0" max="100" value={replayPosition} onChange={(event) => setReplayPosition(Number(event.target.value))} className="flex-1" aria-label="Event replay preview position" />
+                  <div className="text-[9.5px] tabular text-amber">Voltage sag · {replayPosition}%</div>
+                  <Link to="/alarms/power-quality" onClick={() => storeIncidentContext({ eventId: "PQ-260715-143217", feederId: "F-07", incidentGroupId: "INC-PQ-1042" })} className="flex h-7 items-center gap-1.5 rounded-md bg-primary px-2.5 text-[9.5px] font-medium text-primary-foreground"><Waves className="size-3" /> Open synchronized replay</Link>
                 </div>
               </div>
             )}
           </div>
         </Panel>
 
-        <Panel title={`${selected.id} · ${selected.name}`} className="xl:col-span-4 h-[610px]" actions={<StatusPill status={selected.status} />} padded={false}>
-          <div className="h-10 border-b border-border px-2 flex items-center overflow-x-auto">
-            {drawerTabs.map((tab) => (
-              <button
-                key={tab}
-                type="button"
-                onClick={() => setDrawerTab(tab)}
-                className={`h-10 px-2 text-[9.5px] whitespace-nowrap border-b-2 ${drawerTab === tab ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"}`}
-              >
-                {tab}
-              </button>
-            ))}
+        <Panel title={`${selected.id} · ${selected.name}`} className="h-[610px] xl:col-span-4" actions={<StatusPill status={selected.status} />} padded={false}>
+          <div className="flex h-10 items-center overflow-x-auto border-b border-border px-2">
+            {drawerTabs.map((tab) => <button key={tab} type="button" onClick={() => setDrawerTab(tab)} className={`h-10 whitespace-nowrap border-b-2 px-2 text-[9.5px] ${drawerTab === tab ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"}`}>{tab}</button>)}
           </div>
-          <div className="p-4 h-[calc(100%-40px)] overflow-auto">
+          <div className="h-[calc(100%-40px)] overflow-auto p-4">
             {drawerTab === "Overview" && (
               <div>
                 <div className="grid grid-cols-2 gap-3 text-[11.5px]">
-                  <Stat label="Active Power" value={`${fmtNum(selectedKW)} kW`} />
-                  <Stat label="Current" value={`${fmtNum(selectedCurrent)} A`} />
-                  <Stat label="Voltage L-L" value={`${selectedVoltage} V`} tone={selected.status !== "normal" ? "warn" : undefined} />
-                  <Stat label="THD-V" value={`${selectedThd.toFixed(1)}%`} tone={selectedThd > 4 ? "warn" : undefined} />
-                  <Stat label="Power Factor" value={selectedPf.toFixed(3)} tone={selectedPf < 0.95 ? "warn" : undefined} />
-                  <Stat label="Frequency" value="49.98 Hz" />
+                  <Stat label="Active Power" value={`${fmtNum(selectedKW)} kW`} /><Stat label="Current" value={`${fmtNum(selectedCurrent)} A`} /><Stat label="Voltage L-L" value={`${selectedVoltage} V`} tone={selected.status !== "normal" ? "warn" : undefined} /><Stat label="THD-V" value={`${selectedThd.toFixed(1)}%`} tone={selectedThd > 4 ? "warn" : undefined} /><Stat label="Power Factor" value={selectedPf.toFixed(3)} tone={selectedPf < 0.95 ? "warn" : undefined} /><Stat label="Frequency" value="49.98 Hz" />
                 </div>
-                <div className={`mt-4 text-[10.5px] flex items-start gap-2 border rounded-md px-3 py-2.5 ${selected.status === "critical" ? "text-red border-red/25 bg-red/10" : selected.status === "warning" ? "text-amber border-amber/25 bg-amber/10" : "text-green border-green/25 bg-green/10"}`}>
-                  <ShieldAlert className="size-3.5 mt-0.5 shrink-0" />
+                <div className={`mt-4 flex items-start gap-2 rounded-md border px-3 py-2.5 text-[10.5px] ${selected.status === "critical" ? "border-red/25 bg-red/10 text-red" : selected.status === "warning" ? "border-amber/25 bg-amber/10 text-amber" : "border-green/25 bg-green/10 text-green"}`}>
+                  <ShieldAlert className="mt-0.5 size-3.5 shrink-0" />
                   <span>{selected.status === "critical" ? "Voltage sag reached 82% Un for 240 ms. Event correlation indicates a downstream origin; investigation remains open." : selected.status === "warning" ? "The feeder is outside its preferred operating band. Review loading, schedule, and correlated equipment conditions." : "Feeder state, measurements, and communication quality are within configured limits."}</span>
                 </div>
                 <div className="mt-4">
                   <div className="text-[9.5px] uppercase tracking-wider text-muted-foreground">Context path</div>
-                  <div className="mt-2 flex flex-wrap items-center gap-1.5 text-[10px]">
-                    <span className="rounded border border-border bg-surface-2 px-2 py-1">Utility 20 kV</span><ChevronRight className="size-3 text-muted-foreground" /><span className="rounded border border-border bg-surface-2 px-2 py-1">TR-01/02</span><ChevronRight className="size-3 text-muted-foreground" /><span className="rounded border border-primary/30 bg-primary/10 px-2 py-1 text-primary">{selected.id}</span>
-                  </div>
+                  <div className="mt-2 flex flex-wrap items-center gap-1.5 text-[10px]"><span className="rounded border border-border bg-surface-2 px-2 py-1">Utility 20 kV</span><ChevronRight className="size-3 text-muted-foreground" /><span className="rounded border border-border bg-surface-2 px-2 py-1">TR-01/02</span><ChevronRight className="size-3 text-muted-foreground" /><span className="rounded border border-primary/30 bg-primary/10 px-2 py-1 text-primary">{selected.id}</span></div>
                 </div>
+                {selectedHasPqEvidence && <Link to="/alarms/power-quality" onClick={() => storeIncidentContext({ eventId: "PQ-260715-143217", feederId: selected.id, incidentGroupId: "INC-PQ-1042" })} className="mt-4 flex h-9 w-full items-center justify-center gap-2 rounded-md bg-primary text-[10.5px] font-medium text-primary-foreground"><Waves className="size-3.5" /> Open correlated PQ evidence</Link>}
               </div>
             )}
 
-            {drawerTab === "Measurements" && (
-              <div className="space-y-1">
-                {[
-                  ["Voltage AB", `${selectedVoltage} V`, selected.status !== "normal"],
-                  ["Voltage BC", `${selectedVoltage + 2} V`, false],
-                  ["Voltage CA", `${selectedVoltage - 1} V`, false],
-                  ["Current A", `${selectedCurrent} A`, false],
-                  ["Current B", `${selectedCurrent - 8} A`, false],
-                  ["Current C", `${selectedCurrent + 11} A`, false],
-                  ["Reactive power", `${Math.round(selectedKW * 0.23)} kvar`, false],
-                  ["Voltage unbalance", selected.status === "critical" ? "2.8%" : "0.7%", selected.status === "critical"],
-                  ["Data quality", "GOOD · 1.2 s", false],
-                ].map(([label, value, warning]) => (
-                  <div key={String(label)} className="flex items-center justify-between border-b border-border py-2 text-[10.5px]">
-                    <span className="text-muted-foreground">{label}</span><span className={`tabular font-medium ${warning ? "text-amber" : ""}`}>{value}</span>
-                  </div>
-                ))}
-              </div>
-            )}
+            {drawerTab === "Measurements" && <div className="space-y-1">{[["Voltage AB", `${selectedVoltage} V`, selected.status !== "normal"], ["Voltage BC", `${selectedVoltage + 2} V`, false], ["Voltage CA", `${selectedVoltage - 1} V`, false], ["Current A", `${selectedCurrent} A`, false], ["Current B", `${selectedCurrent - 8} A`, false], ["Current C", `${selectedCurrent + 11} A`, false], ["Reactive power", `${Math.round(selectedKW * 0.23)} kvar`, false], ["Voltage unbalance", selected.status === "critical" ? "2.8%" : "0.7%", selected.status === "critical"], ["Data quality", "GOOD · 1.2 s", false]].map(([label, value, warning]) => <div key={String(label)} className="flex items-center justify-between border-b border-border py-2 text-[10.5px]"><span className="text-muted-foreground">{label}</span><span className={`tabular font-medium ${warning ? "text-amber" : ""}`}>{value}</span></div>)}</div>}
 
-            {drawerTab === "Trends" && (
-              <div className="h-[430px]">
-                <div className="mb-3 flex items-center justify-between"><span className="text-[10px] text-muted-foreground">Feeder load · last 24 hours</span><span className="text-[10px] tabular">kW</span></div>
-                <ResponsiveContainer width="100%" height="92%">
-                  <LineChart data={selectedTrend} margin={{ top: 8, right: 8, left: -8, bottom: 0 }}>
-                    <CartesianGrid stroke="var(--color-border)" strokeDasharray="2 4" vertical={false} />
-                    <XAxis dataKey="t" {...chartAxis} interval={7} />
-                    <YAxis {...chartAxis} width={44} />
-                    <Tooltip contentStyle={{ background: "var(--color-surface-2)", border: "1px solid var(--color-border-strong)", borderRadius: 6, fontSize: 11 }} formatter={(value: number) => [`${fmtNum(value)} kW`, selected.id]} />
-                    <Line type="monotone" dataKey="feederKW" name={selected.id} stroke="var(--color-cyan)" strokeWidth={1.6} dot={false} />
-                  </LineChart>
-                </ResponsiveContainer>
-              </div>
-            )}
+            {drawerTab === "Trends" && <div className="h-[430px]"><div className="mb-3 flex items-center justify-between"><span className="text-[10px] text-muted-foreground">Feeder load · last 24 hours</span><span className="text-[10px] tabular">kW</span></div><ResponsiveContainer width="100%" height="92%"><LineChart data={selectedTrend} margin={{ top: 8, right: 8, left: -8, bottom: 0 }}><CartesianGrid stroke="var(--color-border)" strokeDasharray="2 4" vertical={false} /><XAxis dataKey="t" {...chartAxis} interval={7} /><YAxis {...chartAxis} width={44} /><Tooltip contentStyle={{ background: "var(--color-surface-2)", border: "1px solid var(--color-border-strong)", borderRadius: 6, fontSize: 11 }} formatter={(value: number) => [`${fmtNum(value)} kW`, selected.id]} /><Line type="monotone" dataKey="feederKW" name={selected.id} stroke="var(--color-cyan)" strokeWidth={1.6} dot={false} /></LineChart></ResponsiveContainer></div>}
 
-            {drawerTab === "Events" && (
-              <div className="space-y-2">
-                {[
-                  { time: "14:32:18.040", title: "Voltage recovered", detail: "0.99 Un · phase ABC", tone: "text-green" },
-                  { time: "14:32:17.800", title: "Minimum RMS voltage", detail: "0.82 Un · 240 ms", tone: "text-red" },
-                  { time: "14:32:17.640", title: "Event triggered", detail: "Sag threshold crossed", tone: "text-amber" },
-                  { time: "14:31:58.120", title: "Pre-event state", detail: "Breaker closed · 320 kW", tone: "text-muted-foreground" },
-                ].map((event) => (
-                  <div key={event.time} className="rounded-md border border-border bg-surface-2 px-3 py-2.5">
-                    <div className="flex items-center justify-between gap-2"><span className={`text-[10.5px] font-medium ${event.tone}`}>{event.title}</span><span className="text-[9.5px] tabular text-muted-foreground">{event.time}</span></div>
-                    <div className="mt-1 text-[10px] text-muted-foreground">{event.detail}</div>
-                  </div>
-                ))}
-              </div>
-            )}
+            {drawerTab === "Events" && <div className="space-y-2">{selectedHasPqEvidence && <Link to="/alarms/power-quality" onClick={() => storeIncidentContext({ eventId: "PQ-260715-143217", feederId: selected.id, incidentGroupId: "INC-PQ-1042" })} className="mb-2 flex h-8 items-center justify-center gap-1.5 rounded-md border border-primary/30 bg-primary/10 text-[10px] font-medium text-primary"><Waves className="size-3.5" /> Open synchronized RMS, waveform, and correlation</Link>}{[{ time: "14:32:18.040", title: "Voltage recovered", detail: "0.99 Un · phase ABC", tone: "text-green" }, { time: "14:32:17.800", title: "Minimum RMS voltage", detail: "0.82 Un · 240 ms", tone: "text-red" }, { time: "14:32:17.640", title: "Event triggered", detail: "Sag threshold crossed", tone: "text-amber" }, { time: "14:31:58.120", title: "Pre-event state", detail: `Breaker closed · ${fmtNum(selectedKW)} kW`, tone: "text-muted-foreground" }].map((event) => <div key={event.time} className="rounded-md border border-border bg-surface-2 px-3 py-2.5"><div className="flex items-center justify-between gap-2"><span className={`text-[10.5px] font-medium ${event.tone}`}>{event.title}</span><span className="text-[9.5px] tabular text-muted-foreground">{event.time}</span></div><div className="mt-1 text-[10px] text-muted-foreground">{event.detail}</div></div>)}</div>}
 
-            {drawerTab === "Asset" && (
-              <div className="space-y-1">
-                {[
-                  ["Asset ID", `${selected.id}-CB-MTR`],
-                  ["Parent board", "MSB-Main"],
-                  ["Device", "Power meter + breaker IED"],
-                  ["Protocol", "IEC 61850 / Modbus TCP"],
-                  ["CT ratio", "1600/5 A"],
-                  ["Accuracy", "Class 0.5S"],
-                  ["Last calibration", "18 Mar 2026"],
-                  ["Time synchronization", "PTP · ±2.1 ms"],
-                  ["Criticality", selected.id === "F-07" ? "High" : "Medium"],
-                ].map(([label, value]) => (
-                  <div key={label} className="flex items-center justify-between border-b border-border py-2 text-[10.5px]"><span className="text-muted-foreground">{label}</span><span className="tabular text-right">{value}</span></div>
-                ))}
-              </div>
-            )}
+            {drawerTab === "Asset" && <div className="space-y-1">{[["Asset ID", `${selected.id}-CB-MTR`], ["Parent board", "MSB-Main"], ["Device", "Power meter + breaker IED"], ["Protocol", "IEC 61850 / Modbus TCP"], ["CT ratio", "1600/5 A"], ["Accuracy", "Class 0.5S"], ["Last calibration", "18 Mar 2026"], ["Time synchronization", "PTP · ±2.1 ms"], ["Criticality", selected.id === "F-07" ? "High" : "Medium"]].map(([label, value]) => <div key={label} className="flex items-center justify-between border-b border-border py-2 text-[10.5px]"><span className="text-muted-foreground">{label}</span><span className="tabular text-right">{value}</span></div>)}</div>}
 
-            {drawerTab === "Actions" && (
-              <div>
-                <div className="rounded-md border border-border bg-surface-2 p-3 text-[10.5px] text-muted-foreground">Actions remain in simulation mode. No switching command or field-device write will be executed.</div>
-                <div className="mt-3 grid gap-2">
-                  <button type="button" onClick={() => setActionMessage("Investigation AG-INV-1042 created and linked to the event.")} className="h-9 rounded-md bg-primary text-primary-foreground text-[11px] font-medium flex items-center justify-center gap-2"><Activity className="size-3.5" /> Create investigation</button>
-                  <button type="button" onClick={() => setActionMessage("Trend and event evidence added to Opportunity OPP-2041.")} className="h-9 rounded-md border border-border text-[11px] font-medium flex items-center justify-center gap-2 hover:bg-surface-2"><Gauge className="size-3.5" /> Link to opportunity</button>
-                  <button type="button" onClick={() => setActionMessage("Maintenance inspection request prepared for review.")} className="h-9 rounded-md border border-border text-[11px] font-medium flex items-center justify-center gap-2 hover:bg-surface-2"><Wrench className="size-3.5" /> Prepare inspection</button>
-                </div>
-                {actionMessage && <div className="mt-3 rounded-md border border-green/25 bg-green/10 px-3 py-2.5 text-[10.5px] text-green">{actionMessage}</div>}
-              </div>
-            )}
+            {drawerTab === "Actions" && <div><div className="rounded-md border border-border bg-surface-2 p-3 text-[10.5px] text-muted-foreground">Actions remain in simulation mode. No switching command or field-device write will be executed.</div><div className="mt-3 grid gap-2"><button type="button" onClick={() => setActionMessage("Investigation AG-INV-1042 created and linked to the event.")} className="flex h-9 items-center justify-center gap-2 rounded-md bg-primary text-[11px] font-medium text-primary-foreground"><Activity className="size-3.5" /> Create investigation</button><button type="button" onClick={() => setActionMessage("Trend and event evidence added to Opportunity OPP-2041.")} className="flex h-9 items-center justify-center gap-2 rounded-md border border-border text-[11px] font-medium hover:bg-surface-2"><Gauge className="size-3.5" /> Link to opportunity</button><button type="button" onClick={() => setActionMessage("Maintenance inspection request prepared for review.")} className="flex h-9 items-center justify-center gap-2 rounded-md border border-border text-[11px] font-medium hover:bg-surface-2"><Wrench className="size-3.5" /> Prepare inspection</button></div>{actionMessage && <div className="mt-3 rounded-md border border-green/25 bg-green/10 px-3 py-2.5 text-[10.5px] text-green">{actionMessage}</div>}</div>}
           </div>
         </Panel>
 
-        <Panel title="Feeder Operations Matrix" className="xl:col-span-12" actions={<span className="text-[10px] text-muted-foreground">Select a row to preserve context in the one-line and drawer</span>}>
-          <div className="overflow-x-auto">
-            <table className="w-full text-[11.5px]">
-              <thead>
-                <tr className="text-left text-[9.5px] uppercase tracking-[0.12em] text-muted-foreground border-b border-border">
-                  <th className="py-2 font-normal">Feeder</th>
-                  <th className="py-2 font-normal">Name</th>
-                  <th className="py-2 font-normal text-right">Active Power</th>
-                  <th className="py-2 font-normal text-right">Loading</th>
-                  <th className="py-2 font-normal text-right">PF</th>
-                  <th className="py-2 font-normal text-right">THD-V</th>
-                  <th className="py-2 font-normal">Breaker</th>
-                  <th className="py-2 font-normal">Condition</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border">
-                {filteredFeeders.map((feeder) => (
-                  <tr key={feeder.id} onClick={() => setSelectedId(feeder.id)} className={`cursor-pointer hover:bg-surface-2/60 ${selected.id === feeder.id ? "bg-primary/7" : ""}`}>
-                    <td className="py-2 tabular text-muted-foreground">{feeder.id}</td>
-                    <td className="py-2 font-medium">{feeder.name}</td>
-                    <td className="py-2 text-right tabular">{fmtNum(feeder.kw * site.powerScale)} kW</td>
-                    <td className="py-2 text-right tabular">{feeder.load}%</td>
-                    <td className="py-2 text-right tabular">{feeder.status === "critical" ? "0.88" : feeder.status === "warning" ? "0.92" : "0.96"}</td>
-                    <td className="py-2 text-right tabular">{feeder.status === "critical" ? "4.8%" : feeder.status === "warning" ? "3.7%" : "2.2%"}</td>
-                    <td className="py-2"><span className="inline-flex items-center gap-1.5 text-green"><span className="inline-block h-3 w-[2px] bg-current" /> CLOSED</span></td>
-                    <td className="py-2"><StatusPill status={feeder.status} /></td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+        <Panel title="Feeder Operations Matrix" className="xl:col-span-12" actions={<span className="text-[10px] text-muted-foreground">Select a row to preserve context in the one-line and drawer · total {fmtNum(totalKW)} kW</span>}>
+          <div className="overflow-x-auto"><table className="w-full text-[11.5px]"><thead><tr className="border-b border-border text-left text-[9.5px] uppercase tracking-[0.12em] text-muted-foreground"><th className="py-2 font-normal">Feeder</th><th className="py-2 font-normal">Name</th><th className="py-2 text-right font-normal">Active Power</th><th className="py-2 text-right font-normal">Loading</th><th className="py-2 text-right font-normal">PF</th><th className="py-2 text-right font-normal">THD-V</th><th className="py-2 font-normal">Breaker</th><th className="py-2 font-normal">Condition</th></tr></thead><tbody className="divide-y divide-border">{filteredFeeders.map((feeder) => <tr key={feeder.id} onClick={() => setSelectedId(feeder.id)} className={`cursor-pointer hover:bg-surface-2/60 ${selected.id === feeder.id ? "bg-primary/7" : ""}`}><td className="py-2 tabular text-muted-foreground">{feeder.id}</td><td className="py-2 font-medium">{feeder.name}</td><td className="py-2 text-right tabular">{fmtNum(feeder.kw * site.powerScale)} kW</td><td className="py-2 text-right tabular">{feeder.load}%</td><td className="py-2 text-right tabular">{feeder.status === "critical" ? "0.88" : feeder.status === "warning" ? "0.92" : "0.96"}</td><td className="py-2 text-right tabular">{feeder.status === "critical" ? "4.8%" : feeder.status === "warning" ? "3.7%" : "2.2%"}</td><td className="py-2"><span className="inline-flex items-center gap-1.5 text-green"><span className="inline-block h-3 w-[2px] bg-current" /> CLOSED</span></td><td className="py-2"><StatusPill status={feeder.status} /></td></tr>)}</tbody></table></div>
           <div className="mt-3 flex items-center gap-2 text-[9.5px] text-muted-foreground"><Clock3 className="size-3" /> Data source timestamp {lastUpdated.toLocaleString()} · quality GOOD · simulated engineering demo</div>
         </Panel>
       </div>
@@ -370,10 +236,5 @@ function ElectricalNetwork() {
 }
 
 function Stat({ label, value, tone }: { label: string; value: string; tone?: "warn" }) {
-  return (
-    <div className="rounded-md border border-border bg-surface-2 px-3 py-2.5">
-      <div className="text-[9.5px] uppercase tracking-wider text-muted-foreground">{label}</div>
-      <div className={`mt-1 tabular text-[13px] font-medium ${tone === "warn" ? "text-amber" : ""}`}>{value}</div>
-    </div>
-  );
+  return <div className="rounded-md border border-border bg-surface-2 px-3 py-2.5"><div className="text-[9.5px] uppercase tracking-wider text-muted-foreground">{label}</div><div className={`mt-1 tabular text-[13px] font-medium ${tone === "warn" ? "text-amber" : ""}`}>{value}</div></div>;
 }
