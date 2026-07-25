@@ -37,11 +37,13 @@ import logoMark from "@/assets/argrid-logo.png";
 
 type AppPath =
   | "/"
+  | "/portfolio"
   | "/electrical"
   | "/analytics"
   | "/demand"
   | "/opportunities"
   | "/savings"
+  | "/data-health"
   | "/alarms"
   | "/billing"
   | "/sustainability";
@@ -53,6 +55,7 @@ const navGroups: NavGroup[] = [
   {
     label: "Performance",
     items: [
+      { to: "/portfolio", label: "Portfolio", icon: Building2 },
       { to: "/", label: "Overview", icon: LayoutDashboard },
       { to: "/analytics", label: "Energy Analytics", icon: Activity },
       { to: "/demand", label: "Demand & Cost", icon: Gauge },
@@ -74,9 +77,15 @@ const navGroups: NavGroup[] = [
       { to: "/sustainability", label: "Sustainability", icon: Leaf },
     ],
   },
+  {
+    label: "Governance",
+    items: [{ to: "/data-health", label: "Data Health", icon: Database }],
+  },
 ];
 
 const searchableAssets: Array<{ label: string; detail: string; to: AppPath }> = [
+  { label: "Enterprise Portfolio", detail: "Multi-site performance and opportunity ranking", to: "/portfolio" },
+  { label: "Performance Constellation", detail: "Intensity, budget variance, and opportunity benchmark", to: "/portfolio" },
   { label: "Cikarang Manufacturing Complex", detail: "Enterprise site · West Java", to: "/" },
   { label: "Demand interval forecast", detail: "Contract-limit and financial exposure", to: "/demand" },
   { label: "Chiller Plant F-04", detail: "18% peak-demand contribution", to: "/demand" },
@@ -84,6 +93,9 @@ const searchableAssets: Array<{ label: string; detail: string; to: AppPath }> = 
   { label: "ACT-2036", detail: "Chiller sequencing · verification ready", to: "/savings" },
   { label: "Verified Savings Ledger", detail: "Auditable cost and energy results", to: "/savings" },
   { label: "Weekend baseload persistence", detail: "Savings at risk review", to: "/savings" },
+  { label: "PM-TNT-03", detail: "Tenant revenue meter · billing exception", to: "/data-health" },
+  { label: "Data Quality DQ-3061", detail: "Missing intervals blocking invoice approval", to: "/data-health" },
+  { label: "Measurement provenance", detail: "Source-to-decision calculation lineage", to: "/data-health" },
   { label: "MSB-Main", detail: "20 kV incomer · electrical network", to: "/electrical" },
   { label: "Transformer TR-01", detail: "6 MVA · 84% loading", to: "/electrical" },
   { label: "Feeder F-07", detail: "Utility & Aux · voltage sag", to: "/electrical" },
@@ -95,47 +107,59 @@ const searchableAssets: Array<{ label: string; detail: string; to: AppPath }> = 
 ];
 
 const workspaceOptions: Array<{ id: string; label: string; to: AppPath }> = [
-  { id: "management", label: "Management", to: "/" },
+  { id: "management", label: "Management", to: "/portfolio" },
   { id: "operations", label: "Operations", to: "/electrical" },
   { id: "finance", label: "Finance", to: "/billing" },
 ];
 
 const guidedSteps: Array<{ title: string; body: string; to: AppPath; scenario: DemoScenarioId }> = [
   {
-    title: "1 · Enterprise condition",
-    body: "Begin with live electrical operation, energy performance, cost exposure, and verified value.",
+    title: "1 · Portfolio confidence",
+    body: "Rank sites by normalized intensity, budget variance, demand exposure, opportunity, savings, and data confidence.",
+    to: "/portfolio",
+    scenario: "peak-demand",
+  },
+  {
+    title: "2 · Enterprise condition",
+    body: "Open the selected site and review electrical operation, energy performance, cost exposure, and realized value.",
     to: "/",
     scenario: "peak-demand",
   },
   {
-    title: "2 · Predict demand exposure",
+    title: "3 · Predict demand exposure",
     body: "Inspect the interval trajectory, contributing feeders, tariff exposure, and a simulation-only response plan.",
     to: "/demand",
     scenario: "peak-demand",
   },
   {
-    title: "3 · Locate the electrical cause",
+    title: "4 · Locate the electrical cause",
     body: "Move from financial impact to the contributing feeder without losing site and scenario context.",
     to: "/electrical",
     scenario: "peak-demand",
   },
   {
-    title: "4 · Prioritize corrective action",
+    title: "5 · Prioritize corrective action",
     body: "Review the opportunity, confidence, payback, evidence, and accountable owner.",
     to: "/opportunities",
     scenario: "efficiency-loss",
   },
   {
-    title: "5 · Verify and approve value",
+    title: "6 · Verify and approve value",
     body: "Review the frozen baseline, adjustments, meter quality, calculation trace, approval gate, and persistence risk.",
     to: "/savings",
     scenario: "efficiency-loss",
   },
   {
-    title: "6 · Close commercial value",
-    body: "Conclude with billing status and management-ready commercial evidence.",
+    title: "7 · Validate decision data",
+    body: "Trace a billing exception from missing interval to meter, gateway, historian, calculation, and approval consequence.",
+    to: "/data-health",
+    scenario: "billing-exception",
+  },
+  {
+    title: "8 · Close commercial value",
+    body: "Conclude with tariff trace, invoice assurance, collection status, and management-ready commercial evidence.",
     to: "/billing",
-    scenario: "normal",
+    scenario: "billing-exception",
   },
 ];
 
@@ -244,12 +268,12 @@ export function AppShell({
 
       <div className={`border-t border-sidebar-border ${collapsed ? "p-2" : "p-3 space-y-2"}`}>
         {collapsed ? (
-          <div className="size-8 mx-auto rounded-md flex items-center justify-center" title={`Data health ${telemetry.dataHealth.toFixed(1)}%`}><Database className="size-4 text-green" /></div>
+          <Link to="/data-health" className="size-8 mx-auto rounded-md flex items-center justify-center hover:bg-sidebar-accent" title={`Data health ${telemetry.dataHealth.toFixed(1)}%`}><Database className={`size-4 ${telemetry.meterQuality === "GOOD" ? "text-green" : "text-amber"}`} /></Link>
         ) : (
           <>
-            <div className="flex items-center gap-2 text-[11px] text-muted-foreground"><Database className="size-3.5" />Data health<span className="tabular text-foreground ml-auto">{telemetry.dataHealth.toFixed(1)}%</span></div>
-            <div className="h-1 rounded-full bg-sidebar-accent overflow-hidden"><div className="h-full bg-green" style={{ width: `${telemetry.dataHealth}%` }} /></div>
-            <div className="text-[9.5px] leading-relaxed text-muted-foreground/75">Simulation mode · no field command will be executed.</div>
+            <Link to="/data-health" className="flex items-center gap-2 text-[11px] text-muted-foreground hover:text-foreground"><Database className="size-3.5" />Data health<span className="tabular text-foreground ml-auto">{telemetry.dataHealth.toFixed(1)}%</span></Link>
+            <div className="h-1 rounded-full bg-sidebar-accent overflow-hidden"><div className={telemetry.meterQuality === "GOOD" ? "h-full bg-green" : "h-full bg-amber"} style={{ width: `${telemetry.dataHealth}%` }} /></div>
+            <div className="text-[9.5px] leading-relaxed text-muted-foreground/75">{telemetry.meterQuality} · {telemetry.intervalCompletenessPct.toFixed(1)}% complete · simulation only</div>
           </>
         )}
       </div>
@@ -312,7 +336,7 @@ export function AppShell({
 
           <div className="relative order-last lg:order-none w-full lg:flex-1 lg:max-w-md lg:ml-1">
             <Search className="size-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
-            <input value={search} onChange={(event: ChangeEvent<HTMLInputElement>) => setSearch(event.target.value)} placeholder="Search site, action, saving, demand, feeder, alarm…" className="w-full h-8 pl-8 pr-3 rounded-md bg-surface-2 border border-border text-[11.5px] placeholder:text-muted-foreground/70 focus:outline-none focus:border-primary/50" aria-label="Search demo assets" />
+            <input value={search} onChange={(event: ChangeEvent<HTMLInputElement>) => setSearch(event.target.value)} placeholder="Search site, meter, issue, action, invoice, feeder…" className="w-full h-8 pl-8 pr-3 rounded-md bg-surface-2 border border-border text-[11.5px] placeholder:text-muted-foreground/70 focus:outline-none focus:border-primary/50" aria-label="Search demo assets" />
             {normalizedSearch.length >= 2 && (
               <div className="absolute left-0 right-0 top-9 rounded-md border border-border-strong bg-surface overflow-hidden z-50 shadow-lg">
                 {searchResults.length > 0 ? searchResults.map((result) => (
@@ -328,7 +352,7 @@ export function AppShell({
             <button type="button" onClick={startGuide} className="hidden xl:flex h-8 items-center gap-1.5 rounded-md border border-primary/25 bg-primary/8 px-2.5 text-[10.5px] font-medium text-primary hover:bg-primary/12"><PlayCircle className="size-3.5" /> Guided demo</button>
             <div className="hidden 2xl:flex items-center gap-1.5 px-2 text-[10px] text-muted-foreground tabular" title={lastUpdated.toLocaleString()}><Play className={`size-3 ${running ? "text-green" : "text-amber"}`} />{lastUpdated.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })}</div>
             <Link to="/alarms" className="relative size-8 rounded-md hover:bg-surface-2 flex items-center justify-center" aria-label="Open alarms"><Bell className="size-4 text-muted-foreground" />{kpis.criticalAlarms > 0 && <span className="absolute top-1.5 right-1.5 size-1.5 rounded-full bg-red" />}</Link>
-            <div className="size-8 rounded-md flex items-center justify-center" title={`Data health ${telemetry.dataHealth.toFixed(1)}%`}><ShieldCheck className="size-4 text-green" /></div>
+            <Link to="/data-health" className="size-8 rounded-md flex items-center justify-center hover:bg-surface-2" title={`Data health ${telemetry.dataHealth.toFixed(1)}%`}><ShieldCheck className={`size-4 ${telemetry.meterQuality === "GOOD" ? "text-green" : "text-amber"}`} /></Link>
             <div className="hidden sm:block h-4 w-px bg-border mx-1" />
             <div className="hidden sm:flex items-center gap-2 h-8 px-2 text-[11.5px]"><div className="size-6 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center"><User className="size-3.5 text-primary" /></div><span className="text-muted-foreground">Energy Manager</span></div>
           </div>
