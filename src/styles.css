@@ -3,15 +3,14 @@
 @custom-variant dark (&:is(.dark *));
 
 /*
- * ArGrid Energy Management — Design System
- * Operations Dark theme (default). Premium industrial command center.
- * Deep graphite background, fine cool-gray borders, restrained cyan accent,
- * amber/orange/red for abnormal states.
+ * ArGrid Energy Management — dual workspace design system.
+ * Management uses a warm, precise enterprise surface. Operations remains a
+ * deep graphite command-center environment. Abnormal colors stay semantic.
  */
 
 @theme inline {
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
-  --font-display: "Space Grotesk", "Inter", sans-serif;
+  --font-display: "Space Grotesk", "Inter", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, monospace;
 
   --radius-sm: 4px;
@@ -64,40 +63,34 @@
   --color-sidebar-ring: var(--sidebar-ring);
 }
 
-:root {
+:root,
+.workspace-operations {
   --radius: 8px;
 
-  /* Operations Dark */
   --background: oklch(0.18 0.008 240);
   --foreground: oklch(0.95 0.005 240);
   --surface: oklch(0.21 0.008 240);
   --surface-2: oklch(0.235 0.009 240);
   --surface-3: oklch(0.27 0.01 240);
-
   --card: oklch(0.21 0.008 240);
   --card-foreground: oklch(0.95 0.005 240);
   --popover: oklch(0.235 0.009 240);
   --popover-foreground: oklch(0.95 0.005 240);
-
   --primary: oklch(0.78 0.14 200);
   --primary-foreground: oklch(0.15 0.01 240);
-
   --secondary: oklch(0.27 0.01 240);
   --secondary-foreground: oklch(0.92 0.005 240);
   --muted: oklch(0.25 0.008 240);
-  --muted-foreground: oklch(0.63 0.015 240);
+  --muted-foreground: oklch(0.66 0.014 240);
   --accent: oklch(0.3 0.02 220);
   --accent-foreground: oklch(0.95 0.005 240);
-
   --destructive: oklch(0.62 0.22 25);
   --destructive-foreground: oklch(0.98 0.005 240);
-
   --border: oklch(0.3 0.008 240);
   --border-strong: oklch(0.38 0.01 240);
   --input: oklch(0.3 0.008 240);
   --ring: oklch(0.78 0.14 200);
 
-  /* Signal colors */
   --cyan: oklch(0.78 0.14 200);
   --amber: oklch(0.82 0.16 85);
   --orange: oklch(0.72 0.19 55);
@@ -121,20 +114,92 @@
   --sidebar-ring: oklch(0.78 0.14 200);
 }
 
+.workspace-management {
+  --background: oklch(0.965 0.004 90);
+  --foreground: oklch(0.245 0.012 245);
+  --surface: oklch(0.995 0.002 90);
+  --surface-2: oklch(0.972 0.005 230);
+  --surface-3: oklch(0.935 0.008 230);
+  --card: oklch(0.995 0.002 90);
+  --card-foreground: oklch(0.245 0.012 245);
+  --popover: oklch(0.995 0.002 90);
+  --popover-foreground: oklch(0.245 0.012 245);
+  --primary: oklch(0.56 0.135 216);
+  --primary-foreground: oklch(0.99 0.002 230);
+  --secondary: oklch(0.94 0.008 230);
+  --secondary-foreground: oklch(0.3 0.014 245);
+  --muted: oklch(0.95 0.005 230);
+  --muted-foreground: oklch(0.5 0.018 245);
+  --accent: oklch(0.93 0.025 215);
+  --accent-foreground: oklch(0.28 0.025 230);
+  --destructive: oklch(0.58 0.21 25);
+  --destructive-foreground: oklch(0.99 0.002 230);
+  --border: oklch(0.875 0.009 235);
+  --border-strong: oklch(0.78 0.014 235);
+  --input: oklch(0.875 0.009 235);
+  --ring: oklch(0.56 0.135 216);
+
+  --cyan: oklch(0.56 0.135 216);
+  --amber: oklch(0.67 0.15 78);
+  --orange: oklch(0.62 0.18 52);
+  --red: oklch(0.58 0.21 25);
+  --green: oklch(0.52 0.135 155);
+  --violet: oklch(0.55 0.13 290);
+
+  --chart-1: oklch(0.56 0.135 216);
+  --chart-2: oklch(0.52 0.135 155);
+  --chart-3: oklch(0.67 0.15 78);
+  --chart-4: oklch(0.62 0.18 52);
+  --chart-5: oklch(0.55 0.13 290);
+
+  /* Navigation intentionally remains a calm dark anchor in management mode. */
+  --sidebar: oklch(0.19 0.012 245);
+  --sidebar-foreground: oklch(0.93 0.005 240);
+  --sidebar-primary: oklch(0.72 0.13 205);
+  --sidebar-primary-foreground: oklch(0.15 0.01 240);
+  --sidebar-accent: oklch(0.25 0.015 245);
+  --sidebar-accent-foreground: oklch(0.97 0.004 240);
+  --sidebar-border: oklch(0.28 0.012 245);
+  --sidebar-ring: oklch(0.72 0.13 205);
+}
+
 @layer base {
   * {
     border-color: var(--color-border);
   }
-  html, body {
+
+  html,
+  body,
+  #root {
+    min-height: 100%;
+  }
+
+  body {
+    margin: 0;
     background-color: var(--color-background);
     color: var(--color-foreground);
     font-family: var(--font-sans);
     font-feature-settings: "cv02", "cv03", "cv04", "cv11", "ss01";
     -webkit-font-smoothing: antialiased;
   }
+
   .tabular {
     font-variant-numeric: tabular-nums;
     font-feature-settings: "tnum";
+  }
+
+  button,
+  a,
+  select {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  table {
+    min-width: 680px;
+  }
+
+  ::selection {
+    background: color-mix(in oklab, var(--color-primary) 28%, transparent);
   }
 }
 
@@ -158,24 +223,23 @@
   background-position: -1px -1px;
 }
 
-@layer base {
-  button,
-  a,
-  select {
-    -webkit-tap-highlight-color: transparent;
-  }
-
-  table {
-    min-width: 680px;
-  }
-
-  ::selection {
-    background: color-mix(in oklab, var(--color-primary) 35%, transparent);
-  }
+.workspace-management .panel {
+  box-shadow: 0 1px 2px color-mix(in oklab, var(--color-foreground) 5%, transparent);
 }
 
 @media (max-width: 640px) {
   .panel {
     border-radius: 6px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
 }
