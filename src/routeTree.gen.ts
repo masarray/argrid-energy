@@ -18,6 +18,7 @@ import { Route as DemandRouteImport } from './routes/demand'
 import { Route as DataHealthRouteImport } from './routes/data-health'
 import { Route as BillingRouteImport } from './routes/billing'
 import { Route as AnalyticsRouteImport } from './routes/analytics'
+import { Route as AlarmsPowerQualityRouteImport } from './routes/alarms.power-quality'
 import { Route as AlarmsRouteImport } from './routes/alarms'
 import { Route as IndexRouteImport } from './routes/index'
 
@@ -66,6 +67,11 @@ const AnalyticsRoute = AnalyticsRouteImport.update({
   path: '/analytics',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AlarmsPowerQualityRoute = AlarmsPowerQualityRouteImport.update({
+  id: '/alarms/power-quality',
+  path: '/alarms/power-quality',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AlarmsRoute = AlarmsRouteImport.update({
   id: '/alarms',
   path: '/alarms',
@@ -80,6 +86,7 @@ const IndexRoute = IndexRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/alarms': typeof AlarmsRoute
+  '/alarms/power-quality': typeof AlarmsPowerQualityRoute
   '/analytics': typeof AnalyticsRoute
   '/billing': typeof BillingRoute
   '/data-health': typeof DataHealthRoute
@@ -93,6 +100,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/alarms': typeof AlarmsRoute
+  '/alarms/power-quality': typeof AlarmsPowerQualityRoute
   '/analytics': typeof AnalyticsRoute
   '/billing': typeof BillingRoute
   '/data-health': typeof DataHealthRoute
@@ -107,6 +115,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/alarms': typeof AlarmsRoute
+  '/alarms/power-quality': typeof AlarmsPowerQualityRoute
   '/analytics': typeof AnalyticsRoute
   '/billing': typeof BillingRoute
   '/data-health': typeof DataHealthRoute
@@ -122,6 +131,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/alarms'
+    | '/alarms/power-quality'
     | '/analytics'
     | '/billing'
     | '/data-health'
@@ -135,6 +145,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/alarms'
+    | '/alarms/power-quality'
     | '/analytics'
     | '/billing'
     | '/data-health'
@@ -148,6 +159,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/alarms'
+    | '/alarms/power-quality'
     | '/analytics'
     | '/billing'
     | '/data-health'
@@ -162,6 +174,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AlarmsRoute: typeof AlarmsRoute
+  AlarmsPowerQualityRoute: typeof AlarmsPowerQualityRoute
   AnalyticsRoute: typeof AnalyticsRoute
   BillingRoute: typeof BillingRoute
   DataHealthRoute: typeof DataHealthRoute
@@ -238,6 +251,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AnalyticsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/alarms/power-quality': {
+      id: '/alarms/power-quality'
+      path: '/alarms/power-quality'
+      fullPath: '/alarms/power-quality'
+      preLoaderRoute: typeof AlarmsPowerQualityRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/alarms': {
       id: '/alarms'
       path: '/alarms'
@@ -258,6 +278,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AlarmsRoute: AlarmsRoute,
+  AlarmsPowerQualityRoute: AlarmsPowerQualityRoute,
   AnalyticsRoute: AnalyticsRoute,
   BillingRoute: BillingRoute,
   DataHealthRoute: DataHealthRoute,
