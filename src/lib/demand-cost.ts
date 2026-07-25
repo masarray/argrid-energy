@@ -80,14 +80,14 @@ export function buildDemandContributors({
     .map(({ feeder, weightedKW }) => {
       const currentKW = weightedKW * normalization;
       const constraint = contributorConstraint(feeder.id);
-      const scenarioStatus =
+      const scenarioStatus: DemandContributor["status"] =
         scenarioId === "peak-demand" && (feeder.id === "F-04" || feeder.id === "F-05")
           ? "warning"
           : scenarioId === "voltage-sag" && feeder.id === "F-07"
             ? "critical"
-            : feeder.status === "critical"
+            : feeder.status === "warning" || feeder.status === "critical"
               ? "warning"
-              : feeder.status;
+              : "normal";
 
       return {
         id: feeder.id,
