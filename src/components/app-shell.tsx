@@ -7,6 +7,7 @@ import {
   ChevronRight,
   ClipboardCheck,
   Database,
+  FileText,
   Gauge,
   LayoutDashboard,
   Leaf,
@@ -47,6 +48,7 @@ type AppPath =
   | "/data-health"
   | "/alarms"
   | "/alarms/power-quality"
+  | "/reports"
   | "/billing"
   | "/sustainability";
 
@@ -77,6 +79,7 @@ const navGroups: NavGroup[] = [
   {
     label: "Commercial & ESG",
     items: [
+      { to: "/reports", label: "Report Center", icon: FileText },
       { to: "/billing", label: "Billing", icon: Receipt },
       { to: "/sustainability", label: "Sustainability", icon: Leaf },
     ],
@@ -114,11 +117,17 @@ const searchableAssets: SearchableAsset[] = [
   { label: "PM-PQ-07", detail: "Source PQ meter · F-07 Utility & Aux", to: "/alarms/power-quality", context: primaryIncidentContext },
   { label: "MCC-AUX-07", detail: "Probable downstream origin · equipment response linked", to: "/alarms/power-quality", context: primaryIncidentContext },
   { label: "AGR-PQ-2026-1042", detail: "Engineering report document control and evidence register", to: "/alarms/power-quality", context: primaryIncidentContext },
+  { label: "Report Center", detail: "Governed executive, carbon, billing, PQ, savings, and data-quality reports", to: "/reports" },
+  { label: "RPT-EXEC-2026-07", detail: "Executive Energy & Carbon Performance report", to: "/reports" },
+  { label: "RPT-CARBON-2026-Q2", detail: "Quarterly Scope 1 and Scope 2 inventory", to: "/reports" },
+  { label: "Scope 2 location-based", detail: "Regional-grid-factor carbon inventory", to: "/sustainability" },
+  { label: "Scope 2 market-based", detail: "Supplier mix and renewable-attribute inventory", to: "/sustainability" },
+  { label: "EAC-ID-2026-0148", detail: "Renewable-attribute allocation and evidence", to: "/sustainability" },
+  { label: "Emission factor registry", detail: "Factor version, source, effective period, and quality", to: "/sustainability" },
   { label: "AHU-HL-03", detail: "Night setback opportunity", to: "/opportunities" },
   { label: "COMP-04", detail: "Compressed air loss", to: "/opportunities" },
   { label: "ALM-8821", detail: "Critical voltage sag member alarm", to: "/alarms", context: primaryIncidentContext },
   { label: "Tenant E", detail: "Overdue energy invoice", to: "/billing" },
-  { label: "Scope 2 emissions", detail: "Sustainability performance", to: "/sustainability" },
 ];
 
 const workspaceOptions: Array<{ id: string; label: string; to: AppPath }> = [
@@ -178,7 +187,19 @@ const guidedSteps: GuidedStep[] = [
     scenario: "billing-exception",
   },
   {
-    title: "9 · Close commercial value",
+    title: "9 · Assure sustainability results",
+    body: "Separate location-based and market-based Scope 2, inspect factor versions, reconcile renewable attributes, and review assurance gates.",
+    to: "/sustainability",
+    scenario: "normal",
+  },
+  {
+    title: "10 · Govern the executive report",
+    body: "Review report sources, coverage, blocking issues, owner, reviewer, approval gate, publication state, and printable evidence.",
+    to: "/reports",
+    scenario: "normal",
+  },
+  {
+    title: "11 · Close commercial value",
     body: "Conclude with tariff trace, invoice assurance, collection status, and management-ready commercial evidence.",
     to: "/billing",
     scenario: "billing-exception",
