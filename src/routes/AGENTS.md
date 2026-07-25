@@ -9,6 +9,7 @@ These rules apply to route-level pages under `src/routes/`.
 - Above-the-fold content should be understandable in roughly ten seconds without relying on oversized cards.
 - Prefer one high-value contextual insight over generic greetings or decorative banners.
 - Maintain direct navigation between business impact, electrical root cause, opportunity, action, verification, billing, and reporting.
+- Management workspaces should combine graphical summaries with traceable detail instead of becoming either chart walls or spreadsheet-only pages.
 
 ## Overview
 
@@ -40,8 +41,19 @@ Show current demand, projected interval demand, contract limit, remaining margin
 - Power-quality evidence should correlate waveform/RMS context, electrical location, related meters, equipment response, operational impact, and probable origin.
 - Red is reserved for critical/trip conditions. Avoid alarm fatigue through grouping, acknowledgement, and disciplined priority semantics.
 
-## Billing and data health
+## Billing and invoicing
 
-- Billing values must have an auditable trace from invoice line → tariff rule → interval → meter reading → source measurement.
-- Distinguish missing, estimated, substituted, reset, rollover, duplicate, and abnormal data.
-- Data quality is part of the decision, not a footer decoration.
+- The main view should expose billed value, collected value, outstanding and overdue balance, billing readiness, charge composition, and data-quality exceptions.
+- Billing values must have an auditable trace from invoice total → line item → tariff rule → time band or demand rule → meter reading → source measurement.
+- Distinguish draft, review required, approved, issued, partially paid, paid, and overdue states.
+- Do not count draft or blocked calculations as issued receivables.
+- Invoice detail should include period, issue date, due date, tenant, meter, tariff version, opening and closing readings, multiplier, time-of-use quantities, billing demand, power factor, reactive penalty, fixed charges, tax, prior balance, payment allocation, and outstanding balance where applicable.
+- Approval is blocked by unresolved critical exceptions or inadequate completeness.
+- Distinguish missing, estimated, substituted, reset, rollover, duplicate, tariff mismatch, and abnormal data.
+- Data quality is part of the billing decision, not a footer decoration.
+- Any approve, issue, or payment control in the open-source demo must clearly state that it does not post to ERP, send a legal invoice, or move money.
+
+## Data health
+
+- Show freshness, completeness, estimated/substituted intervals, time synchronization, meter identity, and source provenance.
+- Allow users to move from a data-quality issue to the affected financial or engineering calculation.
