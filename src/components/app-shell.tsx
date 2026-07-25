@@ -33,6 +33,7 @@ import {
   useDemoSimulation,
   type DemoScenarioId,
 } from "@/lib/demo-simulation";
+import { storeIncidentContext, type IncidentContext } from "@/lib/incident-context";
 import logoMark from "@/assets/argrid-logo.png";
 
 type AppPath =
@@ -45,11 +46,14 @@ type AppPath =
   | "/savings"
   | "/data-health"
   | "/alarms"
+  | "/alarms/power-quality"
   | "/billing"
   | "/sustainability";
 
 type NavItem = { to: AppPath; label: string; icon: typeof LayoutDashboard };
 type NavGroup = { label: string; items: NavItem[] };
+type SearchableAsset = { label: string; detail: string; to: AppPath; context?: IncidentContext };
+type GuidedStep = { title: string; body: string; to: AppPath; scenario: DemoScenarioId; context?: IncidentContext };
 
 const navGroups: NavGroup[] = [
   {
@@ -83,7 +87,13 @@ const navGroups: NavGroup[] = [
   },
 ];
 
-const searchableAssets: Array<{ label: string; detail: string; to: AppPath }> = [
+const primaryIncidentContext: IncidentContext = {
+  eventId: "PQ-260715-143217",
+  feederId: "F-07",
+  incidentGroupId: "INC-PQ-1042",
+};
+
+const searchableAssets: SearchableAsset[] = [
   { label: "Enterprise Portfolio", detail: "Multi-site performance and opportunity ranking", to: "/portfolio" },
   { label: "Performance Constellation", detail: "Intensity, budget variance, and opportunity benchmark", to: "/portfolio" },
   { label: "Cikarang Manufacturing Complex", detail: "Enterprise site · West Java", to: "/" },
@@ -98,10 +108,15 @@ const searchableAssets: Array<{ label: string; detail: string; to: AppPath }> = 
   { label: "Measurement provenance", detail: "Source-to-decision calculation lineage", to: "/data-health" },
   { label: "MSB-Main", detail: "20 kV incomer · electrical network", to: "/electrical" },
   { label: "Transformer TR-01", detail: "6 MVA · 84% loading", to: "/electrical" },
-  { label: "Feeder F-07", detail: "Utility & Aux · voltage sag", to: "/electrical" },
+  { label: "Feeder F-07", detail: "Utility & Aux · voltage sag and event evidence", to: "/electrical", context: primaryIncidentContext },
+  { label: "PQ-260715-143217", detail: "82.0% Un · 240 ms · synchronized PQ evidence", to: "/alarms/power-quality", context: primaryIncidentContext },
+  { label: "INC-PQ-1042", detail: "Grouped voltage-sag incident · formal investigation package", to: "/alarms", context: primaryIncidentContext },
+  { label: "PM-PQ-07", detail: "Source PQ meter · F-07 Utility & Aux", to: "/alarms/power-quality", context: primaryIncidentContext },
+  { label: "MCC-AUX-07", detail: "Probable downstream origin · equipment response linked", to: "/alarms/power-quality", context: primaryIncidentContext },
+  { label: "AGR-PQ-2026-1042", detail: "Engineering report document control and evidence register", to: "/alarms/power-quality", context: primaryIncidentContext },
   { label: "AHU-HL-03", detail: "Night setback opportunity", to: "/opportunities" },
   { label: "COMP-04", detail: "Compressed air loss", to: "/opportunities" },
-  { label: "ALM-8821", detail: "Critical voltage sag event", to: "/alarms" },
+  { label: "ALM-8821", detail: "Critical voltage sag member alarm", to: "/alarms", context: primaryIncidentContext },
   { label: "Tenant E", detail: "Overdue energy invoice", to: "/billing" },
   { label: "Scope 2 emissions", detail: "Sustainability performance", to: "/sustainability" },
 ];
@@ -112,7 +127,7 @@ const workspaceOptions: Array<{ id: string; label: string; to: AppPath }> = [
   { id: "finance", label: "Finance", to: "/billing" },
 ];
 
-const guidedSteps: Array<{ title: string; body: string; to: AppPath; scenario: DemoScenarioId }> = [
+const guidedSteps: GuidedStep[] = [
   {
     title: "1 · Portfolio confidence",
     body: "Rank sites by normalized intensity, budget variance, demand exposure, opportunity, savings, and data confidence.",
@@ -150,13 +165,20 @@ const guidedSteps: Array<{ title: string; body: string; to: AppPath; scenario: D
     scenario: "efficiency-loss",
   },
   {
-    title: "7 · Validate decision data",
+    title: "7 · Investigate a PQ incident",
+    body: "Replay the voltage sag, compare synchronized meters, inspect equipment response, and export the governed engineering report.",
+    to: "/alarms/power-quality",
+    scenario: "voltage-sag",
+    context: primaryIncidentContext,
+  },
+  {
+    title: "8 · Validate decision data",
     body: "Trace a billing exception from missing interval to meter, gateway, historian, calculation, and approval consequence.",
     to: "/data-health",
     scenario: "billing-exception",
   },
   {
-    title: "8 · Close commercial value",
+    title: "9 · Close commercial value",
     body: "Conclude with tariff trace, invoice assurance, collection status, and management-ready commercial evidence.",
     to: "/billing",
     scenario: "billing-exception",
@@ -209,19 +231,23 @@ export function AppShell({
     [normalizedSearch],
   );
 
+  const applyGuidedStep = (step: GuidedStep) => {
+    setScenarioId(step.scenario);
+    if (step.context) storeIncidentContext(step.context);
+    void navigate({ to: step.to });
+  };
+
   const startGuide = () => {
     setGuideStep(0);
     setGuideOpen(true);
-    setScenarioId(guidedSteps[0].scenario);
-    void navigate({ to: guidedSteps[0].to });
+    applyGuidedStep(guidedSteps[0]);
   };
 
   const moveGuide = (nextIndex: number) => {
     const boundedIndex = Math.max(0, Math.min(guidedSteps.length - 1, nextIndex));
     const nextStep = guidedSteps[boundedIndex];
     setGuideStep(boundedIndex);
-    setScenarioId(nextStep.scenario);
-    void navigate({ to: nextStep.to });
+    applyGuidedStep(nextStep);
   };
 
   const renderSidebar = (collapsed: boolean) => (
@@ -336,11 +362,11 @@ export function AppShell({
 
           <div className="relative order-last lg:order-none w-full lg:flex-1 lg:max-w-md lg:ml-1">
             <Search className="size-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
-            <input value={search} onChange={(event: ChangeEvent<HTMLInputElement>) => setSearch(event.target.value)} placeholder="Search site, meter, issue, action, invoice, feeder…" className="w-full h-8 pl-8 pr-3 rounded-md bg-surface-2 border border-border text-[11.5px] placeholder:text-muted-foreground/70 focus:outline-none focus:border-primary/50" aria-label="Search demo assets" />
+            <input value={search} onChange={(event: ChangeEvent<HTMLInputElement>) => setSearch(event.target.value)} placeholder="Search site, meter, incident, event, report, invoice…" className="w-full h-8 pl-8 pr-3 rounded-md bg-surface-2 border border-border text-[11.5px] placeholder:text-muted-foreground/70 focus:outline-none focus:border-primary/50" aria-label="Search demo assets" />
             {normalizedSearch.length >= 2 && (
               <div className="absolute left-0 right-0 top-9 rounded-md border border-border-strong bg-surface overflow-hidden z-50 shadow-lg">
                 {searchResults.length > 0 ? searchResults.map((result) => (
-                  <Link key={`${result.to}-${result.label}`} to={result.to} onClick={() => setSearch("")} className="flex items-center gap-3 px-3 py-2 text-[11.5px] hover:bg-surface-2 border-b border-border last:border-b-0">
+                  <Link key={`${result.to}-${result.label}`} to={result.to} onClick={() => { if (result.context) storeIncidentContext(result.context); setSearch(""); }} className="flex items-center gap-3 px-3 py-2 text-[11.5px] hover:bg-surface-2 border-b border-border last:border-b-0">
                     <Search className="size-3.5 text-muted-foreground" /><span className="min-w-0 flex-1"><span className="block font-medium">{result.label}</span><span className="block text-[10px] text-muted-foreground truncate">{result.detail}</span></span><ChevronRight className="size-3.5 text-muted-foreground" />
                   </Link>
                 )) : <div className="px-3 py-3 text-[11px] text-muted-foreground">No matching demo asset.</div>}
