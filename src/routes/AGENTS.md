@@ -8,7 +8,7 @@ These rules apply to route-level pages under `src/routes/`.
 - A route should answer one primary user question and expose a clear next action.
 - Above-the-fold content should be understandable in roughly ten seconds without relying on oversized cards.
 - Prefer one high-value contextual insight over generic greetings or decorative banners.
-- Maintain direct navigation between portfolio, business impact, electrical root cause, opportunity, action, verification, data confidence, billing, and reporting.
+- Maintain direct navigation between portfolio, business impact, electrical root cause, opportunity, action, verification, data confidence, sustainability, billing, and reporting.
 - Management workspaces should combine graphical summaries with traceable detail instead of becoming either chart walls or spreadsheet-only pages.
 
 ## Portfolio
@@ -64,6 +64,25 @@ Show current demand, projected interval demand, contract limit, remaining margin
 - Red is reserved for critical/trip conditions. Avoid alarm fatigue through grouping, acknowledgement, disciplined priority semantics, and one clear next action.
 - Any workflow action remains simulation-only and must not change protection settings, operate switchgear, or write to field devices.
 
+## Sustainability and carbon accounting
+
+- Keep Scope 1, Scope 2 location-based, and Scope 2 market-based results distinct. Never replace physical electricity consumption with renewable-attribute allocation.
+- Every carbon value must retain reporting boundary, activity data, factor ID, factor value, unit, source, version, effective period, quality state, and reporting method.
+- Keep physical energy reduction, verified energy saving, avoided emissions, renewable generation, contractual renewable attributes, and carbon inventory results as separate concepts.
+- Renewable instruments require unique identity, type, vintage, geography, volume, allocation, remaining balance, evidence, and retirement/review state.
+- Forecasts and target trajectories must state whether values are actual, estimated, scenario-based, or forecast.
+- Carbon reporting confidence must inherit activity-data completeness, estimated coverage, factor applicability, and unresolved data-quality exceptions.
+- Do not describe the open-source demo as an externally assured inventory, statutory filing, certificate-retirement registry, supplier attestation, or regulatory submission.
+
+## Report center
+
+- A governed report definition requires report ID, title, category, audience, period, frequency, accountable owner, independent reviewer, status, source systems, completeness, blocking issues, sections, generation history, and next-run context.
+- Keep `Draft → Review required → Approved → Published` explicit. Report generation is not approval, and approval is not external publication.
+- Approval and publication must be blocked by inadequate source completeness, unresolved blocking issues, missing ownership/reviewer assignment, or failed domain assurance gates.
+- Report sections and exported visuals must use the same domain source as their source workspaces; do not create separate hard-coded executive numbers.
+- Direct users from a report to the relevant energy, carbon, billing, PQ, savings, or data-quality workspace for evidence inspection.
+- Browser-local schedules and publication states are demonstrations only. They must not imply background delivery, email distribution, regulatory filing, customer publication, or document-management integration.
+
 ## Billing and invoicing
 
 - The main view should expose billed value, collected value, outstanding and overdue balance, billing readiness, charge composition, and data-quality exceptions.
@@ -80,8 +99,8 @@ Show current demand, projected interval demand, contract limit, remaining margin
 
 - Show meter identity, role, source path, quality state, completeness, estimated coverage, freshness, time synchronization, calibration, ownership, and affected calculations.
 - Support visible issue types including missing, estimated, substituted, reset, rollover, duplicate, stale, time drift, and abnormal values.
-- A blocking issue must explain which invoice, KPI, M&V result, opportunity, or operational decision is blocked.
+- A blocking issue must explain which invoice, KPI, M&V result, opportunity, carbon inventory, report, or operational decision is blocked.
 - Keep original data, corrected data, method, reason, actor, approval, timestamp, and recalculation impact conceptually distinct.
-- Provenance should show source device → field transport → gateway → historian/aggregation → calculation/model/tariff → user decision.
-- Allow users to move from a data-quality issue to the affected financial or engineering calculation.
+- Provenance should show source device → field transport → gateway → historian/aggregation → calculation/model/tariff/factor → user decision or report.
+- Allow users to move from a data-quality issue to the affected financial, carbon, or engineering calculation.
 - Data-health thresholds shown in the demo are explicit product configuration, not universal regulatory requirements.
