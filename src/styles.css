@@ -3,9 +3,10 @@
 @custom-variant dark (&:is(.dark *));
 
 /*
- * ArGrid Energy Management — dual workspace design system.
- * Management uses a warm, precise enterprise surface. Operations remains a
- * deep graphite command-center environment. Abnormal colors stay semantic.
+ * ArGrid industrial design system.
+ * Management surfaces are light, restrained, and information-led.
+ * Operations surfaces remain graphite for one-line, event, and PQ work.
+ * Semantic colors are reserved for state and consequence.
  */
 
 @theme inline {
@@ -65,107 +66,105 @@
 
 :root,
 .workspace-operations {
-  --radius: 8px;
-
-  --background: oklch(0.18 0.008 240);
+  --background: oklch(0.17 0.008 240);
   --foreground: oklch(0.95 0.005 240);
-  --surface: oklch(0.21 0.008 240);
+  --surface: oklch(0.205 0.008 240);
   --surface-2: oklch(0.235 0.009 240);
-  --surface-3: oklch(0.27 0.01 240);
-  --card: oklch(0.21 0.008 240);
+  --surface-3: oklch(0.275 0.01 240);
+  --card: oklch(0.205 0.008 240);
   --card-foreground: oklch(0.95 0.005 240);
   --popover: oklch(0.235 0.009 240);
   --popover-foreground: oklch(0.95 0.005 240);
-  --primary: oklch(0.78 0.14 200);
+  --primary: oklch(0.76 0.135 207);
   --primary-foreground: oklch(0.15 0.01 240);
   --secondary: oklch(0.27 0.01 240);
   --secondary-foreground: oklch(0.92 0.005 240);
   --muted: oklch(0.25 0.008 240);
-  --muted-foreground: oklch(0.66 0.014 240);
+  --muted-foreground: oklch(0.68 0.014 240);
   --accent: oklch(0.3 0.02 220);
   --accent-foreground: oklch(0.95 0.005 240);
   --destructive: oklch(0.62 0.22 25);
   --destructive-foreground: oklch(0.98 0.005 240);
   --border: oklch(0.3 0.008 240);
-  --border-strong: oklch(0.38 0.01 240);
+  --border-strong: oklch(0.39 0.01 240);
   --input: oklch(0.3 0.008 240);
-  --ring: oklch(0.78 0.14 200);
+  --ring: oklch(0.76 0.135 207);
 
-  --cyan: oklch(0.78 0.14 200);
+  --cyan: oklch(0.76 0.135 207);
   --amber: oklch(0.82 0.16 85);
   --orange: oklch(0.72 0.19 55);
   --red: oklch(0.65 0.24 25);
   --green: oklch(0.72 0.16 155);
   --violet: oklch(0.7 0.15 290);
 
-  --chart-1: oklch(0.78 0.14 200);
+  --chart-1: oklch(0.76 0.135 207);
   --chart-2: oklch(0.72 0.16 155);
   --chart-3: oklch(0.82 0.16 85);
   --chart-4: oklch(0.72 0.19 55);
   --chart-5: oklch(0.7 0.15 290);
 
-  --sidebar: oklch(0.16 0.008 240);
+  --sidebar: oklch(0.15 0.008 240);
   --sidebar-foreground: oklch(0.9 0.005 240);
-  --sidebar-primary: oklch(0.78 0.14 200);
+  --sidebar-primary: oklch(0.76 0.135 207);
   --sidebar-primary-foreground: oklch(0.15 0.01 240);
-  --sidebar-accent: oklch(0.24 0.01 240);
+  --sidebar-accent: oklch(0.235 0.01 240);
   --sidebar-accent-foreground: oklch(0.95 0.005 240);
-  --sidebar-border: oklch(0.26 0.008 240);
-  --sidebar-ring: oklch(0.78 0.14 200);
+  --sidebar-border: oklch(0.255 0.008 240);
+  --sidebar-ring: oklch(0.76 0.135 207);
 }
 
 .workspace-management {
-  --background: oklch(0.965 0.004 90);
-  --foreground: oklch(0.245 0.012 245);
-  --surface: oklch(0.995 0.002 90);
-  --surface-2: oklch(0.972 0.005 230);
-  --surface-3: oklch(0.935 0.008 230);
-  --card: oklch(0.995 0.002 90);
-  --card-foreground: oklch(0.245 0.012 245);
-  --popover: oklch(0.995 0.002 90);
-  --popover-foreground: oklch(0.245 0.012 245);
-  --primary: oklch(0.56 0.135 216);
+  --background: oklch(0.968 0.004 235);
+  --foreground: oklch(0.245 0.018 245);
+  --surface: oklch(0.995 0.002 235);
+  --surface-2: oklch(0.975 0.005 235);
+  --surface-3: oklch(0.925 0.009 235);
+  --card: oklch(0.995 0.002 235);
+  --card-foreground: oklch(0.245 0.018 245);
+  --popover: oklch(0.995 0.002 235);
+  --popover-foreground: oklch(0.245 0.018 245);
+  --primary: oklch(0.54 0.13 216);
   --primary-foreground: oklch(0.99 0.002 230);
   --secondary: oklch(0.94 0.008 230);
   --secondary-foreground: oklch(0.3 0.014 245);
   --muted: oklch(0.95 0.005 230);
-  --muted-foreground: oklch(0.5 0.018 245);
+  --muted-foreground: oklch(0.46 0.018 245);
   --accent: oklch(0.93 0.025 215);
   --accent-foreground: oklch(0.28 0.025 230);
   --destructive: oklch(0.58 0.21 25);
   --destructive-foreground: oklch(0.99 0.002 230);
   --border: oklch(0.875 0.009 235);
-  --border-strong: oklch(0.78 0.014 235);
+  --border-strong: oklch(0.76 0.014 235);
   --input: oklch(0.875 0.009 235);
-  --ring: oklch(0.56 0.135 216);
+  --ring: oklch(0.54 0.13 216);
 
-  --cyan: oklch(0.56 0.135 216);
-  --amber: oklch(0.67 0.15 78);
-  --orange: oklch(0.62 0.18 52);
-  --red: oklch(0.58 0.21 25);
-  --green: oklch(0.52 0.135 155);
-  --violet: oklch(0.55 0.13 290);
+  --cyan: oklch(0.54 0.13 216);
+  --amber: oklch(0.65 0.145 78);
+  --orange: oklch(0.61 0.18 52);
+  --red: oklch(0.57 0.205 25);
+  --green: oklch(0.5 0.13 155);
+  --violet: oklch(0.54 0.125 290);
 
-  --chart-1: oklch(0.56 0.135 216);
-  --chart-2: oklch(0.52 0.135 155);
-  --chart-3: oklch(0.67 0.15 78);
-  --chart-4: oklch(0.62 0.18 52);
-  --chart-5: oklch(0.55 0.13 290);
+  --chart-1: oklch(0.54 0.13 216);
+  --chart-2: oklch(0.5 0.13 155);
+  --chart-3: oklch(0.65 0.145 78);
+  --chart-4: oklch(0.58 0.08 238);
+  --chart-5: oklch(0.54 0.125 290);
 
-  /* Navigation intentionally remains a calm dark anchor in management mode. */
-  --sidebar: oklch(0.19 0.012 245);
+  --sidebar: oklch(0.18 0.012 245);
   --sidebar-foreground: oklch(0.93 0.005 240);
   --sidebar-primary: oklch(0.72 0.13 205);
   --sidebar-primary-foreground: oklch(0.15 0.01 240);
-  --sidebar-accent: oklch(0.25 0.015 245);
+  --sidebar-accent: oklch(0.24 0.015 245);
   --sidebar-accent-foreground: oklch(0.97 0.004 240);
-  --sidebar-border: oklch(0.28 0.012 245);
+  --sidebar-border: oklch(0.27 0.012 245);
   --sidebar-ring: oklch(0.72 0.13 205);
 }
 
 @layer base {
   * {
     border-color: var(--color-border);
+    box-sizing: border-box;
   }
 
   html,
@@ -181,6 +180,7 @@
     font-family: var(--font-sans);
     font-feature-settings: "cv02", "cv03", "cv04", "cv11", "ss01";
     -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
   }
 
   .tabular {
@@ -190,8 +190,17 @@
 
   button,
   a,
-  select {
+  select,
+  input {
     -webkit-tap-highlight-color: transparent;
+  }
+
+  button:focus-visible,
+  a:focus-visible,
+  select:focus-visible,
+  input:focus-visible {
+    outline: 2px solid color-mix(in oklab, var(--color-ring) 70%, transparent);
+    outline-offset: 2px;
   }
 
   table {
@@ -199,7 +208,7 @@
   }
 
   ::selection {
-    background: color-mix(in oklab, var(--color-primary) 28%, transparent);
+    background: color-mix(in oklab, var(--color-primary) 24%, transparent);
   }
 }
 
@@ -223,13 +232,101 @@
   background-position: -1px -1px;
 }
 
+/* Explicit scoped declarations prevent the custom utility from resolving to
+ * the root operations palette in management builds. */
 .workspace-management .panel {
-  box-shadow: 0 1px 2px color-mix(in oklab, var(--color-foreground) 5%, transparent);
+  background: var(--surface) !important;
+  color: var(--foreground) !important;
+  border-color: var(--border) !important;
+  box-shadow:
+    0 1px 2px color-mix(in oklab, var(--foreground) 5%, transparent),
+    0 8px 24px color-mix(in oklab, var(--foreground) 2.5%, transparent);
+}
+
+.workspace-management .panel-header {
+  background: color-mix(in oklab, var(--surface) 94%, var(--surface-2));
+}
+
+.workspace-operations .panel {
+  background: var(--surface) !important;
+  color: var(--foreground) !important;
+  border-color: var(--border) !important;
+  box-shadow: none;
+}
+
+.kpi-tile {
+  position: relative;
+  overflow: hidden;
+  min-width: 0;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background: var(--color-surface);
+  padding: 13px 14px 12px;
+}
+
+.workspace-management .kpi-tile {
+  background: var(--surface) !important;
+  color: var(--foreground) !important;
+  border-color: var(--border) !important;
+  box-shadow: 0 1px 2px color-mix(in oklab, var(--foreground) 4%, transparent);
+}
+
+.workspace-operations .kpi-tile {
+  background: var(--surface) !important;
+  color: var(--foreground) !important;
+}
+
+.kpi-tile::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 2px;
+  background: transparent;
+}
+
+.kpi-state-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 999px;
+  background: var(--color-border-strong);
+}
+
+.kpi-warning::before,
+.kpi-warning .kpi-state-dot {
+  background: var(--color-amber);
+}
+
+.kpi-critical::before,
+.kpi-critical .kpi-state-dot {
+  background: var(--color-red);
+}
+
+.kpi-good::before,
+.kpi-good .kpi-state-dot {
+  background: var(--color-green);
+}
+
+.workspace-management main {
+  background:
+    linear-gradient(180deg, color-mix(in oklab, var(--background) 96%, white) 0%, var(--background) 180px);
+}
+
+.workspace-management .recharts-cartesian-grid line {
+  stroke-opacity: 0.72;
+}
+
+.workspace-management .recharts-text {
+  fill: var(--muted-foreground);
 }
 
 @media (max-width: 640px) {
-  .panel {
+  .panel,
+  .kpi-tile {
     border-radius: 6px;
+  }
+
+  table {
+    min-width: 620px;
   }
 }
 
