@@ -37,6 +37,8 @@ import {
   groupIncidentAlarms,
   type EventSeverity,
   type IncidentAlarm,
+  type InvestigationStatus,
+  type PowerQualityEvent,
 } from "@/lib/power-quality";
 
 export const Route = createFileRoute("/alarms")({
@@ -77,14 +79,23 @@ function AlarmsPage() {
     window.localStorage.setItem("argrid-alarm-ack-overrides", JSON.stringify(ackOverrides));
   }, [ackOverrides]);
 
+  const investigationStatusOverrides = (() => {
+    try {
+      return JSON.parse(window.localStorage.getItem("argrid-pq-status-overrides") ?? "{}") as Record<string, InvestigationStatus>;
+    } catch {
+      return {};
+    }
+  })();
+  const resolvedStatus = (event: PowerQualityEvent) => investigationStatusOverrides[event.id] ?? event.status;
   const alarms = baseAlarms.map((alarm) => ({ ...alarm, acknowledged: ackOverrides[alarm.id] ?? alarm.acknowledged }));
   const groups = groupIncidentAlarms(alarms);
   const selectedGroup = groups.find((group) => group.incidentGroupId === selectedIncidentId) ?? groups[0];
   const selectedEvent = events.find((event) => event.incidentGroupId === selectedGroup.incidentGroupId) ?? null;
+  const selectedStatus = selectedEvent ? resolvedStatus(selectedEvent) : null;
   const selectedAlarms = alarms.filter((alarm) => alarm.incidentGroupId === selectedGroup.incidentGroupId);
   const timeline = selectedEvent ? getIncidentTimeline(selectedEvent) : [];
   const scatter = getIticScatter(scenarioId);
-  const documentControl = selectedEvent ? getIncidentDocumentControl(selectedEvent, selectedEvent.status) : null;
+  const documentControl = selectedEvent && selectedStatus ? getIncidentDocumentControl(selectedEvent, selectedStatus) : null;
 
   useEffect(() => {
     storeIncidentContext({
@@ -95,7 +106,10 @@ function AlarmsPage() {
 
   const criticalIncidents = groups.filter((group) => group.highestSeverity === "Critical").length;
   const unacknowledgedGroups = groups.filter((group) => group.unacknowledged > 0).length;
-  const activeInvestigations = events.filter((event) => event.status === "Investigating" || event.status === "Confirmed").length;
+  const activeInvestigations = events.filter((event) => {
+    const status = resolvedStatus(event);
+    return status === "Investigating" || status === "Confirmed";
+  }).length;
 
   const acknowledgeAlarm = (id: string) => {
     setAckOverrides((current) => ({ ...current, [id]: true }));
@@ -169,7 +183,7 @@ function AlarmsPage() {
             {selectedEvent ? (
               <div className="grid gap-3 lg:grid-cols-[1fr_260px]">
                 <div>
-                  <div className="grid grid-cols-2 gap-2 md:grid-cols-4"><Info label="Event" value={selectedEvent.id} /><Info label="Source" value={selectedEvent.sourceMeter} /><Info label="Feeder" value={`${selectedEvent.feederId} · ${selectedEvent.feederName}`} /><Info label="Status" value={selectedEvent.status} /></div>
+                  <div className="grid grid-cols-2 gap-2 md:grid-cols-4"><Info label="Event" value={selectedEvent.id} /><Info label="Source" value={selectedEvent.sourceMeter} /><Info label="Feeder" value={`${selectedEvent.feederId} · ${selectedEvent.feederName}`} /><Info label="Status" value={selectedStatus ?? selectedEvent.status} /></div>
                   <div className="mt-3 rounded-md border border-border bg-surface-2 p-3"><div className="flex items-center gap-2 text-[10.5px] font-semibold"><Crosshair className="size-3.5 text-primary" />{selectedEvent.probableOrigin}</div><p className="mt-1.5 text-[9.5px] leading-relaxed text-muted-foreground">{selectedEvent.operationalImpact} Correlation confidence is {selectedEvent.confidencePct}%.</p></div>
                   <div className="mt-3 grid grid-cols-2 gap-2"><Info label="Minimum RMS" value={`${selectedEvent.minimumVoltagePct.toFixed(1)}% Un`} /><Info label="Duration" value={`${selectedEvent.durationMs} ms`} /><Info label="Affected assets" value={String(selectedEvent.affectedAssets.length)} /><Info label="Investigation owner" value={selectedEvent.investigationOwner} /></div>
                   {documentControl && <div className="mt-3 grid grid-cols-2 gap-2 rounded-md border border-border bg-surface-2 p-3"><Info label="Document" value={documentControl.documentNumber} /><Info label="Revision / state" value={`${documentControl.revision} · ${documentControl.documentStatus}`} /><Info label="Technical review" value={`${documentControl.reviewState} · ${documentControl.reviewedBy}`} /><Info label="Final approval" value={`${documentControl.approvalState} · ${documentControl.approvedBy}`} /></div>}
