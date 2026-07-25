@@ -11,9 +11,11 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SustainabilityRouteImport } from './routes/sustainability'
 import { Route as SavingsRouteImport } from './routes/savings'
+import { Route as PortfolioRouteImport } from './routes/portfolio'
 import { Route as OpportunitiesRouteImport } from './routes/opportunities'
 import { Route as ElectricalRouteImport } from './routes/electrical'
 import { Route as DemandRouteImport } from './routes/demand'
+import { Route as DataHealthRouteImport } from './routes/data-health'
 import { Route as BillingRouteImport } from './routes/billing'
 import { Route as AnalyticsRouteImport } from './routes/analytics'
 import { Route as AlarmsRouteImport } from './routes/alarms'
@@ -29,6 +31,11 @@ const SavingsRoute = SavingsRouteImport.update({
   path: '/savings',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PortfolioRoute = PortfolioRouteImport.update({
+  id: '/portfolio',
+  path: '/portfolio',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const OpportunitiesRoute = OpportunitiesRouteImport.update({
   id: '/opportunities',
   path: '/opportunities',
@@ -42,6 +49,11 @@ const ElectricalRoute = ElectricalRouteImport.update({
 const DemandRoute = DemandRouteImport.update({
   id: '/demand',
   path: '/demand',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DataHealthRoute = DataHealthRouteImport.update({
+  id: '/data-health',
+  path: '/data-health',
   getParentRoute: () => rootRouteImport,
 } as any)
 const BillingRoute = BillingRouteImport.update({
@@ -70,9 +82,11 @@ export interface FileRoutesByFullPath {
   '/alarms': typeof AlarmsRoute
   '/analytics': typeof AnalyticsRoute
   '/billing': typeof BillingRoute
+  '/data-health': typeof DataHealthRoute
   '/demand': typeof DemandRoute
   '/electrical': typeof ElectricalRoute
   '/opportunities': typeof OpportunitiesRoute
+  '/portfolio': typeof PortfolioRoute
   '/savings': typeof SavingsRoute
   '/sustainability': typeof SustainabilityRoute
 }
@@ -81,9 +95,11 @@ export interface FileRoutesByTo {
   '/alarms': typeof AlarmsRoute
   '/analytics': typeof AnalyticsRoute
   '/billing': typeof BillingRoute
+  '/data-health': typeof DataHealthRoute
   '/demand': typeof DemandRoute
   '/electrical': typeof ElectricalRoute
   '/opportunities': typeof OpportunitiesRoute
+  '/portfolio': typeof PortfolioRoute
   '/savings': typeof SavingsRoute
   '/sustainability': typeof SustainabilityRoute
 }
@@ -93,9 +109,11 @@ export interface FileRoutesById {
   '/alarms': typeof AlarmsRoute
   '/analytics': typeof AnalyticsRoute
   '/billing': typeof BillingRoute
+  '/data-health': typeof DataHealthRoute
   '/demand': typeof DemandRoute
   '/electrical': typeof ElectricalRoute
   '/opportunities': typeof OpportunitiesRoute
+  '/portfolio': typeof PortfolioRoute
   '/savings': typeof SavingsRoute
   '/sustainability': typeof SustainabilityRoute
 }
@@ -106,9 +124,11 @@ export interface FileRouteTypes {
     | '/alarms'
     | '/analytics'
     | '/billing'
+    | '/data-health'
     | '/demand'
     | '/electrical'
     | '/opportunities'
+    | '/portfolio'
     | '/savings'
     | '/sustainability'
   fileRoutesByTo: FileRoutesByTo
@@ -117,9 +137,11 @@ export interface FileRouteTypes {
     | '/alarms'
     | '/analytics'
     | '/billing'
+    | '/data-health'
     | '/demand'
     | '/electrical'
     | '/opportunities'
+    | '/portfolio'
     | '/savings'
     | '/sustainability'
   id:
@@ -128,9 +150,11 @@ export interface FileRouteTypes {
     | '/alarms'
     | '/analytics'
     | '/billing'
+    | '/data-health'
     | '/demand'
     | '/electrical'
     | '/opportunities'
+    | '/portfolio'
     | '/savings'
     | '/sustainability'
   fileRoutesById: FileRoutesById
@@ -140,9 +164,11 @@ export interface RootRouteChildren {
   AlarmsRoute: typeof AlarmsRoute
   AnalyticsRoute: typeof AnalyticsRoute
   BillingRoute: typeof BillingRoute
+  DataHealthRoute: typeof DataHealthRoute
   DemandRoute: typeof DemandRoute
   ElectricalRoute: typeof ElectricalRoute
   OpportunitiesRoute: typeof OpportunitiesRoute
+  PortfolioRoute: typeof PortfolioRoute
   SavingsRoute: typeof SavingsRoute
   SustainabilityRoute: typeof SustainabilityRoute
 }
@@ -161,6 +187,13 @@ declare module '@tanstack/react-router' {
       path: '/savings'
       fullPath: '/savings'
       preLoaderRoute: typeof SavingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/portfolio': {
+      id: '/portfolio'
+      path: '/portfolio'
+      fullPath: '/portfolio'
+      preLoaderRoute: typeof PortfolioRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/opportunities': {
@@ -182,6 +215,13 @@ declare module '@tanstack/react-router' {
       path: '/demand'
       fullPath: '/demand'
       preLoaderRoute: typeof DemandRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/data-health': {
+      id: '/data-health'
+      path: '/data-health'
+      fullPath: '/data-health'
+      preLoaderRoute: typeof DataHealthRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/billing': {
@@ -220,9 +260,11 @@ const rootRouteChildren: RootRouteChildren = {
   AlarmsRoute: AlarmsRoute,
   AnalyticsRoute: AnalyticsRoute,
   BillingRoute: BillingRoute,
+  DataHealthRoute: DataHealthRoute,
   DemandRoute: DemandRoute,
   ElectricalRoute: ElectricalRoute,
   OpportunitiesRoute: OpportunitiesRoute,
+  PortfolioRoute: PortfolioRoute,
   SavingsRoute: SavingsRoute,
   SustainabilityRoute: SustainabilityRoute,
 }
