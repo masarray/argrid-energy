@@ -1,0 +1,59 @@
+name: Diagnostic CI
+
+on:
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  diagnose:
+    name: Diagnose lint, types, and bundle
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          package-manager-cache: false
+
+      - name: Show tool versions
+        run: |
+          node --version
+          npm --version
+
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: Lint diagnostics
+        id: lint
+        continue-on-error: true
+        run: npm run lint
+
+      - name: TypeScript diagnostics
+        id: typecheck
+        continue-on-error: true
+        run: npx tsc --noEmit
+
+      - name: Vite bundle diagnostics
+        id: bundle
+        continue-on-error: true
+        run: npx vite build
+
+      - name: Fail when a diagnostic failed
+        if: always()
+        run: |
+          echo "lint=${{ steps.lint.outcome }}"
+          echo "typecheck=${{ steps.typecheck.outcome }}"
+          echo "bundle=${{ steps.bundle.outcome }}"
+          test "${{ steps.lint.outcome }}" = "success"
+          test "${{ steps.typecheck.outcome }}" = "success"
+          test "${{ steps.bundle.outcome }}" = "success"
