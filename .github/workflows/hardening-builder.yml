@@ -1,0 +1,686 @@
+name: Apply final product hardening
+
+on:
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  harden:
+    if: github.head_ref == 'agent/final-product-hardening-20260726'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout feature branch
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ github.head_ref }}
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          package-manager-cache: false
+
+      - name: Apply product hardening changes
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import json
+
+          def replace_once(path: str, old: str, new: str) -> None:
+              file = Path(path)
+              text = file.read_text()
+              if old not in text:
+                  raise SystemExit(f"Expected text not found in {path}: {old[:120]!r}")
+              file.write_text(text.replace(old, new, 1))
+
+          package_path = Path("package.json")
+          package = json.loads(package_path.read_text())
+          package["scripts"] = {
+              "dev": "vite",
+              "build": "vite build",
+              "preview": "vite preview",
+              "lint": "eslint .",
+              "typecheck": "tsc --noEmit",
+              "verify:build": "node scripts/verify-build.mjs",
+              "check": "npm run lint && npm run typecheck && npm run build && npm run verify:build",
+              "ci": "npm run check",
+              "format": "prettier --write ."
+          }
+          package_path.write_text(json.dumps(package, indent=2) + "\n")
+
+          Path("scripts").mkdir(exist_ok=True)
+          Path("scripts/verify-build.mjs").write_text(r'''import assert from "node:assert/strict";
+import { existsSync, readFileSync } from "node:fs";
+import path from "node:path";
+
+const expectedRoutes = [
+  "/",
+  "/portfolio",
+  "/analytics",
+  "/demand",
+  "/opportunities",
+  "/savings",
+  "/electrical",
+  "/alarms",
+  "/alarms/power-quality",
+  "/data-health",
+  "/reports",
+  "/billing",
+  "/sustainability",
+];
+
+const routeTree = readFileSync("src/routeTree.gen.ts", "utf8");
+for (const route of expectedRoutes) {
+  assert(routeTree.includes(`'${route}'`) || routeTree.includes(`\"${route}\"`), `Route tree is missing ${route}`);
+}
+
+const indexPath = path.join("dist", "index.html");
+assert(existsSync(indexPath), "dist/index.html was not generated");
+const indexHtml = readFileSync(indexPath, "utf8");
+const repository = process.env.GITHUB_REPOSITORY?.split("/")[1];
+const expectedBase = process.env.GITHUB_ACTIONS === "true" && repository ? `/${repository}/` : "/";
+
+if (expectedBase !== "/") {
+  assert(indexHtml.includes(`${expectedBase}assets/`), `Built assets do not use the GitHub Pages base ${expectedBase}`);
+  assert(!/\b(?:src|href)=["']\/assets\//.test(indexHtml), "Found a root-relative /assets URL that would break GitHub Pages");
+}
+
+const assetReferences = [...indexHtml.matchAll(/\b(?:src|href)=["']([^"']+)["']/g)]
+  .map((match) => match[1])
+  .filter((reference) => reference.startsWith(expectedBase) && !reference.endsWith("/"));
+
+for (const reference of assetReferences) {
+  const cleanReference = reference.split(/[?#]/, 1)[0];
+  const relativePath = expectedBase === "/" ? cleanReference.slice(1) : cleanReference.slice(expectedBase.length);
+  assert(existsSync(path.join("dist", relativePath)), `Built asset is referenced but missing: ${reference}`);
+}
+
+console.log(`Verified ${expectedRoutes.length} routes, ${assetReferences.length} built assets, and base ${expectedBase}`);
+''')
+
+          Path(".github/workflows/quality.yml").write_text(r'''name: ArGrid Quality Gate
+
+on:
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: quality-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    name: Lint, types, build, and static verification
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install locked dependencies
+        run: npm ci --no-audit --no-fund
+
+      - name: Lint source
+        run: npm run lint
+
+      - name: Type-check source
+        run: npm run typecheck
+
+      - name: Build static site
+        run: npm run build
+
+      - name: Verify routes, assets, and Pages base
+        run: npm run verify:build
+''')
+
+          Path(".github/workflows/deploy-pages.yml").write_text(r'''name: Deploy ArGrid to GitHub Pages
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build static site
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Show tool versions
+        run: |
+          node --version
+          npm --version
+
+      - name: Install locked dependencies
+        run: npm ci --no-audit --no-fund
+
+      - name: Lint source
+        run: npm run lint
+
+      - name: Type-check source
+        run: npm run typecheck
+
+      - name: Build static site
+        run: npm run build
+
+      - name: Verify routes, assets, and Pages base
+        run: npm run verify:build
+
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v6
+
+      - name: Upload static site
+        uses: actions/upload-pages-artifact@v5
+        with:
+          path: dist
+
+  deploy:
+    name: Deploy GitHub Pages
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
+    timeout-minutes: 10
+
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v5
+''')
+
+          Path("src/components/argrid-ui.tsx").write_text(r'''import type { ReactNode } from "react";
+
+export function Panel({
+  title,
+  description,
+  actions,
+  children,
+  className = "",
+  padded = true,
+  busy = false,
+}: {
+  title?: string;
+  description?: string;
+  actions?: ReactNode;
+  children: ReactNode;
+  className?: string;
+  padded?: boolean;
+  busy?: boolean;
+}) {
+  return (
+    <section className={`panel flex min-w-0 flex-col overflow-hidden ${className}`} aria-busy={busy || undefined}>
+      {(title || description || actions) && (
+        <header className="panel-header flex min-h-10 items-start justify-between gap-3 border-b border-border px-4 py-2.5">
+          <div className="min-w-0">
+            {title && <h2 className="truncate text-[11.5px] font-semibold tracking-[-0.01em] text-foreground">{title}</h2>}
+            {description && <p className="mt-0.5 text-[9.5px] leading-relaxed text-muted-foreground">{description}</p>}
+          </div>
+          {actions && <div className="flex shrink-0 items-center gap-1.5">{actions}</div>}
+        </header>
+      )}
+      <div className={`min-h-0 flex-1 ${padded ? "p-4" : ""}`}>{children}</div>
+    </section>
+  );
+}
+
+export function KpiTile({
+  label,
+  value,
+  unit,
+  trend,
+  hint,
+  tone = "neutral",
+}: {
+  label: string;
+  value: string | number;
+  unit?: string;
+  trend?: number;
+  hint?: string;
+  tone?: "neutral" | "warning" | "critical" | "good";
+}) {
+  const toneClass = {
+    neutral: "kpi-neutral",
+    warning: "kpi-warning",
+    critical: "kpi-critical",
+    good: "kpi-good",
+  }[tone];
+  const stateLabel = {
+    neutral: "normal",
+    warning: "warning",
+    critical: "critical",
+    good: "good",
+  }[tone];
+
+  return (
+    <section className={`kpi-tile ${toneClass}`} aria-label={`${label}: ${value}${unit ? ` ${unit}` : ""}. State ${stateLabel}${hint ? `. ${hint}` : ""}`}>
+      <div className="flex items-center justify-between gap-2">
+        <div className="text-[9.5px] font-medium uppercase tracking-[0.11em] text-muted-foreground">{label}</div>
+        <span className="kpi-state-dot" aria-hidden="true" />
+      </div>
+      <div className="mt-2 flex min-w-0 items-baseline gap-1.5">
+        <span className="font-display truncate text-[22px] font-medium leading-none tracking-[-0.035em] tabular">{value}</span>
+        {unit && <span className="shrink-0 text-[10.5px] text-muted-foreground">{unit}</span>}
+      </div>
+      <div className="mt-2 flex min-h-4 items-center gap-2 text-[9.5px] text-muted-foreground">
+        {typeof trend === "number" && (
+          <span className={`shrink-0 tabular ${trend < 0 ? "text-green" : trend > 0 ? "text-amber" : ""}`}>
+            {trend > 0 ? "▲" : trend < 0 ? "▼" : "—"} {Math.abs(trend).toFixed(1)}%
+          </span>
+        )}
+        {hint && <span className="truncate">{hint}</span>}
+      </div>
+    </section>
+  );
+}
+
+export function WorkspaceState({
+  eyebrow,
+  title,
+  description,
+  action,
+  tone = "neutral",
+  compact = false,
+}: {
+  eyebrow?: string;
+  title: string;
+  description: string;
+  action?: ReactNode;
+  tone?: "neutral" | "warning" | "critical";
+  compact?: boolean;
+}) {
+  const toneClass = tone === "critical" ? "workspace-state-critical" : tone === "warning" ? "workspace-state-warning" : "workspace-state-neutral";
+  return (
+    <section className={`workspace-state ${toneClass} ${compact ? "workspace-state-compact" : ""}`} role={tone === "critical" ? "alert" : "status"}>
+      <span className="workspace-state-mark" aria-hidden="true" />
+      <div className="min-w-0 flex-1">
+        {eyebrow && <div className="text-[9px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">{eyebrow}</div>}
+        <h2 className="mt-1 text-[13px] font-semibold tracking-tight text-foreground">{title}</h2>
+        <p className="mt-1 text-[10.5px] leading-relaxed text-muted-foreground">{description}</p>
+      </div>
+      {action && <div className="shrink-0">{action}</div>}
+    </section>
+  );
+}
+
+export function SkeletonBlock({ className = "h-20" }: { className?: string }) {
+  return <div className={`skeleton-block ${className}`} aria-hidden="true" />;
+}
+
+export function SeverityDot({ level }: { level: "Critical" | "Warning" | "Info" | string }) {
+  const c = level === "Critical" ? "bg-red" : level === "Warning" ? "bg-amber" : "bg-primary";
+  return <span className={`mt-1 inline-block size-2 shrink-0 rounded-full ${c}`} aria-hidden="true" />;
+}
+
+export function StatusPill({ status }: { status: string }) {
+  const map: Record<string, string> = {
+    normal: "bg-green/10 text-green border-green/25",
+    warning: "bg-amber/10 text-amber border-amber/30",
+    critical: "bg-red/10 text-red border-red/30",
+    Open: "bg-primary/10 text-primary border-primary/25",
+    Assigned: "bg-violet/10 text-violet border-violet/25",
+    Converted: "bg-green/10 text-green border-green/25",
+    "In review": "bg-amber/10 text-amber border-amber/25",
+    Validated: "bg-primary/10 text-primary border-primary/25",
+    Approved: "bg-violet/10 text-violet border-violet/25",
+    "In Progress": "bg-amber/10 text-amber border-amber/25",
+    Implemented: "bg-primary/10 text-primary border-primary/25",
+    Verification: "bg-amber/10 text-amber border-amber/25",
+    "Verified Saving": "bg-green/10 text-green border-green/25",
+    "Persistence Monitoring": "bg-green/10 text-green border-green/25",
+  };
+  const cls = map[status] || "bg-surface-2 text-muted-foreground border-border";
+  return <span className={`inline-flex items-center rounded border px-1.5 py-0.5 text-[9px] font-medium uppercase tracking-[0.09em] ${cls}`}>{status}</span>;
+}
+''')
+
+          Path("src/routes/__root.tsx").write_text(r'''import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { HeadContent, Link, Outlet, createRootRouteWithContext, useRouter } from "@tanstack/react-router";
+import { useEffect } from "react";
+import { WorkspaceState } from "@/components/argrid-ui";
+import { DemoSimulationProvider } from "@/lib/demo-simulation";
+
+function NotFoundComponent() {
+  return (
+    <div className="flex min-h-screen items-center justify-center bg-background px-4 py-10">
+      <div className="w-full max-w-xl">
+        <WorkspaceState
+          eyebrow="Navigation"
+          title="Workspace not found"
+          description="The requested ArGrid route is not part of the current static demonstration. Return to the enterprise portfolio and continue from a governed workspace."
+          action={<Link to="/portfolio" className="inline-flex h-9 items-center rounded-md bg-primary px-4 text-[11px] font-medium text-primary-foreground">Open portfolio</Link>}
+        />
+      </div>
+    </div>
+  );
+}
+
+function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
+  const router = useRouter();
+  useEffect(() => console.error(error), [error]);
+
+  return (
+    <div className="flex min-h-screen items-center justify-center bg-background px-4 py-10">
+      <div className="w-full max-w-xl">
+        <WorkspaceState
+          eyebrow="Client-side recovery"
+          title="This workspace did not load"
+          description="The local demo encountered an unexpected client-side error. Retry the route first; no field command, external filing, or financial posting occurred."
+          tone="critical"
+          action={
+            <div className="flex flex-wrap gap-2">
+              <button type="button" onClick={() => { router.invalidate(); reset(); }} className="inline-flex h-9 items-center rounded-md bg-primary px-4 text-[11px] font-medium text-primary-foreground">Retry workspace</button>
+              <Link to="/portfolio" className="inline-flex h-9 items-center rounded-md border border-border bg-surface px-4 text-[11px] font-medium">Portfolio</Link>
+            </div>
+          }
+        />
+        <details className="mt-3 rounded-md border border-border bg-surface px-3 py-2 text-[10px] text-muted-foreground">
+          <summary className="cursor-pointer font-medium text-foreground">Technical detail</summary>
+          <pre className="mt-2 max-h-40 overflow-auto whitespace-pre-wrap font-mono text-[9px]">{error.message}</pre>
+        </details>
+      </div>
+    </div>
+  );
+}
+
+export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
+  head: () => ({
+    meta: [
+      { title: "ArGrid Energy Management System" },
+      { name: "description", content: "Open-source industrial energy management system demonstration." },
+      { name: "author", content: "ArGrid open-source contributors" },
+      { name: "theme-color", content: "#181c1f" },
+      { property: "og:type", content: "website" },
+    ],
+  }),
+  component: RootComponent,
+  notFoundComponent: NotFoundComponent,
+  errorComponent: ErrorComponent,
+});
+
+function RootComponent() {
+  const { queryClient } = Route.useRouteContext();
+
+  return (
+    <QueryClientProvider client={queryClient}>
+      <DemoSimulationProvider>
+        <HeadContent />
+        <Outlet />
+      </DemoSimulationProvider>
+    </QueryClientProvider>
+  );
+}
+''')
+
+          replace_once(
+              "src/components/app-shell.tsx",
+              'import { useMemo, useState, type ChangeEvent, type ReactNode } from "react";',
+              'import { useEffect, useMemo, useState, type ChangeEvent, type KeyboardEvent, type ReactNode } from "react";'
+          )
+          replace_once(
+              "src/components/app-shell.tsx",
+              'const [sidebarCollapsed, setSidebarCollapsed] = useState(() => window.innerWidth <= 1366);',
+              'const [sidebarCollapsed, setSidebarCollapsed] = useState(() => typeof window !== "undefined" && window.innerWidth <= 1366);'
+          )
+          replace_once(
+              "src/components/app-shell.tsx",
+              '  const [guideStep, setGuideStep] = useState(0);\n\n  const normalizedSearch',
+              '''  const [guideStep, setGuideStep] = useState(0);\n\n  useEffect(() => {\n    if (!mobileNavOpen) return;\n    const previousOverflow = document.body.style.overflow;\n    const closeOnEscape = (event: globalThis.KeyboardEvent) => {\n      if (event.key === "Escape") setMobileNavOpen(false);\n    };\n    document.body.style.overflow = "hidden";\n    window.addEventListener("keydown", closeOnEscape);\n    return () => {\n      document.body.style.overflow = previousOverflow;\n      window.removeEventListener("keydown", closeOnEscape);\n    };\n  }, [mobileNavOpen]);\n\n  const normalizedSearch'''
+          )
+          replace_once(
+              "src/components/app-shell.tsx",
+              '                    title={collapsed ? item.label : undefined}\n                    className=',
+              '                    title={collapsed ? item.label : undefined}\n                    aria-current={active ? "page" : undefined}\n                    className='
+          )
+          replace_once(
+              "src/components/app-shell.tsx",
+              '  return (\n    <div className={`min-h-screen flex text-foreground ${operationsWorkspace ? "workspace-operations" : "workspace-management"}`}>',
+              '  return (\n    <>\n      <a href="#main-content" className="skip-link">Skip to workspace content</a>\n      <div className={`min-h-screen flex text-foreground ${operationsWorkspace ? "workspace-operations" : "workspace-management"}`}> '
+          )
+          replace_once(
+              "src/components/app-shell.tsx",
+              '<header className="min-h-[52px] shrink-0 border-b border-border bg-surface flex flex-wrap items-center px-3 lg:px-4 py-2 lg:py-0 gap-2 relative z-30">',
+              '<header className="shell-command-bar min-h-[52px] shrink-0 border-b border-border bg-surface flex flex-wrap items-center px-3 lg:px-4 py-2 lg:py-0 gap-2 relative z-30">'
+          )
+          replace_once(
+              "src/components/app-shell.tsx",
+              '<button type="button" onClick={() => setRunning(!running)} className={`flex items-center gap-1.5 h-8 px-2.5 rounded-md border text-[10.5px] font-medium tracking-wide ${running ? "border-primary/25 bg-primary/8 text-primary" : "border-amber/30 bg-amber/10 text-amber"}`} title={running ? "Pause simulated live telemetry" : "Resume simulated live telemetry"}>',
+              '<button type="button" onClick={() => setRunning(!running)} aria-pressed={running} className={`flex items-center gap-1.5 h-8 px-2.5 rounded-md border text-[10.5px] font-medium tracking-wide ${running ? "border-primary/25 bg-primary/8 text-primary" : "border-amber/30 bg-amber/10 text-amber"}`} title={running ? "Pause simulated live telemetry" : "Resume simulated live telemetry"}>'
+          )
+          replace_once(
+              "src/components/app-shell.tsx",
+              '<input value={search} onChange={(event: ChangeEvent<HTMLInputElement>) => setSearch(event.target.value)} placeholder="Search site, meter, incident, event, report, invoice…" className="w-full h-8 pl-8 pr-3 rounded-md bg-surface-2 border border-border text-[11.5px] placeholder:text-muted-foreground/70 focus:outline-none focus:border-primary/50" aria-label="Search demo assets" />',
+              '<input value={search} onChange={(event: ChangeEvent<HTMLInputElement>) => setSearch(event.target.value)} onKeyDown={(event: KeyboardEvent<HTMLInputElement>) => { if (event.key === "Escape") setSearch(""); }} placeholder="Search site, meter, incident, event, report, invoice…" className="w-full h-8 pl-8 pr-3 rounded-md bg-surface-2 border border-border text-[11.5px] placeholder:text-muted-foreground/70 focus:outline-none focus:border-primary/50" aria-label="Search demo assets" role="combobox" aria-autocomplete="list" aria-expanded={normalizedSearch.length >= 2} aria-controls="global-search-results" />'
+          )
+          replace_once(
+              "src/components/app-shell.tsx",
+              '<div className="absolute left-0 right-0 top-9 rounded-md border border-border-strong bg-surface overflow-hidden z-50 shadow-lg">',
+              '<div id="global-search-results" role="listbox" className="absolute left-0 right-0 top-9 rounded-md border border-border-strong bg-surface overflow-hidden z-50 shadow-lg">'
+          )
+          replace_once(
+              "src/components/app-shell.tsx",
+              'onClick={() => { if (result.context) storeIncidentContext(result.context); setSearch(""); }} className="flex items-center gap-3 px-3 py-2 text-[11.5px] hover:bg-surface-2 border-b border-border last:border-b-0">',
+              'onClick={() => { if (result.context) storeIncidentContext(result.context); setSearch(""); }} role="option" aria-selected="false" className="flex items-center gap-3 px-3 py-2 text-[11.5px] hover:bg-surface-2 border-b border-border last:border-b-0">'
+          )
+          replace_once(
+              "src/components/app-shell.tsx",
+              '{toolbar && <div className="flex items-center gap-2">{toolbar}</div>}',
+              '{toolbar && <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto sm:justify-end">{toolbar}</div>}'
+          )
+          replace_once(
+              "src/components/app-shell.tsx",
+              '        </div>\n\n        <main className="flex-1 overflow-auto p-3 lg:p-5">{children}</main>',
+              '''        </div>\n\n        {(!running || telemetry.meterQuality !== "GOOD") && (\n          <div className="workspace-status" role="status" aria-live="polite">\n            <div className="flex min-w-0 items-center gap-2">\n              {running ? <ShieldCheck className="size-3.5 shrink-0 text-amber" /> : <Pause className="size-3.5 shrink-0 text-amber" />}\n              <span className="font-medium text-foreground">{running ? "Decision confidence reduced" : "Simulation paused"}</span>\n              <span className="hidden text-muted-foreground md:inline">\n                {running\n                  ? `${telemetry.meterQuality} source quality · ${telemetry.intervalCompletenessPct.toFixed(1)}% interval completeness`\n                  : `Values are frozen at ${lastUpdated.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })}`}\n              </span>\n            </div>\n            <Link to="/data-health" className="shrink-0 text-[10px] font-medium text-primary hover:underline">Review data trust</Link>\n          </div>\n        )}\n\n        <main id="main-content" tabIndex={-1} className="flex-1 min-w-0 overflow-auto p-2.5 sm:p-3 lg:p-5">{children}</main>'''
+          )
+          replace_once(
+              "src/components/app-shell.tsx",
+              '      )}\n    </div>\n  );\n}',
+              '      )}\n      </div>\n    </>\n  );\n}'
+          )
+
+          styles = Path("src/styles.css")
+          style_text = styles.read_text()
+          marker = "/* Final product hardening: accessibility, responsive shell, and explicit states. */"
+          if marker not in style_text:
+              styles.write_text(style_text + r'''
+
+/* Final product hardening: accessibility, responsive shell, and explicit states. */
+html {
+  scrollbar-gutter: stable;
+}
+
+body {
+  overflow-x: hidden;
+}
+
+button:not(:disabled),
+a[href],
+select:not(:disabled),
+input:not(:disabled) {
+  cursor: pointer;
+}
+
+button:disabled,
+select:disabled,
+input:disabled {
+  cursor: not-allowed;
+}
+
+textarea:focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px solid color-mix(in oklab, var(--color-ring) 70%, transparent);
+  outline-offset: 2px;
+}
+
+.skip-link {
+  position: fixed;
+  left: 12px;
+  top: 10px;
+  z-index: 100;
+  transform: translateY(-160%);
+  border: 1px solid var(--color-border-strong);
+  border-radius: 6px;
+  background: var(--color-surface);
+  color: var(--color-foreground);
+  padding: 8px 12px;
+  font-size: 11px;
+  font-weight: 600;
+  box-shadow: 0 8px 28px color-mix(in oklab, black 18%, transparent);
+  transition: transform 120ms ease;
+}
+
+.skip-link:focus {
+  transform: translateY(0);
+}
+
+.workspace-status {
+  display: flex;
+  min-height: 34px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border-bottom: 1px solid var(--color-border);
+  background: color-mix(in oklab, var(--color-amber) 8%, var(--color-surface));
+  padding: 7px 16px;
+  font-size: 10px;
+}
+
+.workspace-state {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background: var(--color-surface);
+  padding: 20px;
+  box-shadow: 0 1px 2px color-mix(in oklab, var(--color-foreground) 5%, transparent);
+}
+
+.workspace-state-compact {
+  padding: 12px 14px;
+}
+
+.workspace-state-mark {
+  width: 3px;
+  min-height: 52px;
+  align-self: stretch;
+  border-radius: 999px;
+  background: var(--color-primary);
+}
+
+.workspace-state-warning .workspace-state-mark {
+  background: var(--color-amber);
+}
+
+.workspace-state-critical .workspace-state-mark {
+  background: var(--color-red);
+}
+
+.skeleton-block {
+  overflow: hidden;
+  border-radius: 6px;
+  background: linear-gradient(90deg, var(--color-surface-2) 20%, var(--color-surface-3) 40%, var(--color-surface-2) 60%);
+  background-size: 200% 100%;
+  animation: argrid-skeleton 1.4s ease-in-out infinite;
+}
+
+@keyframes argrid-skeleton {
+  from { background-position: 100% 0; }
+  to { background-position: -100% 0; }
+}
+
+@media (max-width: 1279px) {
+  .shell-command-bar {
+    min-height: 58px;
+  }
+}
+
+@media (max-width: 640px) {
+  .workspace-status {
+    align-items: flex-start;
+    padding-inline: 12px;
+  }
+
+  .workspace-state {
+    flex-direction: column;
+  }
+
+  .workspace-state-mark {
+    width: 44px;
+    min-height: 3px;
+  }
+}
+
+@media (forced-colors: active) {
+  .kpi-state-dot,
+  .workspace-state-mark {
+    forced-color-adjust: none;
+  }
+}
+''')
+
+          for path, addition in {
+              "AGENTS.md": """\n## Product hardening gate\n\n- Keep `package-lock.json` committed and use `npm ci` in CI and deployment.\n- Pull requests must pass lint, TypeScript, static build, route registration, asset existence, and GitHub Pages base-path verification before merge.\n- Do not combine all diagnostics into one opaque workflow step; preserve separate lint, type-check, build, and static-verification steps.\n""",
+              "src/AGENTS.md": """\n## Accessibility and resilient states\n\n- Preserve the skip link, visible focus treatment, semantic current-page navigation, reduced-motion behavior, and keyboard-closing overlays.\n- New workspaces must define credible loading, empty, stale/estimated, blocked, and client-error behavior rather than leaving blank panels.\n- Paused simulation and reduced data confidence must remain visible at shell level because they change how measurements may be interpreted.\n""",
+              ".github/workflows/AGENTS.md": """\n## Quality gate\n\n- Keep the pull-request quality workflow separate from Pages deployment.\n- Use the committed npm lockfile with `npm ci`.\n- Run lint, TypeScript, build, and `verify:build` as individually named steps so a failure is immediately diagnosable.\n""",
+          }.items():
+              file = Path(path)
+              text = file.read_text()
+              if addition.strip().splitlines()[0] not in text:
+                  file.write_text(text.rstrip() + "\n" + addition)
+          PY
+
+      - name: Generate locked dependency graph
+        run: npm install --no-audit --no-fund
+
+      - name: Validate hardened product
+        run: npm run check
+
+      - name: Commit validated hardening changes
+        run: |
+          git diff --check
+          git config user.name "ArGrid Product Hardening"
+          git config user.email "actions@users.noreply.github.com"
+          git rm .github/workflows/hardening-builder.yml
+          git add package.json package-lock.json scripts/verify-build.mjs .github/workflows/quality.yml .github/workflows/deploy-pages.yml .github/workflows/AGENTS.md AGENTS.md src/AGENTS.md src/components/app-shell.tsx src/components/argrid-ui.tsx src/routes/__root.tsx src/styles.css
+          git commit -m "Harden product shell accessibility and CI quality gates"
+          git push origin HEAD:${{ github.head_ref }}
