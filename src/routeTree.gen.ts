@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SustainabilityRouteImport } from './routes/sustainability'
+import { Route as SavingsRouteImport } from './routes/savings'
 import { Route as OpportunitiesRouteImport } from './routes/opportunities'
 import { Route as ElectricalRouteImport } from './routes/electrical'
 import { Route as DemandRouteImport } from './routes/demand'
@@ -21,6 +22,11 @@ import { Route as IndexRouteImport } from './routes/index'
 const SustainabilityRoute = SustainabilityRouteImport.update({
   id: '/sustainability',
   path: '/sustainability',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SavingsRoute = SavingsRouteImport.update({
+  id: '/savings',
+  path: '/savings',
   getParentRoute: () => rootRouteImport,
 } as any)
 const OpportunitiesRoute = OpportunitiesRouteImport.update({
@@ -67,6 +73,7 @@ export interface FileRoutesByFullPath {
   '/demand': typeof DemandRoute
   '/electrical': typeof ElectricalRoute
   '/opportunities': typeof OpportunitiesRoute
+  '/savings': typeof SavingsRoute
   '/sustainability': typeof SustainabilityRoute
 }
 export interface FileRoutesByTo {
@@ -77,6 +84,7 @@ export interface FileRoutesByTo {
   '/demand': typeof DemandRoute
   '/electrical': typeof ElectricalRoute
   '/opportunities': typeof OpportunitiesRoute
+  '/savings': typeof SavingsRoute
   '/sustainability': typeof SustainabilityRoute
 }
 export interface FileRoutesById {
@@ -88,6 +96,7 @@ export interface FileRoutesById {
   '/demand': typeof DemandRoute
   '/electrical': typeof ElectricalRoute
   '/opportunities': typeof OpportunitiesRoute
+  '/savings': typeof SavingsRoute
   '/sustainability': typeof SustainabilityRoute
 }
 export interface FileRouteTypes {
@@ -100,6 +109,7 @@ export interface FileRouteTypes {
     | '/demand'
     | '/electrical'
     | '/opportunities'
+    | '/savings'
     | '/sustainability'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -110,6 +120,7 @@ export interface FileRouteTypes {
     | '/demand'
     | '/electrical'
     | '/opportunities'
+    | '/savings'
     | '/sustainability'
   id:
     | '__root__'
@@ -120,6 +131,7 @@ export interface FileRouteTypes {
     | '/demand'
     | '/electrical'
     | '/opportunities'
+    | '/savings'
     | '/sustainability'
   fileRoutesById: FileRoutesById
 }
@@ -131,6 +143,7 @@ export interface RootRouteChildren {
   DemandRoute: typeof DemandRoute
   ElectricalRoute: typeof ElectricalRoute
   OpportunitiesRoute: typeof OpportunitiesRoute
+  SavingsRoute: typeof SavingsRoute
   SustainabilityRoute: typeof SustainabilityRoute
 }
 
@@ -141,6 +154,13 @@ declare module '@tanstack/react-router' {
       path: '/sustainability'
       fullPath: '/sustainability'
       preLoaderRoute: typeof SustainabilityRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/savings': {
+      id: '/savings'
+      path: '/savings'
+      fullPath: '/savings'
+      preLoaderRoute: typeof SavingsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/opportunities': {
@@ -203,6 +223,7 @@ const rootRouteChildren: RootRouteChildren = {
   DemandRoute: DemandRoute,
   ElectricalRoute: ElectricalRoute,
   OpportunitiesRoute: OpportunitiesRoute,
+  SavingsRoute: SavingsRoute,
   SustainabilityRoute: SustainabilityRoute,
 }
 export const routeTree = rootRouteImport
