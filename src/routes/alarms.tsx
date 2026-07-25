@@ -12,14 +12,10 @@ import {
   ZAxis,
 } from "recharts";
 import {
-  Activity,
-  AlertTriangle,
-  BadgeCheck,
   Bell,
   Check,
-  ChevronRight,
-  Clock3,
   Crosshair,
+  FileCheck2,
   GitBranch,
   History,
   ShieldAlert,
@@ -28,6 +24,11 @@ import {
 import { AppShell } from "@/components/app-shell";
 import { KpiTile, Panel } from "@/components/argrid-ui";
 import { useDemoSimulation } from "@/lib/demo-simulation";
+import {
+  getIncidentDocumentControl,
+  readIncidentContext,
+  storeIncidentContext,
+} from "@/lib/incident-context";
 import {
   getIncidentAlarms,
   getIncidentTimeline,
@@ -43,9 +44,9 @@ export const Route = createFileRoute("/alarms")({
   head: () => ({
     meta: [
       { title: "Alarms & Incidents — ArGrid" },
-      { name: "description", content: "Grouped incidents, alarm chronology, acknowledgement, and correlated power-quality investigation." },
+      { name: "description", content: "Grouped incidents, alarm chronology, acknowledgement, document control, and correlated power-quality investigation." },
       { property: "og:title", content: "ArGrid Alarms & Incidents" },
-      { property: "og:description", content: "Operational incident console with power-quality correlation." },
+      { property: "og:description", content: "Operational incident console with power-quality correlation and engineering governance." },
     ],
   }),
 });
@@ -69,7 +70,7 @@ function AlarmsPage() {
       return {};
     }
   });
-  const [selectedIncidentId, setSelectedIncidentId] = useState("INC-PQ-1042");
+  const [selectedIncidentId, setSelectedIncidentId] = useState(() => readIncidentContext().incidentGroupId ?? "INC-PQ-1042");
   const [message, setMessage] = useState("");
 
   useEffect(() => {
@@ -83,6 +84,14 @@ function AlarmsPage() {
   const selectedAlarms = alarms.filter((alarm) => alarm.incidentGroupId === selectedGroup.incidentGroupId);
   const timeline = selectedEvent ? getIncidentTimeline(selectedEvent) : [];
   const scatter = getIticScatter(scenarioId);
+  const documentControl = selectedEvent ? getIncidentDocumentControl(selectedEvent, selectedEvent.status) : null;
+
+  useEffect(() => {
+    storeIncidentContext({
+      incidentGroupId: selectedGroup.incidentGroupId,
+      ...(selectedEvent ? { eventId: selectedEvent.id, feederId: selectedEvent.feederId } : {}),
+    });
+  }, [selectedEvent, selectedGroup.incidentGroupId]);
 
   const criticalIncidents = groups.filter((group) => group.highestSeverity === "Critical").length;
   const unacknowledgedGroups = groups.filter((group) => group.unacknowledged > 0).length;
@@ -99,14 +108,26 @@ function AlarmsPage() {
     setMessage(`${selectedGroup.incidentGroupId} acknowledged as a grouped incident.`);
   };
 
+  const activateSagIncident = () => {
+    setScenarioId("voltage-sag");
+    setSelectedIncidentId("INC-PQ-1042");
+    storeIncidentContext({ eventId: "PQ-260715-143217", feederId: "F-07", incidentGroupId: "INC-PQ-1042" });
+    setMessage("Voltage-sag incident selected and shared engineering context restored.");
+  };
+
+  const preserveSelectedContext = () => {
+    if (!selectedEvent) return;
+    storeIncidentContext({ eventId: selectedEvent.id, feederId: selectedEvent.feederId, incidentGroupId: selectedEvent.incidentGroupId });
+  };
+
   return (
     <AppShell
       title="Alarms & Incidents"
-      subtitle="Grouped operational incidents, acknowledgement, chronology, and engineering investigation"
+      subtitle="Grouped operational incidents, acknowledgement, chronology, document control, and engineering investigation"
       toolbar={
         <div className="flex items-center gap-2">
           <div className="flex h-8 items-center gap-1.5 rounded-md border border-border bg-surface px-2.5 text-[10px] text-muted-foreground"><Bell className="size-3.5 text-primary" />{groups.length} grouped incidents</div>
-          <button type="button" onClick={() => setScenarioId("voltage-sag")} className="h-8 rounded-md border border-primary/30 bg-primary/10 px-2.5 text-[10px] font-medium text-primary">Replay voltage sag</button>
+          <button type="button" onClick={activateSagIncident} className="h-8 rounded-md border border-primary/30 bg-primary/10 px-2.5 text-[10px] font-medium text-primary">Replay voltage sag</button>
         </div>
       }
     >
@@ -115,17 +136,17 @@ function AlarmsPage() {
           <KpiTile label="Critical Incidents" value={String(criticalIncidents)} hint="grouped by common cause" tone={criticalIncidents > 0 ? "critical" : "good"} />
           <KpiTile label="Unacknowledged Groups" value={String(unacknowledgedGroups)} hint="not raw alarm count" tone={unacknowledgedGroups > 0 ? "warning" : "good"} />
           <KpiTile label="Active Investigations" value={String(activeInvestigations)} hint="engineering owner assigned" tone={activeInvestigations > 0 ? "warning" : "good"} />
-          <KpiTile label="Average Time to Ack" value="4.2" unit="min" hint="current demo period" tone="good" />
+          <KpiTile label="Report Revision" value={documentControl?.revision ?? "—"} hint={documentControl?.documentStatus ?? "no formal event package"} tone={documentControl?.reviewState === "Completed" ? "good" : "warning"} />
         </section>
 
         <section className="rounded-lg border border-red/30 bg-red/8 px-4 py-3">
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
             <div className="flex size-8 shrink-0 items-center justify-center rounded-md bg-red/12 text-red"><ShieldAlert className="size-4" /></div>
             <div className="min-w-0 flex-1">
-              <div className="flex flex-wrap items-center gap-2"><span className="text-[9.5px] font-semibold uppercase tracking-[0.13em] text-muted-foreground">Priority incident</span><span className="rounded border border-red/30 bg-surface px-1.5 py-0.5 text-[9px] text-red">{selectedGroup.incidentGroupId}</span></div>
+              <div className="flex flex-wrap items-center gap-2"><span className="text-[9.5px] font-semibold uppercase tracking-[0.13em] text-muted-foreground">Priority incident</span><span className="rounded border border-red/30 bg-surface px-1.5 py-0.5 text-[9px] text-red">{selectedGroup.incidentGroupId}</span>{documentControl && <span className="rounded border border-border bg-surface px-1.5 py-0.5 text-[9px] text-muted-foreground">{documentControl.documentNumber} · {documentControl.revision}</span>}</div>
               <p className="mt-1 text-[12px] leading-relaxed">{selectedEvent ? <><strong>{selectedEvent.minimumVoltagePct.toFixed(1)}% Un voltage sag for {selectedEvent.durationMs} ms on {selectedEvent.feederId}.</strong> Three alarms are grouped into one event chronology; probable origin is {selectedEvent.probableOrigin.toLowerCase()}.</> : <><strong>{selectedGroup.summary}.</strong> Review the member alarms and assign an accountable owner.</>}</p>
             </div>
-            {selectedEvent && <Link to="/alarms/power-quality" className="flex h-8 shrink-0 items-center gap-1.5 rounded-md bg-primary px-3 text-[10.5px] font-medium text-primary-foreground">Open PQ investigation <Waves className="size-3.5" /></Link>}
+            {selectedEvent && <Link to="/alarms/power-quality" onClick={preserveSelectedContext} className="flex h-8 shrink-0 items-center gap-1.5 rounded-md bg-primary px-3 text-[10.5px] font-medium text-primary-foreground">Open PQ investigation <Waves className="size-3.5" /></Link>}
           </div>
         </section>
 
@@ -151,6 +172,7 @@ function AlarmsPage() {
                   <div className="grid grid-cols-2 gap-2 md:grid-cols-4"><Info label="Event" value={selectedEvent.id} /><Info label="Source" value={selectedEvent.sourceMeter} /><Info label="Feeder" value={`${selectedEvent.feederId} · ${selectedEvent.feederName}`} /><Info label="Status" value={selectedEvent.status} /></div>
                   <div className="mt-3 rounded-md border border-border bg-surface-2 p-3"><div className="flex items-center gap-2 text-[10.5px] font-semibold"><Crosshair className="size-3.5 text-primary" />{selectedEvent.probableOrigin}</div><p className="mt-1.5 text-[9.5px] leading-relaxed text-muted-foreground">{selectedEvent.operationalImpact} Correlation confidence is {selectedEvent.confidencePct}%.</p></div>
                   <div className="mt-3 grid grid-cols-2 gap-2"><Info label="Minimum RMS" value={`${selectedEvent.minimumVoltagePct.toFixed(1)}% Un`} /><Info label="Duration" value={`${selectedEvent.durationMs} ms`} /><Info label="Affected assets" value={String(selectedEvent.affectedAssets.length)} /><Info label="Investigation owner" value={selectedEvent.investigationOwner} /></div>
+                  {documentControl && <div className="mt-3 grid grid-cols-2 gap-2 rounded-md border border-border bg-surface-2 p-3"><Info label="Document" value={documentControl.documentNumber} /><Info label="Revision / state" value={`${documentControl.revision} · ${documentControl.documentStatus}`} /><Info label="Technical review" value={`${documentControl.reviewState} · ${documentControl.reviewedBy}`} /><Info label="Final approval" value={`${documentControl.approvalState} · ${documentControl.approvedBy}`} /></div>}
                 </div>
                 <div className="rounded-md border border-border bg-background/30 p-2">
                   <svg viewBox="0 0 240 180" className="h-[175px] w-full" role="img" aria-label="Incident mini one-line">
@@ -163,7 +185,7 @@ function AlarmsPage() {
             ) : (
               <div className="rounded-md border border-border bg-surface-2 p-4 text-[10px] text-muted-foreground">This operational incident has no high-resolution power-quality record. Review member alarms, process context, and assigned owner.</div>
             )}
-            <div className="mt-3 flex flex-wrap gap-2"><button type="button" onClick={acknowledgeIncident} disabled={selectedGroup.unacknowledged === 0} className="flex h-8 items-center gap-1.5 rounded-md border border-border bg-surface px-3 text-[10px] font-medium disabled:opacity-40"><Check className="size-3.5 text-green" />Acknowledge group</button>{selectedEvent && <Link to="/electrical" className="flex h-8 items-center gap-1.5 rounded-md border border-border bg-surface px-3 text-[10px] font-medium hover:bg-surface-2"><GitBranch className="size-3.5" />Electrical context</Link>}</div>
+            <div className="mt-3 flex flex-wrap gap-2"><button type="button" onClick={acknowledgeIncident} disabled={selectedGroup.unacknowledged === 0} className="flex h-8 items-center gap-1.5 rounded-md border border-border bg-surface px-3 text-[10px] font-medium disabled:opacity-40"><Check className="size-3.5 text-green" />Acknowledge group</button>{selectedEvent && <><Link to="/electrical" onClick={preserveSelectedContext} className="flex h-8 items-center gap-1.5 rounded-md border border-border bg-surface px-3 text-[10px] font-medium hover:bg-surface-2"><GitBranch className="size-3.5" />Electrical context</Link><Link to="/alarms/power-quality" onClick={preserveSelectedContext} className="flex h-8 items-center gap-1.5 rounded-md border border-border bg-surface px-3 text-[10px] font-medium hover:bg-surface-2"><FileCheck2 className="size-3.5" />Report & evidence</Link></>}</div>
           </Panel>
 
           <Panel title="Member Alarm Chronology" className="xl:col-span-7" actions={<span className="text-[9.5px] text-muted-foreground">one incident · multiple device conditions</span>}>
@@ -196,7 +218,7 @@ function AlarmsPage() {
           </Panel>
         </div>
 
-        <div className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-border bg-surface px-3 py-2 text-[9.5px] text-muted-foreground"><span>Alarm acknowledgement confirms operator awareness; it does not resolve the underlying condition or close an investigation.</span><Link to="/alarms/power-quality" className="text-primary hover:underline">Open full power-quality workspace →</Link></div>
+        <div className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-border bg-surface px-3 py-2 text-[9.5px] text-muted-foreground"><span>Alarm acknowledgement confirms operator awareness; it does not resolve the underlying condition, approve the report, or close an investigation.</span><Link to="/alarms/power-quality" onClick={preserveSelectedContext} className="text-primary hover:underline">Open full power-quality workspace →</Link></div>
       </div>
     </AppShell>
   );
