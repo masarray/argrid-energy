@@ -48,13 +48,16 @@ Show current demand, projected interval demand, contract limit, remaining margin
 
 - Keep event timestamp, type, residual or maximum magnitude, duration, phase, voltage level, source meter, sample rate, trigger threshold, affected assets, severity, and investigation status.
 - One physical incident may create multiple device alarms. Group alarms by common cause and chronology before presenting counts to operators.
-- Acknowledgement confirms operator awareness; it does not resolve the condition, validate probable origin, or close the investigation.
+- Acknowledgement confirms operator awareness; it does not resolve the condition, validate probable origin, approve the report, or close the investigation.
 - Power-quality evidence should correlate RMS envelope, instantaneous waveform, electrical location, synchronized meters, equipment response, operational impact, probable origin, confidence, and investigation owner.
 - RMS and waveform panels should share event selection and replay cursor where practical.
 - Replay controls should expose play/pause, restart, speed, progress, deterministic stop behavior, and manual cursor override.
-- Electrical, incident, and PQ routes must preserve selected feeder, event, and incident-group context when navigating between workspaces.
+- Electrical, incident, global-search, guided-demo, and PQ routes must preserve selected feeder, event, and incident-group context when navigating between workspaces.
 - Investigation reports must be generated from the same event, meter-correlation, equipment-response, chronology, and workflow state used by the visible workspace.
-- Exported demo reports must state that they are not certified PQ reports, protection studies, insurance-loss statements, or switching authorizations.
+- Formal reports should carry document number, revision, document status, evidence register, revision history, prepared/reviewed/approved roles, and explicit sign-off state.
+- Embedded report charts and one-line diagrams must be generated from the same deterministic event source as the visible RMS, waveform, and electrical-context panels.
+- Review completion and final approval are separate gates. Acknowledgement or investigation progress must not silently create an approved document.
+- Exported demo reports must state that they are not certified PQ reports, COMTRADE/PQDIF records, protection studies, contractual-loss statements, digital signatures, insurance-loss statements, or switching authorizations.
 - Correlation conclusions must explain arrival order, residual depth, duration, time-sync error, source quality, and why competing origin hypotheses are weaker.
 - Equipment response must distinguish ride-through, automatic recovery, trip, controller reboot, process interruption, and no-change states.
 - Estimated operational exposure is not a verified loss. State assumptions and preserve this distinction.
