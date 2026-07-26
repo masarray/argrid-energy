@@ -1,0 +1,50 @@
+name: Inspect ArGrid Browser QA Bootstrap
+
+on:
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  actions: read
+  contents: read
+
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Inspect validated browser QA bootstrap
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EXPECTED_SHA: 1c0c572e6bc0f6f8ef57ba76ec550c108bd9ac67
+        run: |
+          set -euo pipefail
+          run_id=""
+          for attempt in $(seq 1 40); do
+            run_id="$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs?branch=main&per_page=40" --jq ".workflow_runs[] | select(.name == \"Apply ArGrid Browser QA Findings\" and .head_sha == \"${EXPECTED_SHA}\") | .id" | head -n 1)"
+            if [ -n "${run_id}" ]; then break; fi
+            echo "Waiting for browser QA bootstrap (${attempt}/40)"
+            sleep 3
+          done
+          test -n "${run_id}"
+          echo "run_id=${run_id}"
+          for attempt in $(seq 1 120); do
+            status="$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${run_id}" --jq '.status')"
+            conclusion="$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${run_id}" --jq '.conclusion // "pending"')"
+            echo "status=${status} conclusion=${conclusion} (${attempt}/120)"
+            if [ "${status}" = "completed" ]; then break; fi
+            sleep 4
+          done
+          gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${run_id}/jobs" --jq '.jobs[] | [.id, .name, .status, (.conclusion // "pending")] | @tsv'
+          failed_job="$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${run_id}/jobs" --jq '.jobs[] | select(.conclusion == "failure") | .id' | head -n 1)"
+          if [ -n "${failed_job}" ]; then
+            curl -sSL \
+              -H "Authorization: Bearer ${GH_TOKEN}" \
+              -H "Accept: application/vnd.github+json" \
+              -H "X-GitHub-Api-Version: 2022-11-28" \
+              "${GITHUB_API_URL}/repos/${GITHUB_REPOSITORY}/actions/jobs/${failed_job}/logs" \
+              | tail -n 180
+          fi
+          conclusion="$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${run_id}" --jq '.conclusion // "pending"')"
+          test "${conclusion}" = "success"
