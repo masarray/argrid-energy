@@ -29,20 +29,27 @@ jobs:
         uses: actions/setup-node@v6
         with:
           node-version: 22
+          cache: npm
 
       - name: Show tool versions
         run: |
           node --version
           npm --version
 
-      - name: Install dependencies
-        run: npm install --no-audit --no-fund
+      - name: Install locked dependencies
+        run: npm ci --no-audit --no-fund
 
-      - name: Validate and build
-        run: npm run check
+      - name: Lint source
+        run: npm run lint
 
-      - name: Verify build output
-        run: test -f dist/index.html
+      - name: Type-check source
+        run: npm run typecheck
+
+      - name: Build static site
+        run: npm run build
+
+      - name: Verify routes, assets, and Pages base
+        run: npm run verify:build
 
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v6
