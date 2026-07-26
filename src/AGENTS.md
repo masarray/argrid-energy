@@ -54,3 +54,9 @@ These rules apply to everything under `src/`.
 - Normalize units; do not mix kW, MW, and raw values without deliberate conversion.
 - Use measurement-appropriate decimal precision.
 - Mark estimated, stale, substituted, manual, and simulated values distinctly.
+
+## Accessibility and resilient states
+
+- Preserve the skip link, visible focus treatment, semantic current-page navigation, reduced-motion behavior, and keyboard-closing overlays.
+- New workspaces must define credible loading, empty, stale/estimated, blocked, and client-error behavior rather than leaving blank panels.
+- Paused simulation and reduced data confidence must remain visible at shell level because they change how measurements may be interpreted.

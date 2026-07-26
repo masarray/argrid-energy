@@ -403,3 +403,138 @@
     transition-duration: 0.01ms !important;
   }
 }
+
+
+/* Final product hardening: accessibility, responsive shell, and explicit states. */
+html {
+  scrollbar-gutter: stable;
+}
+
+body {
+  overflow-x: hidden;
+}
+
+button:not(:disabled),
+a[href],
+select:not(:disabled),
+input:not(:disabled) {
+  cursor: pointer;
+}
+
+button:disabled,
+select:disabled,
+input:disabled {
+  cursor: not-allowed;
+}
+
+textarea:focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px solid color-mix(in oklab, var(--color-ring) 70%, transparent);
+  outline-offset: 2px;
+}
+
+.skip-link {
+  position: fixed;
+  left: 12px;
+  top: 10px;
+  z-index: 100;
+  transform: translateY(-160%);
+  border: 1px solid var(--color-border-strong);
+  border-radius: 6px;
+  background: var(--color-surface);
+  color: var(--color-foreground);
+  padding: 8px 12px;
+  font-size: 11px;
+  font-weight: 600;
+  box-shadow: 0 8px 28px color-mix(in oklab, black 18%, transparent);
+  transition: transform 120ms ease;
+}
+
+.skip-link:focus {
+  transform: translateY(0);
+}
+
+.workspace-status {
+  display: flex;
+  min-height: 34px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border-bottom: 1px solid var(--color-border);
+  background: color-mix(in oklab, var(--color-amber) 8%, var(--color-surface));
+  padding: 7px 16px;
+  font-size: 10px;
+}
+
+.workspace-state {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background: var(--color-surface);
+  padding: 20px;
+  box-shadow: 0 1px 2px color-mix(in oklab, var(--color-foreground) 5%, transparent);
+}
+
+.workspace-state-compact {
+  padding: 12px 14px;
+}
+
+.workspace-state-mark {
+  width: 3px;
+  min-height: 52px;
+  align-self: stretch;
+  border-radius: 999px;
+  background: var(--color-primary);
+}
+
+.workspace-state-warning .workspace-state-mark {
+  background: var(--color-amber);
+}
+
+.workspace-state-critical .workspace-state-mark {
+  background: var(--color-red);
+}
+
+.skeleton-block {
+  overflow: hidden;
+  border-radius: 6px;
+  background: linear-gradient(90deg, var(--color-surface-2) 20%, var(--color-surface-3) 40%, var(--color-surface-2) 60%);
+  background-size: 200% 100%;
+  animation: argrid-skeleton 1.4s ease-in-out infinite;
+}
+
+@keyframes argrid-skeleton {
+  from { background-position: 100% 0; }
+  to { background-position: -100% 0; }
+}
+
+@media (max-width: 1279px) {
+  .shell-command-bar {
+    min-height: 58px;
+  }
+}
+
+@media (max-width: 640px) {
+  .workspace-status {
+    align-items: flex-start;
+    padding-inline: 12px;
+  }
+
+  .workspace-state {
+    flex-direction: column;
+  }
+
+  .workspace-state-mark {
+    width: 44px;
+    min-height: 3px;
+  }
+}
+
+@media (forced-colors: active) {
+  .kpi-state-dot,
+  .workspace-state-mark {
+    forced-color-adjust: none;
+  }
+}

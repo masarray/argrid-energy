@@ -1,5 +1,5 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
-import { useMemo, useState, type ChangeEvent, type ReactNode } from "react";
+import { useEffect, useMemo, useState, type ChangeEvent, type KeyboardEvent, type ReactNode } from "react";
 import {
   Activity,
   Bell,
@@ -234,10 +234,24 @@ export function AppShell({
   } = useDemoSimulation();
 
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => window.innerWidth <= 1366);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => typeof window !== "undefined" && window.innerWidth <= 1366);
   const [search, setSearch] = useState("");
   const [guideOpen, setGuideOpen] = useState(false);
   const [guideStep, setGuideStep] = useState(0);
+
+  useEffect(() => {
+    if (!mobileNavOpen) return;
+    const previousOverflow = document.body.style.overflow;
+    const closeOnEscape = (event: globalThis.KeyboardEvent) => {
+      if (event.key === "Escape") setMobileNavOpen(false);
+    };
+    document.body.style.overflow = "hidden";
+    window.addEventListener("keydown", closeOnEscape);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", closeOnEscape);
+    };
+  }, [mobileNavOpen]);
 
   const normalizedSearch = search.trim().toLowerCase();
   const operationsWorkspace = path.startsWith("/electrical") || path.startsWith("/alarms");
@@ -299,6 +313,7 @@ export function AppShell({
                     to={item.to}
                     onClick={() => setMobileNavOpen(false)}
                     title={collapsed ? item.label : undefined}
+                    aria-current={active ? "page" : undefined}
                     className={`group flex items-center h-8 rounded-md text-[12.5px] transition-colors relative ${collapsed ? "justify-center px-2" : "gap-2.5 px-2.5"} ${active ? "bg-sidebar-accent text-foreground" : "text-muted-foreground hover:text-foreground hover:bg-sidebar-accent/55"}`}
                   >
                     {active && <span className="absolute left-0 top-1.5 bottom-1.5 w-[2px] rounded-r bg-primary" />}
@@ -328,7 +343,9 @@ export function AppShell({
   );
 
   return (
-    <div className={`min-h-screen flex text-foreground ${operationsWorkspace ? "workspace-operations" : "workspace-management"}`}>
+    <>
+      <a href="#main-content" className="skip-link">Skip to workspace content</a>
+      <div className={`min-h-screen flex text-foreground ${operationsWorkspace ? "workspace-operations" : "workspace-management"}`}>
       <aside className={`hidden lg:flex shrink-0 border-r border-sidebar-border bg-sidebar flex-col relative z-20 transition-[width] duration-200 ${sidebarCollapsed ? "w-[60px]" : "w-[220px]"}`}>
         {renderSidebar(sidebarCollapsed)}
         <button type="button" onClick={() => setSidebarCollapsed((value) => !value)} className="absolute -right-3 top-[68px] size-6 rounded-full border border-sidebar-border bg-sidebar flex items-center justify-center text-muted-foreground hover:text-foreground" aria-label={sidebarCollapsed ? "Expand navigation" : "Collapse navigation"}>
@@ -347,7 +364,7 @@ export function AppShell({
       )}
 
       <div className="flex-1 min-w-0 flex flex-col bg-background">
-        <header className="min-h-[52px] shrink-0 border-b border-border bg-surface flex flex-wrap items-center px-3 lg:px-4 py-2 lg:py-0 gap-2 relative z-30">
+        <header className="shell-command-bar min-h-[52px] shrink-0 border-b border-border bg-surface flex flex-wrap items-center px-3 lg:px-4 py-2 lg:py-0 gap-2 relative z-30">
           <button type="button" className="lg:hidden size-8 rounded-md border border-border bg-surface-2 flex items-center justify-center" onClick={() => setMobileNavOpen(true)} aria-label="Open navigation"><Menu className="size-4" /></button>
 
           <label className="flex items-center gap-2 h-8 px-2 rounded-md border border-transparent hover:border-border hover:bg-surface-2 text-[11.5px] min-w-0">
@@ -377,17 +394,17 @@ export function AppShell({
             </select>
           </label>
 
-          <button type="button" onClick={() => setRunning(!running)} className={`flex items-center gap-1.5 h-8 px-2.5 rounded-md border text-[10.5px] font-medium tracking-wide ${running ? "border-primary/25 bg-primary/8 text-primary" : "border-amber/30 bg-amber/10 text-amber"}`} title={running ? "Pause simulated live telemetry" : "Resume simulated live telemetry"}>
+          <button type="button" onClick={() => setRunning(!running)} aria-pressed={running} className={`flex items-center gap-1.5 h-8 px-2.5 rounded-md border text-[10.5px] font-medium tracking-wide ${running ? "border-primary/25 bg-primary/8 text-primary" : "border-amber/30 bg-amber/10 text-amber"}`} title={running ? "Pause simulated live telemetry" : "Resume simulated live telemetry"}>
             {running ? <Radio className="size-3" /> : <Pause className="size-3" />}{running ? "LIVE" : "PAUSED"}
           </button>
 
           <div className="relative order-last lg:order-none w-full lg:flex-1 lg:max-w-md lg:ml-1">
             <Search className="size-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
-            <input value={search} onChange={(event: ChangeEvent<HTMLInputElement>) => setSearch(event.target.value)} placeholder="Search site, meter, incident, event, report, invoice…" className="w-full h-8 pl-8 pr-3 rounded-md bg-surface-2 border border-border text-[11.5px] placeholder:text-muted-foreground/70 focus:outline-none focus:border-primary/50" aria-label="Search demo assets" />
+            <input value={search} onChange={(event: ChangeEvent<HTMLInputElement>) => setSearch(event.target.value)} onKeyDown={(event: KeyboardEvent<HTMLInputElement>) => { if (event.key === "Escape") setSearch(""); }} placeholder="Search site, meter, incident, event, report, invoice…" className="w-full h-8 pl-8 pr-3 rounded-md bg-surface-2 border border-border text-[11.5px] placeholder:text-muted-foreground/70 focus:outline-none focus:border-primary/50" aria-label="Search demo assets" role="combobox" aria-autocomplete="list" aria-expanded={normalizedSearch.length >= 2} aria-controls="global-search-results" />
             {normalizedSearch.length >= 2 && (
-              <div className="absolute left-0 right-0 top-9 rounded-md border border-border-strong bg-surface overflow-hidden z-50 shadow-lg">
+              <div id="global-search-results" role="listbox" className="absolute left-0 right-0 top-9 rounded-md border border-border-strong bg-surface overflow-hidden z-50 shadow-lg">
                 {searchResults.length > 0 ? searchResults.map((result) => (
-                  <Link key={`${result.to}-${result.label}`} to={result.to} onClick={() => { if (result.context) storeIncidentContext(result.context); setSearch(""); }} className="flex items-center gap-3 px-3 py-2 text-[11.5px] hover:bg-surface-2 border-b border-border last:border-b-0">
+                  <Link key={`${result.to}-${result.label}`} to={result.to} onClick={() => { if (result.context) storeIncidentContext(result.context); setSearch(""); }} role="option" aria-selected="false" className="flex items-center gap-3 px-3 py-2 text-[11.5px] hover:bg-surface-2 border-b border-border last:border-b-0">
                     <Search className="size-3.5 text-muted-foreground" /><span className="min-w-0 flex-1"><span className="block font-medium">{result.label}</span><span className="block text-[10px] text-muted-foreground truncate">{result.detail}</span></span><ChevronRight className="size-3.5 text-muted-foreground" />
                   </Link>
                 )) : <div className="px-3 py-3 text-[11px] text-muted-foreground">No matching demo asset.</div>}
@@ -412,11 +429,26 @@ export function AppShell({
               <h1 className="font-display text-[20px] font-medium tracking-tight leading-tight mt-1">{title}</h1>
               {subtitle && <div className="text-[11.5px] text-muted-foreground mt-0.5">{subtitle}</div>}
             </div>
-            {toolbar && <div className="flex items-center gap-2">{toolbar}</div>}
+            {toolbar && <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto sm:justify-end">{toolbar}</div>}
           </div>
         </div>
 
-        <main className="flex-1 overflow-auto p-3 lg:p-5">{children}</main>
+        {(!running || telemetry.meterQuality !== "GOOD") && (
+          <div className="workspace-status" role="status" aria-live="polite">
+            <div className="flex min-w-0 items-center gap-2">
+              {running ? <ShieldCheck className="size-3.5 shrink-0 text-amber" /> : <Pause className="size-3.5 shrink-0 text-amber" />}
+              <span className="font-medium text-foreground">{running ? "Decision confidence reduced" : "Simulation paused"}</span>
+              <span className="hidden text-muted-foreground md:inline">
+                {running
+                  ? `${telemetry.meterQuality} source quality · ${telemetry.intervalCompletenessPct.toFixed(1)}% interval completeness`
+                  : `Values are frozen at ${lastUpdated.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })}`}
+              </span>
+            </div>
+            <Link to="/data-health" className="shrink-0 text-[10px] font-medium text-primary hover:underline">Review data trust</Link>
+          </div>
+        )}
+
+        <main id="main-content" tabIndex={-1} className="flex-1 min-w-0 overflow-auto p-2.5 sm:p-3 lg:p-5">{children}</main>
       </div>
 
       {guideOpen && (
@@ -425,6 +457,7 @@ export function AppShell({
           <div className="p-4"><div className="text-[13px] font-medium">{guidedSteps[guideStep].title}</div><p className="mt-1.5 text-[11.5px] leading-relaxed text-muted-foreground">{guidedSteps[guideStep].body}</p><div className="mt-4 flex items-center gap-1.5">{guidedSteps.map((step, index) => <span key={step.title} className={`h-1 flex-1 rounded-full ${index <= guideStep ? "bg-primary" : "bg-surface-3"}`} />)}</div><div className="mt-4 flex items-center justify-between"><button type="button" onClick={() => moveGuide(guideStep - 1)} disabled={guideStep === 0} className="h-8 px-3 rounded-md border border-border text-[11px] disabled:opacity-40">Previous</button>{guideStep < guidedSteps.length - 1 ? <button type="button" onClick={() => moveGuide(guideStep + 1)} className="h-8 px-3 rounded-md bg-primary text-primary-foreground text-[11px] font-medium">Next scene</button> : <button type="button" onClick={() => setGuideOpen(false)} className="h-8 px-3 rounded-md bg-primary text-primary-foreground text-[11px] font-medium">Finish demo</button>}</div></div>
         </section>
       )}
-    </div>
+      </div>
+    </>
   );
 }

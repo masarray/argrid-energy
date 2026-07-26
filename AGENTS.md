@@ -64,3 +64,9 @@ A task is not complete merely because TypeScript compiles. Confirm that:
 - interactions preserve context and do not become decorative dead ends;
 - simulation and data-quality states are explicit;
 - no regression is introduced to GitHub Pages deployment.
+
+## Product hardening gate
+
+- Keep `package-lock.json` committed and use `npm ci` in CI and deployment.
+- Pull requests must pass lint, TypeScript, static build, route registration, asset existence, and GitHub Pages base-path verification before merge.
+- Do not combine all diagnostics into one opaque workflow step; preserve separate lint, type-check, build, and static-verification steps.
