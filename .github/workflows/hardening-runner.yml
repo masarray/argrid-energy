@@ -1,0 +1,56 @@
+name: Run final product hardening
+
+on:
+  push:
+    branches:
+      - agent/final-product-hardening-20260726
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout feature branch
+        uses: actions/checkout@v6
+        with:
+          ref: agent/final-product-hardening-20260726
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          package-manager-cache: false
+
+      - name: Execute embedded hardening patch
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import textwrap
+
+          workflow = Path('.github/workflows/hardening-builder.yml').read_text()
+          start = workflow.index("python - <<'PY'\n") + len("python - <<'PY'\n")
+          end = workflow.index("\n          PY", start)
+          patch = textwrap.dedent(workflow[start:end])
+          exec(compile(patch, 'embedded-hardening.py', 'exec'))
+          PY
+
+      - name: Generate locked dependency graph
+        run: npm install --no-audit --no-fund
+
+      - name: Validate hardened product
+        run: npm run check
+
+      - name: Commit validated product changes
+        run: |
+          git diff --check
+          git config user.name "ArGrid Product Hardening"
+          git config user.email "actions@users.noreply.github.com"
+          git rm .github/workflows/hardening-builder.yml .github/workflows/hardening-runner.yml .hardening-trigger
+          git add package.json package-lock.json scripts/verify-build.mjs .github/workflows/quality.yml .github/workflows/deploy-pages.yml .github/workflows/AGENTS.md AGENTS.md src/AGENTS.md src/components/app-shell.tsx src/components/argrid-ui.tsx src/routes/__root.tsx src/styles.css
+          git commit -m "Harden product shell accessibility and CI quality gates"
+          git push origin HEAD:agent/final-product-hardening-20260726
