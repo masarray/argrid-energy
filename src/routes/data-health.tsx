@@ -184,7 +184,7 @@ function DataHealth() {
         {activeTab === "Health Matrix" && (
           <div className="grid grid-cols-1 gap-3 xl:grid-cols-12">
             <Panel title="Meter Health Matrix" className="xl:col-span-8" actions={<span className="text-[9.5px] text-muted-foreground">quality · completeness · freshness · time sync</span>}>
-              <div className="overflow-x-auto">
+              <div className="overflow-x-auto" tabIndex={0} role="region" aria-label="Meter health matrix">
                 <table className="w-full min-w-[980px] text-[10.5px]">
                   <thead><tr className="border-b border-border text-left text-[9px] uppercase tracking-[0.11em] text-muted-foreground"><th className="py-2 font-normal">Meter / source</th><th className="py-2 font-normal">Role</th><th className="py-2 font-normal">Quality</th><th className="py-2 font-normal text-right">Completeness</th><th className="py-2 font-normal text-right">Estimated</th><th className="py-2 font-normal text-right">Freshness</th><th className="py-2 font-normal text-right">Time drift</th><th className="py-2 font-normal">Owner</th></tr></thead>
                   <tbody className="divide-y divide-border">
@@ -217,7 +217,7 @@ function DataHealth() {
             </Panel>
 
             <Panel title="Missing & Estimated Data Calendar" className="xl:col-span-8" actions={<span className="text-[9.5px] text-muted-foreground">June · interval exception density</span>}>
-              <div className="overflow-x-auto">
+              <div className="overflow-x-auto" tabIndex={0} role="region" aria-label="Missing and estimated data calendar">
                 <div className="min-w-[790px]">
                   <div className="grid grid-cols-[78px_repeat(30,minmax(14px,1fr))] gap-1 text-[8px] text-muted-foreground"><span />{Array.from({ length: 30 }, (_, day) => <span key={day} className="text-center tabular">{day + 1}</span>)}</div>
                   <div className="mt-1 space-y-1">{calendar.map((row) => <div key={row.meter} className="grid grid-cols-[78px_repeat(30,minmax(14px,1fr))] gap-1"><span className="pr-2 text-right text-[9px] font-medium tabular">{row.meter}</span>{row.days.map((value, day) => <span key={`${row.meter}-${day}`} title={`${row.meter} · day ${day + 1} · exception level ${value}`} className={`h-4 rounded-sm border border-border/50 ${cellClass(value)}`} />)}</div>)}</div>
@@ -267,7 +267,7 @@ function DataHealth() {
         {activeTab === "Provenance" && (
           <div className="grid grid-cols-1 gap-3 xl:grid-cols-12">
             <Panel title={`${selectedMeter.id} · Measurement Provenance`} className="xl:col-span-8" actions={<span className="text-[9.5px] text-muted-foreground">source → transport → storage → calculation → decision</span>}>
-              <div className="overflow-x-auto pb-2">
+              <div className="overflow-x-auto pb-2" tabIndex={0} role="region" aria-label="Measurement provenance chain">
                 <div className="flex min-w-[860px] items-stretch gap-2">
                   <ProvenanceNode icon={Gauge} title="Measurement" value={selectedMeter.name} detail={`${selectedMeter.id} · ${selectedMeter.quality}`} state={selectedMeter.quality === "GOOD" ? "good" : "warning"} />
                   <ProvenanceArrow />

@@ -236,8 +236,11 @@ export function AppShell({
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(() => typeof window !== "undefined" && window.innerWidth <= 1366);
   const [search, setSearch] = useState("");
-  const [guideOpen, setGuideOpen] = useState(false);
-  const [guideStep, setGuideStep] = useState(0);
+  const [guideOpen, setGuideOpen] = useState(() => window.sessionStorage.getItem("argrid-guided-demo-open") === "true");
+const [guideStep, setGuideStep] = useState(() => {
+  const saved = Number(window.sessionStorage.getItem("argrid-guided-demo-step") ?? "0");
+  return Number.isFinite(saved) ? Math.max(0, Math.min(guidedSteps.length - 1, saved)) : 0;
+});
 
   useEffect(() => {
     if (!mobileNavOpen) return;
@@ -272,9 +275,21 @@ export function AppShell({
     void navigate({ to: step.to });
   };
 
+  const persistGuideState = (open: boolean, step: number) => {
+    window.sessionStorage.setItem("argrid-guided-demo-open", String(open));
+    window.sessionStorage.setItem("argrid-guided-demo-step", String(step));
+  };
+
+  const closeGuide = () => {
+    setGuideOpen(false);
+    window.sessionStorage.removeItem("argrid-guided-demo-open");
+    window.sessionStorage.removeItem("argrid-guided-demo-step");
+  };
+
   const startGuide = () => {
     setGuideStep(0);
     setGuideOpen(true);
+    persistGuideState(true, 0);
     applyGuidedStep(guidedSteps[0]);
   };
 
@@ -282,6 +297,7 @@ export function AppShell({
     const boundedIndex = Math.max(0, Math.min(guidedSteps.length - 1, nextIndex));
     const nextStep = guidedSteps[boundedIndex];
     setGuideStep(boundedIndex);
+    persistGuideState(true, boundedIndex);
     applyGuidedStep(nextStep);
   };
 
@@ -453,8 +469,8 @@ export function AppShell({
 
       {guideOpen && (
         <section className="fixed bottom-4 right-4 z-50 w-[min(360px,calc(100vw-32px))] rounded-lg border border-border-strong bg-surface shadow-xl" aria-live="polite">
-          <div className="flex items-center justify-between border-b border-border px-4 h-10"><div className="text-[10px] uppercase tracking-[0.14em] text-primary">Guided value story</div><button type="button" className="size-7 rounded-md flex items-center justify-center hover:bg-surface-2" onClick={() => setGuideOpen(false)} aria-label="Close guided demo"><X className="size-3.5" /></button></div>
-          <div className="p-4"><div className="text-[13px] font-medium">{guidedSteps[guideStep].title}</div><p className="mt-1.5 text-[11.5px] leading-relaxed text-muted-foreground">{guidedSteps[guideStep].body}</p><div className="mt-4 flex items-center gap-1.5">{guidedSteps.map((step, index) => <span key={step.title} className={`h-1 flex-1 rounded-full ${index <= guideStep ? "bg-primary" : "bg-surface-3"}`} />)}</div><div className="mt-4 flex items-center justify-between"><button type="button" onClick={() => moveGuide(guideStep - 1)} disabled={guideStep === 0} className="h-8 px-3 rounded-md border border-border text-[11px] disabled:opacity-40">Previous</button>{guideStep < guidedSteps.length - 1 ? <button type="button" onClick={() => moveGuide(guideStep + 1)} className="h-8 px-3 rounded-md bg-primary text-primary-foreground text-[11px] font-medium">Next scene</button> : <button type="button" onClick={() => setGuideOpen(false)} className="h-8 px-3 rounded-md bg-primary text-primary-foreground text-[11px] font-medium">Finish demo</button>}</div></div>
+          <div className="flex items-center justify-between border-b border-border px-4 h-10"><div className="text-[10px] uppercase tracking-[0.14em] text-primary">Guided value story</div><button type="button" className="size-7 rounded-md flex items-center justify-center hover:bg-surface-2" onClick={closeGuide} aria-label="Close guided demo"><X className="size-3.5" /></button></div>
+          <div className="p-4"><div className="text-[13px] font-medium">{guidedSteps[guideStep].title}</div><p className="mt-1.5 text-[11.5px] leading-relaxed text-muted-foreground">{guidedSteps[guideStep].body}</p><div className="mt-4 flex items-center gap-1.5">{guidedSteps.map((step, index) => <span key={step.title} className={`h-1 flex-1 rounded-full ${index <= guideStep ? "bg-primary" : "bg-surface-3"}`} />)}</div><div className="mt-4 flex items-center justify-between"><button type="button" onClick={() => moveGuide(guideStep - 1)} disabled={guideStep === 0} className="h-8 px-3 rounded-md border border-border text-[11px] disabled:opacity-40">Previous</button>{guideStep < guidedSteps.length - 1 ? <button type="button" onClick={() => moveGuide(guideStep + 1)} className="h-8 px-3 rounded-md bg-primary text-primary-foreground text-[11px] font-medium">Next scene</button> : <button type="button" onClick={closeGuide} className="h-8 px-3 rounded-md bg-primary text-primary-foreground text-[11px] font-medium">Finish demo</button>}</div></div>
         </section>
       )}
       </div>
