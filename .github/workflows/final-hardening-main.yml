@@ -34,12 +34,12 @@ jobs:
           git show origin/agent/final-product-hardening-20260726:.github/workflows/hardening-builder.yml > /tmp/hardening-builder.yml
           python - <<'PY'
           from pathlib import Path
-          import textwrap
 
           workflow = Path('/tmp/hardening-builder.yml').read_text()
           start = workflow.index("python - <<'PY'\n") + len("python - <<'PY'\n")
           end = workflow.index("\n          PY", start)
-          patch = textwrap.dedent(workflow[start:end])
+          block = workflow[start:end]
+          patch = "\n".join(line[10:] if line.startswith("          ") else line for line in block.splitlines())
           exec(compile(patch, 'embedded-hardening.py', 'exec'))
           PY
 
