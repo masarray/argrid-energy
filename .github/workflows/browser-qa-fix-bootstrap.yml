@@ -1,0 +1,126 @@
+name: Apply ArGrid Browser QA Findings
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/browser-qa-fix-bootstrap.yml
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+
+    steps:
+      - name: Checkout browser QA branch
+        uses: actions/checkout@v6
+        with:
+          ref: agent/browser-qa-visual-a11y-20260726
+          fetch-depth: 0
+
+      - name: Apply audited product fixes
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          app_shell = Path("src/components/app-shell.tsx")
+          text = app_shell.read_text()
+          text = text.replace(
+              '  const [guideOpen, setGuideOpen] = useState(false);\n  const [guideStep, setGuideStep] = useState(0);',
+              '''  const [guideOpen, setGuideOpen] = useState(() => window.sessionStorage.getItem("argrid-guided-demo-open") === "true");
+          const [guideStep, setGuideStep] = useState(() => {
+            const saved = Number(window.sessionStorage.getItem("argrid-guided-demo-step") ?? "0");
+            return Number.isFinite(saved) ? Math.max(0, Math.min(guidedSteps.length - 1, saved)) : 0;
+          });''',
+          )
+          text = text.replace(
+              '''  const startGuide = () => {
+              setGuideStep(0);
+              setGuideOpen(true);
+              applyGuidedStep(guidedSteps[0]);
+            };''',
+              '''  const persistGuideState = (open: boolean, step: number) => {
+              window.sessionStorage.setItem("argrid-guided-demo-open", String(open));
+              window.sessionStorage.setItem("argrid-guided-demo-step", String(step));
+            };
+
+            const closeGuide = () => {
+              setGuideOpen(false);
+              window.sessionStorage.removeItem("argrid-guided-demo-open");
+              window.sessionStorage.removeItem("argrid-guided-demo-step");
+            };
+
+            const startGuide = () => {
+              setGuideStep(0);
+              setGuideOpen(true);
+              persistGuideState(true, 0);
+              applyGuidedStep(guidedSteps[0]);
+            };''',
+          )
+          text = text.replace(
+              '''    setGuideStep(boundedIndex);
+              applyGuidedStep(nextStep);''',
+              '''    setGuideStep(boundedIndex);
+              persistGuideState(true, boundedIndex);
+              applyGuidedStep(nextStep);''',
+          )
+          text = text.replace('onClick={() => setGuideOpen(false)}', 'onClick={closeGuide}')
+          app_shell.write_text(text)
+
+          billing = Path("src/routes/billing.tsx")
+          text = billing.read_text().replace(
+              '<div className="overflow-x-auto">\n                  <table className="w-full min-w-[760px] text-[10.5px]">',
+              '<div className="overflow-x-auto" tabIndex={0} role="region" aria-label="Invoice charge line items">\n                  <table className="w-full min-w-[760px] text-[10.5px]">',
+          )
+          billing.write_text(text)
+
+          data_health = Path("src/routes/data-health.tsx")
+          text = data_health.read_text()
+          text = text.replace(
+              '<div className="overflow-x-auto">\n                <table className="w-full min-w-[980px] text-[10.5px]">',
+              '<div className="overflow-x-auto" tabIndex={0} role="region" aria-label="Meter health matrix">\n                <table className="w-full min-w-[980px] text-[10.5px]">',
+          )
+          text = text.replace(
+              '<div className="overflow-x-auto">\n                <div className="min-w-[790px]">',
+              '<div className="overflow-x-auto" tabIndex={0} role="region" aria-label="Missing and estimated data calendar">\n                <div className="min-w-[790px]">',
+          )
+          text = text.replace(
+              '<div className="overflow-x-auto pb-2">',
+              '<div className="overflow-x-auto pb-2" tabIndex={0} role="region" aria-label="Measurement provenance chain">',
+          )
+          data_health.write_text(text)
+          PY
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          package-manager-cache: false
+
+      - name: Generate locked dependency graph
+        run: npm install --no-audit --no-fund
+
+      - name: Install Chromium and system dependencies
+        run: npx playwright install --with-deps chromium
+
+      - name: Validate source and static build
+        run: npm run check
+
+      - name: Refresh visual baselines after audited fixes
+        run: npm run test:e2e:update
+
+      - name: Validate complete browser QA suite
+        run: npm run qa:browser
+
+      - name: Commit validated browser QA phase
+        run: |
+          git diff --check
+          git config user.name "ArGrid Browser QA"
+          git config user.email "actions@users.noreply.github.com"
+          git add package.json package-lock.json playwright.config.ts tests/e2e src/components/app-shell.tsx src/routes/billing.tsx src/routes/data-health.tsx .github/workflows/browser-qa.yml
+          git commit -m "Add automated browser QA visual regression and accessibility gates"
+          git push origin HEAD:agent/browser-qa-visual-a11y-20260726
