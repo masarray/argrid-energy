@@ -40,3 +40,12 @@ Use clear job names and reasonable timeouts. Keep build failure logs easy to dia
 - Keep the pull-request quality workflow separate from Pages deployment.
 - Run lint, TypeScript, build, and `verify:build` as individually named steps so a failure is immediately diagnosable.
 - A pull request must pass the quality workflow before its changes are considered ready for `main`.
+
+## Browser QA gate
+
+- Keep Playwright browser QA separate from the static quality gate and Pages deployment.
+- Use the committed Playwright version and `npm ci`; do not install an unpinned latest browser-test package at runtime.
+- Run deterministic Chromium smoke, visual-regression, and Axe accessibility coverage for representative Management, Operations, Billing, and Data Health workspaces.
+- Preserve screenshot baselines under `tests/e2e/visual.spec.ts-snapshots/`; update them only after an intentional visual review.
+- Upload traces, videos, screenshots, and the HTML report only when browser QA fails.
+- Browser QA must never call live field, ERP, filing, payment, or external-control endpoints.

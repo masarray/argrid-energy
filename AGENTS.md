@@ -30,13 +30,14 @@ Core value loop:
 - `src/routes/` — route-level workspaces and user workflows.
 - `src/lib/` — deterministic data, simulation, domain rules, formatting, and shared state.
 - `src/routeTree.gen.ts` — committed route tree used by the build.
+- `tests/e2e/` — deterministic Playwright smoke, visual-regression, and accessibility coverage.
 - `.github/workflows/` — validation and GitHub Pages deployment.
 
 Do not reintroduce `@tanstack/router-plugin` unless published package versions and peer dependencies are verified and the route-generation strategy is intentionally changed.
 
 ## Working method
 
-1. Inspect the nearest `AGENTS.md` and the related route, component, data, and simulation files.
+1. Inspect the nearest `AGENTS.md` and the related route, component, data, simulation, and browser-test files.
 2. Trace shared state before editing. Do not duplicate site, scenario, telemetry, status, formatting, or financial logic in route files.
 3. Make the smallest coherent change that completes the requested workflow.
 4. Preserve context across navigation: site, asset, meter, event timestamp, time range, scenario, and selected measurement.
@@ -47,12 +48,12 @@ Do not reintroduce `@tanstack/router-plugin` unless published package versions a
 ## Required validation
 
 ```bash
-npm install --no-audit --no-fund
+npm ci --no-audit --no-fund
 npm run check
-test -f dist/index.html
+npm run qa:browser
 ```
 
-When changing deployment, also confirm that generated asset URLs use the GitHub Pages repository base path.
+When changing deployment, also confirm that generated asset URLs use the GitHub Pages repository base path. When changing a covered visual surface, review and intentionally update the corresponding Playwright baseline rather than bypassing screenshot comparison.
 
 ## Completion standard
 
@@ -63,10 +64,12 @@ A task is not complete merely because TypeScript compiles. Confirm that:
 - abnormal conditions are obvious because normal conditions remain calm;
 - interactions preserve context and do not become decorative dead ends;
 - simulation and data-quality states are explicit;
+- no serious or critical automated accessibility violation is introduced in representative workspaces;
+- no unreviewed visual-regression baseline changes are introduced;
 - no regression is introduced to GitHub Pages deployment.
 
 ## Product hardening gate
 
 - Keep `package-lock.json` committed and use `npm ci` in CI and deployment.
-- Pull requests must pass lint, TypeScript, static build, route registration, asset existence, and GitHub Pages base-path verification before merge.
-- Do not combine all diagnostics into one opaque workflow step; preserve separate lint, type-check, build, and static-verification steps.
+- Pull requests must pass lint, TypeScript, static build, route registration, asset existence, GitHub Pages base-path verification, browser smoke tests, visual regression, and automated accessibility checks before merge.
+- Do not combine all diagnostics into one opaque workflow step; preserve separate lint, type-check, build, static-verification, and browser-QA reporting.

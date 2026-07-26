@@ -373,7 +373,7 @@ function Billing() {
 
             {activeTab === "Invoice" && (
               <div>
-                <div className="overflow-x-auto">
+                <div className="overflow-x-auto" tabIndex={0} role="region" aria-label="Invoice charge line items">
                   <table className="w-full min-w-[760px] text-[10.5px]">
                     <thead><tr className="border-b border-border text-left text-[9px] uppercase tracking-[0.11em] text-muted-foreground"><th className="py-2 font-normal">Code / charge</th><th className="py-2 font-normal">Source</th><th className="py-2 font-normal text-right">Quantity</th><th className="py-2 font-normal text-right">Rate</th><th className="py-2 font-normal text-right">Amount</th></tr></thead>
                     <tbody className="divide-y divide-border">
