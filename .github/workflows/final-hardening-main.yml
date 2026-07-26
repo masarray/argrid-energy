@@ -49,12 +49,13 @@ jobs:
       - name: Validate hardened product
         run: npm run check
 
-      - name: Commit validated hardening
+      - name: Commit validated source hardening
         run: |
           git diff --check
+          git restore .github/workflows/deploy-pages.yml .github/workflows/AGENTS.md
+          rm -f .github/workflows/quality.yml
           git config user.name "ArGrid Product Hardening"
           git config user.email "actions@users.noreply.github.com"
-          git rm .github/workflows/final-hardening-main.yml
-          git add package.json package-lock.json scripts/verify-build.mjs .github/workflows/quality.yml .github/workflows/deploy-pages.yml .github/workflows/AGENTS.md AGENTS.md src/AGENTS.md src/components/app-shell.tsx src/components/argrid-ui.tsx src/routes/__root.tsx src/styles.css
-          git commit -m "Harden product shell accessibility and CI quality gates"
+          git add package.json package-lock.json scripts/verify-build.mjs AGENTS.md src/AGENTS.md src/components/app-shell.tsx src/components/argrid-ui.tsx src/routes/__root.tsx src/styles.css
+          git commit -m "Harden product shell accessibility and build verification"
           git push origin HEAD:main
