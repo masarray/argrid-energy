@@ -16,40 +16,19 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - name: Inspect bootstrap run and source commit
+      - name: Print failed bootstrap log tail
         env:
           GH_TOKEN: ${{ github.token }}
-          EXPECTED_SHA: 4c92012e452e35d2c8498208eaf513b4455695a1
+          RUN_ID: 30180601532
         run: |
           set -euo pipefail
-          run_id=""
-          for attempt in $(seq 1 30); do
-            run_id="$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs?branch=main&per_page=30" --jq ".workflow_runs[] | select(.name == \"Apply validated final hardening\" and .head_sha == \"${EXPECTED_SHA}\") | .id" | head -n 1)"
-            if [ -n "${run_id}" ]; then break; fi
-            echo "Waiting for bootstrap run (${attempt}/30)"
-            sleep 3
-          done
-          test -n "${run_id}"
-          echo "run_id=${run_id}"
-          for attempt in $(seq 1 80); do
-            status="$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${run_id}" --jq '.status')"
-            conclusion="$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${run_id}" --jq '.conclusion // "pending"')"
-            echo "status=${status} conclusion=${conclusion} (${attempt}/80)"
-            if [ "${status}" = "completed" ]; then break; fi
-            sleep 4
-          done
-          gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${run_id}/jobs" --jq '.jobs[] | [.id, .name, .status, (.conclusion // "pending")] | @tsv'
-          failed_job="$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${run_id}/jobs" --jq '.jobs[] | select(.conclusion == "failure") | .id' | head -n 1)"
-          if [ -n "${failed_job}" ]; then
-            echo "failed_job=${failed_job}"
-            curl -sSL \
-              -H "Authorization: Bearer ${GH_TOKEN}" \
-              -H "Accept: application/vnd.github+json" \
-              -H "X-GitHub-Api-Version: 2022-11-28" \
-              "${GITHUB_API_URL}/repos/${GITHUB_REPOSITORY}/actions/jobs/${failed_job}/logs" \
-              | grep -E 'Expected text|error TS|##\[error\]|npm ERR|Error:|Process completed|Traceback|SyntaxError|IndentationError|AssertionError|Route tree|Built asset|GitHub Pages base|remote:' \
-              | tail -n 200 || true
-          fi
-          conclusion="$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${run_id}" --jq '.conclusion // "pending"')"
-          test "${conclusion}" = "success"
-          echo "main_head=$(gh api "repos/${GITHUB_REPOSITORY}/commits/main" --jq '.sha')"
+          gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${RUN_ID}/jobs" --jq '.jobs[] | [.id, .name, .status, (.conclusion // "pending")] | @tsv'
+          failed_job="$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${RUN_ID}/jobs" --jq '.jobs[] | select(.conclusion == "failure") | .id' | head -n 1)"
+          test -n "${failed_job}"
+          echo "failed_job=${failed_job}"
+          curl -sSL \
+            -H "Authorization: Bearer ${GH_TOKEN}" \
+            -H "Accept: application/vnd.github+json" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            "${GITHUB_API_URL}/repos/${GITHUB_REPOSITORY}/actions/jobs/${failed_job}/logs" \
+            | tail -n 140
