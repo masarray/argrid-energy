@@ -11,23 +11,35 @@ permissions:
   contents: read
 
 jobs:
-  inspect-hardening-bootstrap:
-    name: Inspect final hardening bootstrap
+  verify-hardening-bootstrap:
+    name: Verify final hardening bootstrap
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - name: Print final commit failure
+      - name: Wait for validated source commit
         env:
           GH_TOKEN: ${{ github.token }}
-          RUN_ID: 30180601532
+          EXPECTED_SHA: c96857cbff236dba876df45accdb3f72cae9e499
         run: |
           set -euo pipefail
-          failed_job="$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${RUN_ID}/jobs" --jq '.jobs[] | select(.conclusion == "failure") | .id' | head -n 1)"
-          test -n "${failed_job}"
-          echo "failed_job=${failed_job}"
-          curl -sSL \
-            -H "Authorization: Bearer ${GH_TOKEN}" \
-            -H "Accept: application/vnd.github+json" \
-            -H "X-GitHub-Api-Version: 2022-11-28" \
-            "${GITHUB_API_URL}/repos/${GITHUB_REPOSITORY}/actions/jobs/${failed_job}/logs" \
-            | tail -n 52
+          run_id=""
+          for attempt in $(seq 1 30); do
+            run_id="$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs?branch=main&per_page=30" --jq ".workflow_runs[] | select(.name == \"Apply validated final hardening\" and .head_sha == \"${EXPECTED_SHA}\") | .id" | head -n 1)"
+            if [ -n "${run_id}" ]; then break; fi
+            echo "Waiting for bootstrap run (${attempt}/30)"
+            sleep 3
+          done
+          test -n "${run_id}"
+          for attempt in $(seq 1 80); do
+            status="$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${run_id}" --jq '.status')"
+            conclusion="$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${run_id}" --jq '.conclusion // "pending"')"
+            echo "status=${status} conclusion=${conclusion} (${attempt}/80)"
+            if [ "${status}" = "completed" ]; then break; fi
+            sleep 4
+          done
+          gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${run_id}/jobs" --jq '.jobs[] | [.id, .name, .status, (.conclusion // "pending")] | @tsv'
+          conclusion="$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${run_id}" --jq '.conclusion // "pending"')"
+          test "${conclusion}" = "success"
+          main_head="$(gh api "repos/${GITHUB_REPOSITORY}/commits/main" --jq '.sha')"
+          echo "main_head=${main_head}"
+          test "${main_head}" != "${EXPECTED_SHA}"
