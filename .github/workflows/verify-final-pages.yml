@@ -1,0 +1,41 @@
+name: Verify Final ArGrid Pages Deployment
+
+on:
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  actions: read
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - name: Verify final Pages run
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EXPECTED_SHA: 4c4bf7461051d6989f8352a5613b915ca8ee053c
+        run: |
+          set -euo pipefail
+          run_id=""
+          for attempt in $(seq 1 50); do
+            run_id="$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs?branch=main&per_page=50" --jq ".workflow_runs[] | select(.name == \"Deploy ArGrid to GitHub Pages\" and .head_sha == \"${EXPECTED_SHA}\") | .id" | head -n 1)"
+            if [ -n "${run_id}" ]; then break; fi
+            echo "Waiting for Pages run (${attempt}/50)"
+            sleep 3
+          done
+          test -n "${run_id}"
+          echo "run_id=${run_id}"
+          for attempt in $(seq 1 100); do
+            status="$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${run_id}" --jq '.status')"
+            conclusion="$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${run_id}" --jq '.conclusion // "pending"')"
+            echo "status=${status} conclusion=${conclusion} (${attempt}/100)"
+            if [ "${status}" = "completed" ]; then break; fi
+            sleep 4
+          done
+          gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${run_id}/jobs" --jq '.jobs[] | [.id, .name, .status, (.conclusion // "pending")] | @tsv'
+          conclusion="$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${run_id}" --jq '.conclusion // "pending"')"
+          test "${conclusion}" = "success"
