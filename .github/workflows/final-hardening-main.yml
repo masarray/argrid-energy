@@ -51,6 +51,7 @@ jobs:
 
       - name: Commit validated source hardening
         run: |
+          sed -i 's/[[:space:]]\+$//' src/components/app-shell.tsx
           git diff --check
           git restore .github/workflows/deploy-pages.yml .github/workflows/AGENTS.md
           rm -f .github/workflows/quality.yml
