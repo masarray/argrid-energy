@@ -11,37 +11,36 @@ permissions:
   contents: read
 
 jobs:
-  verify-main-pages-run:
-    name: Verify latest main Pages run
+  inspect-hardening-bootstrap:
+    name: Inspect final hardening bootstrap
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - name: Wait for the latest main deployment workflow
+      - name: Inspect bootstrap run and failing logs
         env:
           GH_TOKEN: ${{ github.token }}
-          EXPECTED_SHA: 97aea5cbd8f43a5615767afad3dc6265f9324064
+          EXPECTED_SHA: f6b5331091039b026916dffd3c7b55efb939b654
         run: |
           set -euo pipefail
           run_id=""
-          for attempt in $(seq 1 30); do
-            run_id="$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs?branch=main&per_page=20" --jq ".workflow_runs[] | select(.name == \"Deploy ArGrid to GitHub Pages\" and .head_sha == \"${EXPECTED_SHA}\") | .id" | head -n 1)"
+          for attempt in $(seq 1 20); do
+            run_id="$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs?branch=main&per_page=30" --jq ".workflow_runs[] | select(.name == \"Apply validated final hardening\" and .head_sha == \"${EXPECTED_SHA}\") | .id" | head -n 1)"
             if [ -n "${run_id}" ]; then break; fi
-            echo "Waiting for run to appear (${attempt}/30)"
-            sleep 5
+            echo "Waiting for bootstrap run (${attempt}/20)"
+            sleep 3
           done
           test -n "${run_id}"
           echo "run_id=${run_id}"
-
-          for attempt in $(seq 1 60); do
-            status="$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${run_id}" --jq '.status')"
-            conclusion="$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${run_id}" --jq '.conclusion // "pending"')"
-            echo "status=${status} conclusion=${conclusion} (${attempt}/60)"
-            if [ "${status}" = "completed" ]; then break; fi
-            sleep 5
-          done
-
-          gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${run_id}/jobs" \
-            --jq '.jobs[] | [.id, .name, .status, (.conclusion // "pending")] | @tsv'
-
-          conclusion="$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${run_id}" --jq '.conclusion // "pending"')"
-          test "${conclusion}" = "success"
+          gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${run_id}" --jq '[.status, (.conclusion // "pending"), .html_url] | @tsv'
+          gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${run_id}/jobs" --jq '.jobs[] | [.id, .name, .status, (.conclusion // "pending")] | @tsv'
+          failed_job="$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${run_id}/jobs" --jq '.jobs[] | select(.conclusion == "failure") | .id' | head -n 1)"
+          if [ -n "${failed_job}" ]; then
+            echo "failed_job=${failed_job}"
+            curl -sSL \
+              -H "Authorization: Bearer ${GH_TOKEN}" \
+              -H "Accept: application/vnd.github+json" \
+              -H "X-GitHub-Api-Version: 2022-11-28" \
+              "${GITHUB_API_URL}/repos/${GITHUB_REPOSITORY}/actions/jobs/${failed_job}/logs" \
+              | grep -E 'Expected text|error TS|##\[error\]|npm ERR|Error:|Process completed|Traceback|SyntaxError|AssertionError|Route tree|Built asset|GitHub Pages base' \
+              | tail -n 160 || true
+          fi
