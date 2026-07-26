@@ -16,10 +16,10 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - name: Inspect bootstrap run and failing logs
+      - name: Inspect bootstrap run and source commit
         env:
           GH_TOKEN: ${{ github.token }}
-          EXPECTED_SHA: a659ae1d03a56822fd22ad5e2f199ea2855c5c6f
+          EXPECTED_SHA: 4c92012e452e35d2c8498208eaf513b4455695a1
         run: |
           set -euo pipefail
           run_id=""
@@ -47,8 +47,9 @@ jobs:
               -H "Accept: application/vnd.github+json" \
               -H "X-GitHub-Api-Version: 2022-11-28" \
               "${GITHUB_API_URL}/repos/${GITHUB_REPOSITORY}/actions/jobs/${failed_job}/logs" \
-              | grep -E 'Expected text|error TS|##\[error\]|npm ERR|Error:|Process completed|Traceback|SyntaxError|IndentationError|AssertionError|Route tree|Built asset|GitHub Pages base' \
+              | grep -E 'Expected text|error TS|##\[error\]|npm ERR|Error:|Process completed|Traceback|SyntaxError|IndentationError|AssertionError|Route tree|Built asset|GitHub Pages base|remote:' \
               | tail -n 200 || true
           fi
           conclusion="$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${run_id}" --jq '.conclusion // "pending"')"
           test "${conclusion}" = "success"
+          echo "main_head=$(gh api "repos/${GITHUB_REPOSITORY}/commits/main" --jq '.sha')"
