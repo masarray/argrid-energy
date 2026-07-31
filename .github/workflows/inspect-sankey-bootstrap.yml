@@ -1,4 +1,4 @@
-name: Inspect ArGrid Sankey Bootstrap
+name: Inspect ArGrid Sankey Integration
 
 on:
   pull_request:
@@ -12,30 +12,33 @@ permissions:
 jobs:
   inspect:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
     steps:
-      - name: Wait for Sankey bootstrap
+      - name: Wait for Sankey integration
         env:
           GH_TOKEN: ${{ github.token }}
-          EXPECTED_SHA: a0329a4e83de21b1b547f86c66279853a92f562f
+          EXPECTED_SHA: 2077a85d6ee3173f337ca67e82c03c2e63629089
         run: |
           set -euo pipefail
           run_id=""
-          for attempt in $(seq 1 80); do
-            run_id="$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs?branch=main&per_page=60" --jq ".workflow_runs[] | select(.name == \"Bootstrap ArGrid Energy Sankey\" and .head_sha == \"${EXPECTED_SHA}\") | .id" | head -n 1)"
+          for attempt in $(seq 1 100); do
+            run_id="$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs?branch=main&per_page=80" --jq ".workflow_runs[] | select(.name == \"Integrate ArGrid Energy Sankey\" and .head_sha == \"${EXPECTED_SHA}\") | .id" | head -n 1)"
             if [ -n "${run_id}" ]; then break; fi
             sleep 3
           done
           test -n "${run_id}"
-          for attempt in $(seq 1 180); do
+          echo "run_id=${run_id}"
+          for attempt in $(seq 1 220); do
             status="$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${run_id}" --jq '.status')"
+            conclusion="$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${run_id}" --jq '.conclusion // "pending"')"
+            echo "status=${status} conclusion=${conclusion} (${attempt}/220)"
             if [ "${status}" = "completed" ]; then break; fi
             sleep 4
           done
           gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${run_id}/jobs" --jq '.jobs[] | [.id, .name, .status, (.conclusion // "pending")] | @tsv'
           failed_job="$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${run_id}/jobs" --jq '.jobs[] | select(.conclusion == "failure") | .id' | head -n 1)"
           if [ -n "${failed_job}" ]; then
-            curl -sSL -H "Authorization: Bearer ${GH_TOKEN}" -H "Accept: application/vnd.github+json" "${GITHUB_API_URL}/repos/${GITHUB_REPOSITORY}/actions/jobs/${failed_job}/logs" | tail -n 220
+            curl -sSL -H "Authorization: Bearer ${GH_TOKEN}" -H "Accept: application/vnd.github+json" "${GITHUB_API_URL}/repos/${GITHUB_REPOSITORY}/actions/jobs/${failed_job}/logs" | tail -n 260
           fi
           conclusion="$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${run_id}" --jq '.conclusion // "pending"')"
           test "${conclusion}" = "success"
