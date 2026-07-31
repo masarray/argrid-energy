@@ -1,33 +1,47 @@
 import { expect, test } from "@playwright/test";
-import { openWorkspace, prepareDemo, settleVisual } from "./support";
+import { openWorkspace, prepareDemo, settleVisual, type DemoScenario } from "./support";
 
-test.describe("ArGrid visual regression", () => {
-  test("management overview at 1440×900", async ({ page }) => {
-    await prepareDemo(page, { scenario: "normal" });
-    await openWorkspace(page, "/");
-    await settleVisual(page);
-    await expect(page).toHaveScreenshot("management-overview-1440x900.png", { fullPage: false });
-  });
+const routeMatrix: Array<{ name: string; path: string; scenario: DemoScenario }> = [
+  { name: "overview", path: "/", scenario: "normal" },
+  { name: "portfolio", path: "/portfolio", scenario: "peak-demand" },
+  { name: "analytics", path: "/analytics", scenario: "efficiency-loss" },
+  { name: "demand", path: "/demand", scenario: "peak-demand" },
+  { name: "opportunities", path: "/opportunities", scenario: "efficiency-loss" },
+  { name: "savings", path: "/savings", scenario: "efficiency-loss" },
+  { name: "electrical", path: "/electrical", scenario: "voltage-sag" },
+  { name: "alarms", path: "/alarms", scenario: "voltage-sag" },
+  { name: "power-quality", path: "/alarms/power-quality", scenario: "voltage-sag" },
+  { name: "reports", path: "/reports", scenario: "normal" },
+  { name: "billing", path: "/billing", scenario: "billing-exception" },
+  { name: "sustainability", path: "/sustainability", scenario: "normal" },
+  { name: "data-health", path: "/data-health", scenario: "billing-exception" },
+];
 
-  test("operations electrical workspace at 1440×900", async ({ page }) => {
-    await prepareDemo(page, { scenario: "voltage-sag" });
-    await openWorkspace(page, "/electrical");
-    await settleVisual(page);
-    await expect(page).toHaveScreenshot("operations-electrical-1440x900.png", { fullPage: false });
-  });
+const compactMatrix = [
+  { name: "portfolio", path: "/portfolio", scenario: "peak-demand" as const },
+  { name: "electrical", path: "/electrical", scenario: "voltage-sag" as const },
+  { name: "billing", path: "/billing", scenario: "billing-exception" as const },
+];
 
-  test("billing assurance workspace at 1440×900", async ({ page }) => {
-    await prepareDemo(page, { scenario: "billing-exception" });
-    await openWorkspace(page, "/billing");
-    await settleVisual(page);
-    await expect(page).toHaveScreenshot("billing-assurance-1440x900.png", { fullPage: false });
-  });
+test.describe("ArGrid full-route visual regression", () => {
+  test.skip(({ browserName }) => browserName !== "chromium", "Reviewed visual baselines are Chromium-only; smoke coverage runs in all engines.");
 
-  test("portfolio remains readable at compact engineering viewport", async ({ page }) => {
-    await page.setViewportSize({ width: 1280, height: 800 });
-    await prepareDemo(page, { scenario: "peak-demand" });
-    await openWorkspace(page, "/portfolio");
-    await settleVisual(page);
-    await expect(page).toHaveScreenshot("portfolio-1280x800.png", { fullPage: false });
-  });
+  for (const route of routeMatrix) {
+    test(`${route.name} workspace at 1440×900`, async ({ page }) => {
+      await prepareDemo(page, { scenario: route.scenario });
+      await openWorkspace(page, route.path);
+      await settleVisual(page);
+      await expect(page).toHaveScreenshot(`${route.name}-1440x900.png`, { fullPage: false });
+    });
+  }
+
+  for (const route of compactMatrix) {
+    test(`${route.name} workspace at compact 1280×800`, async ({ page }) => {
+      await page.setViewportSize({ width: 1280, height: 800 });
+      await prepareDemo(page, { scenario: route.scenario });
+      await openWorkspace(page, route.path);
+      await settleVisual(page);
+      await expect(page).toHaveScreenshot(`${route.name}-1280x800.png`, { fullPage: false });
+    });
+  }
 });
