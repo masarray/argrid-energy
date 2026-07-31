@@ -1,0 +1,52 @@
+/*
+ * WCAG contrast hardening for dense industrial text and status labels.
+ * These values preserve the ArGrid semantic palette while meeting the 4.5:1
+ * text threshold on the light management surfaces used by compact labels.
+ */
+.workspace-management {
+  --primary: #006b86;
+  --ring: #006b86;
+  --cyan: #006b86;
+  --amber: #8f5c00;
+  --red: #c21f2b;
+  --chart-1: #006b86;
+  --chart-3: #8f5c00;
+  --sidebar-primary: #006b86;
+  --sidebar-ring: #006b86;
+}
+
+.workspace-operations {
+  --red: #ff5a64;
+}
+
+/* Tailwind theme variables may otherwise retain the root palette inside a
+ * mixed-theme shell. Rebind the status strip to the active workspace tokens. */
+.workspace-management .workspace-status,
+.workspace-operations .workspace-status {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-primary: var(--primary);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-border: var(--border);
+  --color-amber: var(--amber);
+  color: var(--foreground);
+  border-color: var(--border);
+  background: color-mix(in srgb, var(--amber) 8%, var(--surface));
+}
+
+.workspace-management .workspace-status .text-foreground,
+.workspace-operations .workspace-status .text-foreground {
+  color: var(--foreground) !important;
+}
+
+.workspace-management .workspace-status .text-muted-foreground,
+.workspace-operations .workspace-status .text-muted-foreground {
+  color: var(--muted-foreground) !important;
+}
+
+.workspace-management .workspace-status .text-primary,
+.workspace-operations .workspace-status .text-primary {
+  color: var(--primary) !important;
+}
