@@ -1,4 +1,7 @@
-import type { ReactNode } from "react";
+import { useMemo, type ReactNode } from "react";
+import { EnergyFlowSankey } from "@/components/energy-flow-sankey";
+import { buildEnergyFlowSnapshot } from "@/lib/energy-flow";
+import { useDemoSimulation } from "@/lib/demo-simulation";
 
 export function Panel({
   title,
@@ -17,18 +20,34 @@ export function Panel({
   padded?: boolean;
   busy?: boolean;
 }) {
+  const { telemetry, scenarioId } = useDemoSimulation();
+  const energyFlowPanel = title === "Energy Balance";
+  const energyFlow = useMemo(
+    () => buildEnergyFlowSnapshot({
+      currentPower: telemetry.currentPower,
+      gridImportMW: telemetry.gridImportMW,
+      solarMW: telemetry.solarMW,
+      generatorMW: telemetry.generatorMW,
+      meterQuality: telemetry.meterQuality,
+    }, scenarioId),
+    [scenarioId, telemetry.currentPower, telemetry.generatorMW, telemetry.gridImportMW, telemetry.meterQuality, telemetry.solarMW],
+  );
+  const resolvedTitle = energyFlowPanel ? "Energy Flow Sankey" : title;
+  const resolvedDescription = energyFlowPanel ? "Live supply-to-end-use allocation with reconciled losses" : description;
+  const resolvedChildren = energyFlowPanel ? <EnergyFlowSankey snapshot={energyFlow} /> : children;
+
   return (
-    <section className={`panel flex min-w-0 flex-col overflow-hidden ${className}`} aria-busy={busy || undefined}>
-      {(title || description || actions) && (
+    <section className={`panel flex min-w-0 flex-col overflow-hidden ${energyFlowPanel ? "panel-energy-flow" : ""} ${className}`} aria-busy={busy || undefined}>
+      {(resolvedTitle || resolvedDescription || actions) && (
         <header className="panel-header flex min-h-10 items-start justify-between gap-3 border-b border-border px-4 py-2.5">
-<div className="min-w-0">
-  {title && <h2 className="truncate text-[11.5px] font-semibold tracking-[-0.01em] text-foreground">{title}</h2>}
-  {description && <p className="mt-0.5 text-[9.5px] leading-relaxed text-muted-foreground">{description}</p>}
-</div>
-{actions && <div className="flex shrink-0 items-center gap-1.5">{actions}</div>}
+          <div className="min-w-0">
+            {resolvedTitle && <h2 className="truncate text-[11.5px] font-semibold tracking-[-0.01em] text-foreground">{resolvedTitle}</h2>}
+            {resolvedDescription && <p className="mt-0.5 text-[9.5px] leading-relaxed text-muted-foreground">{resolvedDescription}</p>}
+          </div>
+          {actions && <div className="flex shrink-0 items-center gap-1.5">{actions}</div>}
         </header>
       )}
-      <div className={`min-h-0 flex-1 ${padded ? "p-4" : ""}`}>{children}</div>
+      <div className={`min-h-0 flex-1 ${padded ? "p-4" : ""}`}>{resolvedChildren}</div>
     </section>
   );
 }
@@ -73,9 +92,9 @@ export function KpiTile({
       </div>
       <div className="mt-2 flex min-h-4 items-center gap-2 text-[9.5px] text-muted-foreground">
         {typeof trend === "number" && (
-<span className={`shrink-0 tabular ${trend < 0 ? "text-green" : trend > 0 ? "text-amber" : ""}`}>
-  {trend > 0 ? "▲" : trend < 0 ? "▼" : "—"} {Math.abs(trend).toFixed(1)}%
-</span>
+          <span className={`shrink-0 tabular ${trend < 0 ? "text-green" : trend > 0 ? "text-amber" : ""}`}>
+            {trend > 0 ? "▲" : trend < 0 ? "▼" : "—"} {Math.abs(trend).toFixed(1)}%
+          </span>
         )}
         {hint && <span className="truncate">{hint}</span>}
       </div>

@@ -1,0 +1,51 @@
+name: Refresh Sankey Visual Baseline
+
+on:
+  push:
+    branches:
+      - agent/energy-flow-sankey-20260731
+    paths:
+      - .github/workflows/update-sankey-baseline.yml
+
+permissions:
+  contents: write
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout feature branch
+        uses: actions/checkout@v6
+        with:
+          ref: agent/energy-flow-sankey-20260731
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci --no-audit --no-fund
+
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Build static site
+        run: npm run build
+
+      - name: Refresh reviewed visual snapshots
+        run: npx playwright test tests/e2e/visual.spec.ts --project=chromium --update-snapshots
+
+      - name: Commit baseline and remove temporary workflow
+        run: |
+          git rm .github/workflows/update-sankey-baseline.yml
+          git diff --check
+          git config user.name "ArGrid Visual QA"
+          git config user.email "actions@users.noreply.github.com"
+          git add tests/e2e/visual.spec.ts-snapshots .github/workflows/update-sankey-baseline.yml
+          git commit -m "Update overview baseline for energy-flow Sankey"
+          git pull --rebase origin agent/energy-flow-sankey-20260731
+          git push origin HEAD:agent/energy-flow-sankey-20260731

@@ -1,0 +1,114 @@
+.energy-flow-sankey {
+  --sankey-grid: #397ea4;
+  --sankey-solar: #d29b22;
+  --sankey-generator: #7968aa;
+  --sankey-bus: #246f80;
+  --sankey-production: #2e8a8e;
+  --sankey-cooling: #527fae;
+  --sankey-air: #806cac;
+  --sankey-facilities: #5d9871;
+  --sankey-other: #7b8894;
+  --sankey-losses: #c2733f;
+  --sankey-canvas: color-mix(in oklab, var(--color-surface-2) 68%, var(--color-surface));
+}
+
+.energy-flow-canvas {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background-color: var(--sankey-canvas);
+}
+
+.energy-flow-canvas::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.42;
+  background-image:
+    linear-gradient(var(--color-border) 1px, transparent 1px),
+    linear-gradient(90deg, var(--color-border) 1px, transparent 1px);
+  background-size: 28px 28px;
+  mask-image: linear-gradient(to right, transparent, black 14%, black 86%, transparent);
+  -webkit-mask-image: linear-gradient(to right, transparent, black 14%, black 86%, transparent);
+}
+
+.panel-energy-flow .energy-flow-canvas svg {
+  height: 220px !important;
+}
+
+.energy-flow-path {
+  fill: none;
+  stroke-linecap: round;
+  transition: opacity 150ms ease, stroke-width 150ms ease;
+}
+
+.energy-flow-path.is-muted {
+  opacity: 0.12;
+}
+
+.energy-flow-path.is-active {
+  opacity: 0.92;
+}
+
+.energy-flow-node {
+  cursor: default;
+  transition: opacity 150ms ease, transform 150ms ease;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.energy-flow-node:hover,
+.energy-flow-node.is-active {
+  transform: translateY(-1px);
+}
+
+.energy-flow-node.is-muted {
+  opacity: 0.28;
+}
+
+.energy-flow-node rect.energy-flow-node-shell {
+  fill: var(--color-surface);
+  stroke: var(--color-border-strong);
+  stroke-width: 1;
+}
+
+.energy-flow-node.is-active rect.energy-flow-node-shell {
+  stroke: var(--color-foreground);
+  stroke-width: 1.35;
+}
+
+.energy-flow-bus {
+  fill: color-mix(in oklab, var(--sankey-bus) 10%, var(--color-surface));
+  stroke: color-mix(in oklab, var(--sankey-bus) 55%, var(--color-border));
+  stroke-width: 1.2;
+}
+
+.energy-flow-chip {
+  transition: border-color 150ms ease, background-color 150ms ease, color 150ms ease;
+}
+
+.energy-flow-chip[aria-pressed="true"] {
+  border-color: color-mix(in oklab, var(--chip-color) 55%, var(--color-border));
+  background: color-mix(in oklab, var(--chip-color) 10%, var(--color-surface));
+  color: var(--color-foreground);
+}
+
+@media (max-width: 700px) {
+  .energy-flow-canvas {
+    overflow-x: auto;
+  }
+
+  .energy-flow-canvas svg {
+    min-width: 820px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .energy-flow-path,
+  .energy-flow-node,
+  .energy-flow-chip {
+    transition: none;
+  }
+}
