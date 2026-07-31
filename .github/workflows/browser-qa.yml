@@ -44,8 +44,8 @@ jobs:
       - name: Validate source and static build
         run: npm run check
 
-      - name: Refresh reviewed Overview baseline
-        run: npm run test:e2e:update -- --project=chromium --grep "management overview"
+      - name: Refresh reviewed visual baselines
+        run: npm run test:e2e:update -- --project=chromium
 
       - name: Run complete browser QA
         run: npm run qa:browser
@@ -59,7 +59,7 @@ jobs:
           git diff --check
           git config user.name "ArGrid P1 Polish"
           git config user.email "actions@users.noreply.github.com"
-          git add .github/workflows/quality.yml .github/workflows/browser-qa.yml src/components/app-shell.tsx src/components/argrid-ui.tsx src/routes/index.tsx src/routes/portfolio.tsx src/styles.css tests/e2e/visual.spec.ts-snapshots/management-overview-1440x900-chromium-linux.png
+          git add .github/workflows/quality.yml .github/workflows/browser-qa.yml src/components/app-shell.tsx src/components/argrid-ui.tsx src/routes/index.tsx src/routes/portfolio.tsx src/styles.css tests/e2e/visual.spec.ts-snapshots
           git commit -m "Polish command bar and panel hierarchy"
           git push origin HEAD:polish/p1-command-panel-hierarchy
 
