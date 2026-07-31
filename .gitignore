@@ -8,6 +8,11 @@ dist/
 .tanstack/
 *.tsbuildinfo
 
+# Browser QA diagnostics
+playwright-report/
+test-results/
+.lighthouseci/
+
 # Environment files
 .env
 .env.*
