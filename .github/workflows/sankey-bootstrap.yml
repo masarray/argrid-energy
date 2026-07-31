@@ -1,0 +1,119 @@
+name: Bootstrap ArGrid Energy Sankey
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/sankey-bootstrap.yml
+
+permissions:
+  contents: write
+
+jobs:
+  bootstrap:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+
+    steps:
+      - name: Checkout Sankey feature branch
+        uses: actions/checkout@v6
+        with:
+          ref: feature/energy-sankey-20260731
+          fetch-depth: 0
+
+      - name: Materialize Sankey component and integrate Overview
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p src/components
+          gh api repos/${GITHUB_REPOSITORY}/git/blobs/55c394b985199bbc2bfa2e45e20d5f5f1789b610 --jq .content | tr -d '\n' | base64 -d > src/components/energy-sankey.tsx
+          python - <<'PY'
+          from pathlib import Path
+
+          overview = Path("src/routes/index.tsx")
+          text = overview.read_text()
+          if 'import { EnergySankey } from "@/components/energy-sankey";' not in text:
+              text = text.replace(
+                  'import { AppShell } from "@/components/app-shell";',
+                  'import { AppShell } from "@/components/app-shell";\nimport { EnergySankey } from "@/components/energy-sankey";',
+              )
+
+          anchor = '''        <div className="grid grid-cols-1 gap-3 xl:grid-cols-12">
+          <Panel title="Energy Balance"'''
+          replacement = '''        <div className="grid grid-cols-1 gap-3 xl:grid-cols-12">
+          <Panel
+            title="Energy Flow Sankey"
+            className="xl:col-span-12"
+            actions={<Link to="/analytics" className="text-[10px] text-primary hover:underline">Open energy analytics →</Link>}
+          >
+            <EnergySankey
+              siteName={site.name}
+              currentPowerMW={telemetry.currentPower}
+              gridMW={telemetry.gridImportMW}
+              solarMW={telemetry.solarMW}
+              generatorMW={telemetry.generatorMW}
+              energyRateIDR={telemetry.energyRateIDR}
+              meterQuality={telemetry.meterQuality}
+              completenessPct={telemetry.intervalCompletenessPct}
+              scenarioId={scenarioId}
+            />
+          </Panel>
+
+          <Panel title="Energy Balance Detail"'''
+          if anchor not in text:
+              raise SystemExit("Energy Balance insertion anchor was not found")
+          text = text.replace(anchor, replacement, 1)
+          overview.write_text(text)
+
+          smoke = Path("tests/e2e/smoke.spec.ts")
+          smoke_text = smoke.read_text()
+          marker = '''  test("guided demo advances across governed workspaces", async ({ page }) => {'''
+          sankey_test = '''  test("energy Sankey switches between power cost and carbon views", async ({ page }) => {
+    await prepareDemo(page, { scenario: "efficiency-loss" });
+    await openWorkspace(page, "/");
+
+    const sankey = page.getByRole("region", { name: "Energy Sankey diagram" });
+    await expect(sankey).toBeVisible();
+    await page.getByRole("button", { name: "Cost" }).click();
+    await expect(sankey.getByText(/IDR/).first()).toBeVisible();
+    await page.getByRole("button", { name: "Carbon" }).click();
+    await expect(sankey.getByText(/tCO2e\/h/).first()).toBeVisible();
+  });
+
+'''
+          if "energy Sankey switches between power cost and carbon views" not in smoke_text:
+              smoke_text = smoke_text.replace(marker, sankey_test + marker)
+          smoke.write_text(smoke_text)
+          PY
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install locked dependencies
+        run: npm ci --no-audit --no-fund
+
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Validate source and build
+        run: npm run check
+
+      - name: Refresh Overview visual baseline
+        run: npm run test:e2e:update
+
+      - name: Validate browser workflows
+        run: npm run qa:browser -- --project=chromium
+
+      - name: Commit validated Sankey feature
+        run: |
+          git diff --check
+          git config user.name "ArGrid Sankey"
+          git config user.email "actions@users.noreply.github.com"
+          git add src/components/energy-sankey.tsx src/routes/index.tsx tests/e2e/smoke.spec.ts tests/e2e/visual.spec.ts-snapshots
+          git commit -m "Add graphical scenario-aware energy Sankey"
+          git pull --rebase origin feature/energy-sankey-20260731
+          git push origin HEAD:feature/energy-sankey-20260731
