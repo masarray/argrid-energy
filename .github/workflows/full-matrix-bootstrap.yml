@@ -1,0 +1,60 @@
+name: Bootstrap ArGrid Full QA Matrix
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/full-matrix-bootstrap.yml
+
+permissions:
+  contents: write
+
+jobs:
+  bootstrap:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    steps:
+      - name: Checkout full QA branch
+        uses: actions/checkout@v6
+        with:
+          ref: agent/full-browser-matrix-performance-20260731
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          package-manager-cache: false
+
+      - name: Generate locked dependency graph
+        run: npm install --no-audit --no-fund
+
+      - name: Install Chromium Firefox WebKit and system dependencies
+        run: npx playwright install --with-deps chromium firefox webkit
+
+      - name: Validate source and static build
+        run: npm run check
+
+      - name: Generate reviewed Chromium visual baselines
+        run: npm run test:e2e:update
+
+      - name: Run full browser matrix and contrast gate
+        run: npm run qa:browser
+
+      - name: Resolve Chrome executable
+        run: echo "CHROME_PATH=$(command -v google-chrome || command -v google-chrome-stable || command -v chromium)" >> "$GITHUB_ENV"
+
+      - name: Run Lighthouse performance budgets
+        run: npm run qa:performance
+
+      - name: Commit validated lockfile and route baselines
+        run: |
+          git diff --check
+          git config user.name "ArGrid Full QA"
+          git config user.email "actions@users.noreply.github.com"
+          git add package-lock.json tests/e2e/visual.spec.ts-snapshots tests/e2e/route-matrix.spec.ts-snapshots
+          git commit -m "Add full route visual baselines and locked performance tooling"
+          git pull --rebase origin agent/full-browser-matrix-performance-20260731
+          git push origin HEAD:agent/full-browser-matrix-performance-20260731
