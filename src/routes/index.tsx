@@ -19,15 +19,13 @@ import {
   BadgeCheck,
   Clock3,
   Database,
-  Gauge,
   Leaf,
   ShieldCheck,
-  Sun,
   TrendingDown,
-  Zap,
 } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
 import { KpiTile, Panel, SeverityDot } from "@/components/argrid-ui";
+import { EnergyFlowSankey } from "@/components/energy-flow-sankey";
 import { ExportPdfButton } from "@/components/export-pdf-button";
 import {
   alarms,
@@ -45,7 +43,7 @@ export const Route = createFileRoute("/")({
   component: Overview,
   head: () => ({
     meta: [
-      { title: "Overview — ArGrid Energy Management" },
+      { title: "Overview | ArGrid Energy Management" },
       {
         name: "description",
         content: "Operational, financial, and energy-performance overview for industrial sites.",
@@ -79,66 +77,6 @@ const tooltipStyle = {
   labelStyle: { color: "var(--color-muted-foreground)", fontSize: 10, marginBottom: 2 },
   cursor: { fill: "var(--color-surface-3)", opacity: 0.28 },
 };
-
-function SourceRow({
-  icon: Icon,
-  label,
-  value,
-  detail,
-  tone = "normal",
-}: {
-  icon: typeof Zap;
-  label: string;
-  value: string;
-  detail: string;
-  tone?: "normal" | "warning" | "good";
-}) {
-  const iconTone = tone === "warning" ? "text-amber" : tone === "good" ? "text-green" : "text-primary";
-  return (
-    <div className="flex items-center gap-3 border-b border-border py-3 first:pt-0 last:border-0 last:pb-0">
-      <div className="flex size-8 shrink-0 items-center justify-center rounded-md bg-surface-2">
-        <Icon className={`size-4 ${iconTone}`} strokeWidth={1.8} />
-      </div>
-      <div className="min-w-0 flex-1">
-        <div className="text-[9.5px] font-medium uppercase tracking-[0.11em] text-muted-foreground">{label}</div>
-        <div className="mt-0.5 text-[14px] font-medium tabular">{value}</div>
-      </div>
-      <div className="max-w-[150px] text-right text-[9.5px] leading-relaxed text-muted-foreground">{detail}</div>
-    </div>
-  );
-}
-
-function AllocationRow({
-  label,
-  value,
-  share,
-  detail,
-  tone = "normal",
-}: {
-  label: string;
-  value: string;
-  share: number;
-  detail: string;
-  tone?: "normal" | "warning";
-}) {
-  return (
-    <div className="border-b border-border py-2.5 last:border-0 last:pb-0">
-      <div className="flex items-center justify-between gap-3">
-        <div className="min-w-0">
-          <div className="text-[10.5px] font-medium">{label}</div>
-          <div className="mt-0.5 text-[9.5px] text-muted-foreground">{detail}</div>
-        </div>
-        <div className="text-right">
-          <div className="text-[12px] font-medium tabular">{value}</div>
-          <div className={`mt-0.5 text-[9.5px] tabular ${tone === "warning" ? "text-amber" : "text-muted-foreground"}`}>{share.toFixed(1)}%</div>
-        </div>
-      </div>
-      <div className="mt-2 h-1 rounded-full bg-surface-3">
-        <div className={`h-full rounded-full ${tone === "warning" ? "bg-amber" : "bg-primary"}`} style={{ width: `${share}%` }} />
-      </div>
-    </div>
-  );
-}
 
 function Overview() {
   const { telemetry, timeRange, site, scenarioId, scenario } = useDemoSimulation();
@@ -194,9 +132,6 @@ function Overview() {
     })
     .slice(0, 5);
 
-  const solarMW = telemetry.currentPower * 0.12;
-  const generatorMW = scenarioId === "voltage-sag" ? telemetry.currentPower * 0.11 : telemetry.currentPower * 0.035;
-  const utilityMW = Math.max(0, telemetry.currentPower - solarMW - generatorMW);
   const projectedMargin = telemetry.demandLimit - projectedDemand;
 
   const pipeline = [
@@ -260,43 +195,16 @@ function Overview() {
         </section>
 
         <div className="grid grid-cols-1 gap-3 xl:grid-cols-12">
-          <Panel title="Energy Balance" className="xl:col-span-8" actions={<Link to="/electrical" className="text-[10px] text-primary hover:underline">Electrical context →</Link>}>
-            <div className="grid min-h-[260px] grid-cols-1 gap-5 lg:grid-cols-[0.92fr_1.08fr]">
-              <div className="lg:border-r lg:border-border lg:pr-5">
-                <div className="mb-2 text-[9.5px] font-medium uppercase tracking-[0.12em] text-muted-foreground">Supply</div>
-                <SourceRow icon={Zap} label="Utility grid" value={`${utilityMW.toFixed(2)} MW`} detail="20 kV incomer · normal" />
-                <SourceRow icon={Sun} label="Solar PV" value={`${solarMW.toFixed(2)} MW`} detail={`${((solarMW / telemetry.currentPower) * 100).toFixed(1)}% of site load`} tone="good" />
-                <SourceRow icon={Gauge} label="Generator" value={`${generatorMW.toFixed(2)} MW`} detail={scenarioId === "voltage-sag" ? "event support" : "warm standby"} tone={scenarioId === "voltage-sag" ? "warning" : "normal"} />
-              </div>
-
-              <div>
-                <div className="rounded-md border border-primary/25 bg-primary/6 px-3 py-3">
-                  <div className="flex items-start justify-between gap-4">
-                    <div>
-                      <div className="text-[9.5px] font-medium uppercase tracking-[0.12em] text-muted-foreground">Main distribution bus</div>
-                      <div className="mt-1 text-[20px] font-medium tracking-[-0.03em] tabular">{telemetry.currentPower.toFixed(2)} MW</div>
-                    </div>
-                    <div className="text-right text-[9.5px] leading-relaxed text-muted-foreground">
-                      <div>20 kV · 50.01 Hz</div>
-                      <div>PF {telemetry.powerFactor.toFixed(3)}</div>
-                    </div>
-                  </div>
-                  <div className="mt-3 h-1.5 rounded-full bg-surface-3">
-                    <div className="h-full rounded-full bg-primary transition-[width] duration-500" style={{ width: `${Math.min(100, demandPct)}%` }} />
-                  </div>
-                  <div className="mt-1.5 flex justify-between text-[9px] text-muted-foreground"><span>Current site load</span><span className="tabular">{demandPct.toFixed(1)}% of contract demand</span></div>
-                </div>
-                <div className="mt-3">
-                  <div className="mb-1 text-[9.5px] font-medium uppercase tracking-[0.12em] text-muted-foreground">Allocation</div>
-                  <AllocationRow label="Production" value={`${(telemetry.currentPower * 0.54).toFixed(2)} MW`} share={54} detail="three process lines" />
-                  <AllocationRow label="Utilities" value={`${(telemetry.currentPower * 0.27).toFixed(2)} MW`} share={27} detail="chiller and compressed air" tone="warning" />
-                  <AllocationRow label="Facilities" value={`${(telemetry.currentPower * 0.19).toFixed(2)} MW`} share={19} detail="buildings and services" />
-                </div>
-              </div>
-            </div>
+          <Panel
+            title="Energy Flow Sankey"
+            description="Live source, distribution, end-use, cost, and carbon reconciliation"
+            className="xl:col-span-12"
+            actions={<Link to="/electrical" className="text-[10px] text-primary hover:underline">Electrical context →</Link>}
+          >
+            <EnergyFlowSankey currentPower={telemetry.currentPower} scenarioId={scenarioId} dataHealth={telemetry.dataHealth} />
           </Panel>
 
-          <Panel title="Demand & Cost Outlook" className="h-[348px] xl:col-span-4" actions={<span className="text-[9.5px] text-muted-foreground tabular">Limit {telemetry.demandLimit.toFixed(1)} MW</span>}>
+          <Panel title="Demand & Cost Outlook" className="h-[315px] xl:col-span-4" actions={<span className="text-[9.5px] text-muted-foreground tabular">Limit {telemetry.demandLimit.toFixed(1)} MW</span>}>
             <div className="h-[205px]">
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={demandTrend} margin={{ top: 8, right: 8, left: -12, bottom: 0 }}>

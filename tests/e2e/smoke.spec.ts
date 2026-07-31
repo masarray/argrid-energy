@@ -33,6 +33,25 @@ test.describe("ArGrid browser smoke", () => {
     await expectWorkspaceHeading(page, "Enterprise Overview");
   });
 
+  test("energy flow and Phase A analytics render decision-ready visuals", async ({ page }) => {
+    await prepareDemo(page, { scenario: "normal" });
+    await openWorkspace(page, "/");
+
+    await expect(page.getByRole("heading", { name: "Energy Flow Sankey" })).toBeVisible();
+    await expect(page.getByRole("region", { name: "Power energy flow Sankey diagram" })).toBeVisible();
+    await page.getByRole("tab", { name: "Cost" }).click();
+    await expect(page.getByRole("region", { name: "Cost energy flow Sankey diagram" })).toBeVisible();
+    await expect(page.getByText("Blended energy rate", { exact: true })).toBeVisible();
+
+    await page.getByRole("link", { name: "Energy Analytics" }).click();
+    await expectWorkspaceHeading(page, "Energy Analytics");
+    await expect(page.getByRole("heading", { name: "Energy Heatmap" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Load Duration Curve" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Top Consumer Pareto" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Energy Signature" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Insight Summary" })).toBeVisible();
+  });
+
   test("billing exception can be reviewed and accepted without external posting", async ({ page }) => {
     await prepareDemo(page, { scenario: "billing-exception" });
     await openWorkspace(page, "/billing");
