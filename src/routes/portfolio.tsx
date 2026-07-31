@@ -164,7 +164,7 @@ function Portfolio() {
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
             <div className="flex size-8 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary"><AlertTriangle className="size-4" /></div>
             <div className="min-w-0 flex-1">
-              <div className="flex flex-wrap items-center gap-2"><span className="text-[9.5px] font-semibold uppercase tracking-[0.13em] text-muted-foreground">Portfolio decision</span><span className="rounded border border-primary/25 bg-surface px-1.5 py-0.5 text-[9px] text-primary">ranked by value and consequence</span></div>
+              <div className="flex flex-wrap items-center gap-2"><span className="text-[9.5px] font-semibold uppercase tracking-[0.13em] text-muted-foreground">Portfolio decision</span><span className="rounded border border-primary/25 bg-surface px-1.5 py-0.5 text-[9.5px] text-primary">ranked by value and consequence</span></div>
               <p className="mt-1 text-[12px] leading-relaxed">
                 <strong className="font-semibold">{prioritySite.name}</strong> carries {fmtIDR(prioritySite.opportunityValueIDR)} annual opportunity and a {prioritySite.budgetVariancePct.toFixed(1)}% cost variance. {bestSite.name} is the current intensity benchmark at index {bestSite.energyIntensityIndex}.
               </p>
@@ -266,12 +266,25 @@ function Portfolio() {
           <Panel title="Site Benchmark Matrix" className="xl:col-span-8" actions={<span className="text-[9.5px] text-muted-foreground">normalized for production, weather, and site type</span>}>
             <div className="overflow-x-auto">
               <table className="w-full min-w-[920px] text-[10.5px]">
-                <thead><tr className="border-b border-border text-left text-[9px] uppercase tracking-[0.11em] text-muted-foreground"><th className="py-2 font-normal">Site</th><th className="py-2 font-normal">Status</th><th className="py-2 font-normal text-right">Intensity</th><th className="py-2 font-normal text-right">Demand</th><th className="py-2 font-normal text-right">Budget</th><th className="py-2 font-normal text-right">Renewable</th><th className="py-2 font-normal text-right">Data confidence</th><th className="py-2 font-normal text-right">Opportunity</th></tr></thead>
+                <thead><tr className="border-b border-border text-left text-[9.5px] uppercase tracking-[0.11em] text-muted-foreground"><th className="py-2 font-normal">Site</th><th className="py-2 font-normal">Status</th><th className="py-2 font-normal text-right">Intensity</th><th className="py-2 font-normal text-right">Demand</th><th className="py-2 font-normal text-right">Budget</th><th className="py-2 font-normal text-right">Renewable</th><th className="py-2 font-normal text-right">Data confidence</th><th className="py-2 font-normal text-right">Opportunity</th></tr></thead>
                 <tbody className="divide-y divide-border">
                   {[...sites].sort((a, b) => a.energyIntensityIndex - b.energyIntensityIndex).map((site, index) => (
-                    <tr key={site.id} onClick={() => setSelectedId(site.id)} aria-selected={selected.id === site.id} className={`portfolio-benchmark-row cursor-pointer hover:bg-surface-2/70 ${selected.id === site.id ? "portfolio-benchmark-row-selected bg-primary/5" : ""}`}>
-                      <td className="py-2.5"><div className="flex items-center gap-2"><span className="flex size-5 items-center justify-center rounded border border-border bg-surface-2 text-[9px] tabular">{index + 1}</span><div><div className="font-semibold">{site.name}</div><div className="text-[9px] text-muted-foreground">{site.type} · {site.region}</div></div></div></td>
-                      <td className="py-2.5"><span className={`inline-flex rounded border px-1.5 py-0.5 text-[9px] ${statusClass(site.status)}`}>{site.status}</span></td>
+                    <tr
+                      key={site.id}
+                      tabIndex={0}
+                      aria-label={`Select ${site.name}`}
+                      aria-selected={selected.id === site.id}
+                      onClick={() => setSelectedId(site.id)}
+                      onKeyDown={(event) => {
+                        if (event.key === "Enter" || event.key === " ") {
+                          event.preventDefault();
+                          setSelectedId(site.id);
+                        }
+                      }}
+                      className={`portfolio-benchmark-row cursor-pointer hover:bg-surface-2/70 ${selected.id === site.id ? "portfolio-benchmark-row-selected bg-primary/5" : ""}`}
+                    >
+                      <td className="py-2.5"><div className="flex items-center gap-2"><span className="flex size-5 items-center justify-center rounded border border-border bg-surface-2 text-[9.5px] tabular">{index + 1}</span><div><div className="font-semibold">{site.name}</div><div className="text-[9.5px] text-muted-foreground">{site.type} · {site.region}</div></div></div></td>
+                      <td className="py-2.5"><span className={`inline-flex rounded border px-1.5 py-0.5 text-[9.5px] ${statusClass(site.status)}`}>{site.status}</span></td>
                       <td className="py-2.5 text-right"><div className="benchmark-cell"><div className="tabular"><span className={site.energyIntensityIndex <= site.targetIntensityIndex ? "text-green" : "text-amber"}>{site.energyIntensityIndex}</span><span className="text-muted-foreground"> / {site.targetIntensityIndex}</span></div><MiniBar value={(site.energyIntensityIndex / 120) * 100} tone={site.energyIntensityIndex <= site.targetIntensityIndex ? "good" : "warning"} /></div></td>
                       <td className="py-2.5 text-right"><div className="benchmark-cell"><div className="tabular">{site.demandUtilizationPct.toFixed(1)}%</div><MiniBar value={site.demandUtilizationPct} tone={site.demandUtilizationPct >= 95 ? "critical" : site.demandUtilizationPct >= 85 ? "warning" : "primary"} /></div></td>
                       <td className={`py-2.5 text-right tabular ${site.budgetVariancePct > 2 ? "text-red" : site.budgetVariancePct < 0 ? "text-green" : ""}`}>{site.budgetVariancePct >= 0 ? "+" : ""}{site.budgetVariancePct.toFixed(1)}%</td>
@@ -285,12 +298,12 @@ function Portfolio() {
             </div>
           </Panel>
 
-          <Panel variant="quiet" title="Management Profile" className="xl:col-span-4" actions={<span className="text-[9px] uppercase tracking-[0.1em] text-muted-foreground">Selected site</span>}>
+          <Panel variant="quiet" title="Management Profile" className="xl:col-span-4" actions={<span className="text-[9.5px] uppercase tracking-[0.1em] text-muted-foreground">Selected site</span>}>
             <div className="space-y-3">
               <div className="portfolio-identity">
                 <span className="portfolio-identity-mark"><Building2 className="size-4" /></span>
                 <div className="min-w-0 flex-1"><div className="truncate text-[12px] font-semibold">{selected.name}</div><div className="mt-0.5 truncate text-[9.5px] text-muted-foreground">{selected.type} · {selected.region}</div></div>
-                <span className={`shrink-0 rounded border px-1.5 py-0.5 text-[9px] ${statusClass(selected.status)}`}>{selected.status}</span>
+                <span className={`shrink-0 rounded border px-1.5 py-0.5 text-[9.5px] ${statusClass(selected.status)}`}>{selected.status}</span>
               </div>
               <div className="grid grid-cols-2 gap-2">
                 <Metric icon={Zap} label="MTD energy" value={`${fmtNum(selected.energyMWh)} MWh`} />
@@ -304,7 +317,7 @@ function Portfolio() {
               <div className="rounded-md border border-border bg-surface-2 p-3">
                 <div className="flex items-center justify-between text-[9.5px]"><span className="font-semibold uppercase tracking-[0.11em] text-muted-foreground">Normalized intensity</span><span className="tabular">{selected.energyIntensityIndex} / target {selected.targetIntensityIndex}</span></div>
                 <div className="mt-2 h-2 overflow-hidden rounded-full bg-surface-3"><div className={`h-full ${selected.energyIntensityIndex <= selected.targetIntensityIndex ? "bg-green" : "bg-amber"}`} style={{ width: `${Math.min(100, (selected.energyIntensityIndex / 120) * 100)}%` }} /></div>
-                <div className="mt-2 text-[9px] text-muted-foreground">Basis: {selected.outputUnit} · production index {selected.productionIndex}</div>
+                <div className="mt-2 text-[9.5px] text-muted-foreground">Basis: {selected.outputUnit} · production index {selected.productionIndex}</div>
               </div>
 
               <div className="grid grid-cols-2 gap-2 text-[10px]"><Info label="Annual opportunity" value={fmtIDR(selected.opportunityValueIDR)} /><Info label="Critical alarms" value={String(selected.criticalAlarms)} /><Info label="Floor area" value={`${fmtNum(selected.floorAreaM2)} m²`} /><Info label="Budget variance" value={`${selected.budgetVariancePct >= 0 ? "+" : ""}${selected.budgetVariancePct.toFixed(1)}%`} /></div>
@@ -329,9 +342,9 @@ function MiniBar({ value, tone = "primary" }: { value: number; tone?: "primary" 
 
 function Metric({ icon: Icon, label, value, tone = "neutral" }: { icon: typeof Building2; label: string; value: string; tone?: "neutral" | "good" | "warning" | "critical" }) {
   const toneClass = tone === "good" ? "text-green" : tone === "warning" ? "text-amber" : tone === "critical" ? "text-red" : "text-foreground";
-  return <div className="rounded-md border border-border bg-surface-2 p-2.5"><div className="flex items-center gap-1.5 text-[8.5px] uppercase tracking-[0.1em] text-muted-foreground"><Icon className={`size-3.5 ${toneClass}`} />{label}</div><div className={`mt-1 text-[11.5px] font-semibold tabular ${toneClass}`}>{value}</div></div>;
+  return <div className="rounded-md border border-border bg-surface-2 p-2.5"><div className="flex items-center gap-1.5 text-[9.5px] uppercase tracking-[0.1em] text-muted-foreground"><Icon className={`size-3.5 ${toneClass}`} />{label}</div><div className={`mt-1 text-[11.5px] font-semibold tabular ${toneClass}`}>{value}</div></div>;
 }
 
 function Info({ label, value }: { label: string; value: string }) {
-  return <div><div className="text-[8.5px] uppercase tracking-[0.1em] text-muted-foreground">{label}</div><div className="mt-0.5 font-medium tabular">{value}</div></div>;
+  return <div><div className="text-[9.5px] uppercase tracking-[0.1em] text-muted-foreground">{label}</div><div className="mt-0.5 font-medium tabular">{value}</div></div>;
 }

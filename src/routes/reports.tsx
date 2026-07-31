@@ -221,11 +221,11 @@ function ReportCenter() {
                 className={`w-full rounded-md border p-3 text-left ${selected.id === report.id ? "border-primary bg-primary/8" : "border-border bg-surface-2 hover:border-border-strong"}`}
               >
                 <div className="flex items-center justify-between gap-2">
-                  <span className="text-[9px] tabular text-muted-foreground">{report.id}</span>
-                  <span className={`rounded border px-1.5 py-0.5 text-[8.5px] ${statusClass(report.status)}`}>{report.status}</span>
+                  <span className="text-[9.5px] tabular text-muted-foreground">{report.id}</span>
+                  <span className={`rounded border px-1.5 py-0.5 text-[9.5px] ${statusClass(report.status)}`}>{report.status}</span>
                 </div>
                 <div className="mt-1.5 text-[11px] font-medium leading-snug">{report.title}</div>
-                <div className="mt-1 text-[9px] text-muted-foreground">{report.category} · {report.period} · {report.frequency}</div>
+                <div className="mt-1 text-[9.5px] text-muted-foreground">{report.category} · {report.period} · {report.frequency}</div>
                 <div className="mt-2 flex items-center justify-between text-[9.5px]">
                   <span className="text-muted-foreground">Coverage</span>
                   <span className={`tabular ${report.completenessPct >= 95 ? "text-green" : "text-amber"}`}>{report.completenessPct.toFixed(1)}%</span>
@@ -239,7 +239,7 @@ function ReportCenter() {
         <div className="min-w-0">
           <Panel
             title={`${selected.id} · ${selected.title}`}
-            actions={<span className={`rounded border px-1.5 py-0.5 text-[9px] ${statusClass(selected.status)}`}>{selected.status}</span>}
+            actions={<span className={`rounded border px-1.5 py-0.5 text-[9.5px] ${statusClass(selected.status)}`}>{selected.status}</span>}
           >
             <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
               <Info label="Audience" value={selected.audience} />
@@ -287,8 +287,8 @@ function ReportCenter() {
                 <div className="space-y-2">
                   {selected.sections.map((section, index) => (
                     <div key={section} className="grid grid-cols-[34px_1fr_auto] items-center gap-3 rounded-md border border-border bg-surface-2 px-3 py-2.5">
-                      <span className="flex size-7 items-center justify-center rounded-md bg-primary/8 text-[9px] font-medium text-primary">{String(index + 1).padStart(2, "0")}</span>
-                      <div><div className="text-[10.5px] font-medium">{section}</div><div className="mt-0.5 text-[9px] text-muted-foreground">Source-linked section · period {selected.period}</div></div>
+                      <span className="flex size-7 items-center justify-center rounded-md bg-primary/8 text-[9.5px] font-medium text-primary">{String(index + 1).padStart(2, "0")}</span>
+                      <div><div className="text-[10.5px] font-medium">{section}</div><div className="mt-0.5 text-[9.5px] text-muted-foreground">Source-linked section · period {selected.period}</div></div>
                       <FileText className="size-3.5 text-muted-foreground" />
                     </div>
                   ))}
@@ -334,7 +334,7 @@ function ReportCenter() {
                 <div className="space-y-2">
                   {selected.sourceSystems.map((source, index) => {
                     const coverage = coverageChart[index].coverage;
-                    return <div key={source} className="rounded-md border border-border bg-surface-2 p-3"><div className="flex items-center justify-between gap-2"><div className="text-[10.5px] font-medium">{source}</div><span className={`text-[10px] tabular ${coverage >= 95 ? "text-green" : "text-amber"}`}>{coverage.toFixed(1)}%</span></div><div className="mt-2 h-1 overflow-hidden rounded-full bg-surface-3"><div className={coverage >= 95 ? "h-full bg-green" : "h-full bg-amber"} style={{ width: `${coverage}%` }} /></div><div className="mt-1.5 text-[9px] text-muted-foreground">Inherited by {selected.id} · period {selected.period}</div></div>;
+                    return <div key={source} className="rounded-md border border-border bg-surface-2 p-3"><div className="flex items-center justify-between gap-2"><div className="text-[10.5px] font-medium">{source}</div><span className={`text-[10px] tabular ${coverage >= 95 ? "text-green" : "text-amber"}`}>{coverage.toFixed(1)}%</span></div><div className="mt-2 h-1 overflow-hidden rounded-full bg-surface-3"><div className={coverage >= 95 ? "h-full bg-green" : "h-full bg-amber"} style={{ width: `${coverage}%` }} /></div><div className="mt-1.5 text-[9.5px] text-muted-foreground">Inherited by {selected.id} · period {selected.period}</div></div>;
                   })}
                 </div>
               </Panel>
@@ -377,7 +377,7 @@ function ReportCenter() {
                     { title: "Generated", time: selected.lastGenerated, detail: "Deterministic source snapshot created." },
                     { title: selected.status === "Draft" ? "Review pending" : "Review workflow", time: selected.status === "Draft" ? "Not submitted" : "Browser demo state", detail: `${selected.reviewer} assigned as independent reviewer.` },
                     { title: "Next scheduled run", time: selected.nextRun, detail: "Schedule shown for product demonstration; no background scheduler is invoked." },
-                  ].map((item) => <div key={item.title} className="rounded-md border border-border bg-surface-2 p-3"><div className="flex items-center gap-2 text-[10px] font-medium"><History className="size-3.5 text-primary" />{item.title}</div><div className="mt-2 text-[10px] tabular">{item.time}</div><p className="mt-1 text-[9px] leading-relaxed text-muted-foreground">{item.detail}</p></div>)}
+                  ].map((item) => <div key={item.title} className="rounded-md border border-border bg-surface-2 p-3"><div className="flex items-center gap-2 text-[10px] font-medium"><History className="size-3.5 text-primary" />{item.title}</div><div className="mt-2 text-[10px] tabular">{item.time}</div><p className="mt-1 text-[9.5px] leading-relaxed text-muted-foreground">{item.detail}</p></div>)}
                 </div>
               </Panel>
             </div>
@@ -393,9 +393,9 @@ function ReportCenter() {
 }
 
 function Info({ label, value }: { label: string; value: string }) {
-  return <div><div className="text-[8.5px] uppercase tracking-[0.1em] text-muted-foreground">{label}</div><div className="mt-0.5 text-[10px] font-medium leading-relaxed tabular">{value}</div></div>;
+  return <div><div className="text-[9.5px] uppercase tracking-[0.1em] text-muted-foreground">{label}</div><div className="mt-0.5 text-[10px] font-medium leading-relaxed tabular">{value}</div></div>;
 }
 
 function Metric({ label, value, tone }: { label: string; value: string; tone?: "good" | "warn" }) {
-  return <div className="rounded-md border border-border bg-surface-2 p-3"><div className="text-[9px] uppercase tracking-[0.11em] text-muted-foreground">{label}</div><div className={`mt-1 text-[12px] font-medium tabular ${tone === "good" ? "text-green" : tone === "warn" ? "text-amber" : ""}`}>{value}</div></div>;
+  return <div className="rounded-md border border-border bg-surface-2 p-3"><div className="text-[9.5px] uppercase tracking-[0.11em] text-muted-foreground">{label}</div><div className={`mt-1 text-[12px] font-medium tabular ${tone === "good" ? "text-green" : tone === "warn" ? "text-amber" : ""}`}>{value}</div></div>;
 }

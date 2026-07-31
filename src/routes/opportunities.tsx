@@ -131,7 +131,7 @@ function Opportunities() {
           <div className="overflow-x-auto">
             <table className="w-full text-[11px]">
               <thead>
-                <tr className="text-left text-[9px] uppercase tracking-[0.12em] text-muted-foreground border-b border-border">
+                <tr className="text-left text-[9.5px] uppercase tracking-[0.12em] text-muted-foreground border-b border-border">
                   <th className="px-3 py-2 font-normal">Priority</th>
                   <th className="py-2 font-normal">Opportunity</th>
                   <th className="py-2 font-normal">Asset</th>
@@ -148,7 +148,7 @@ function Opportunities() {
                   return (
                     <tr key={item.id} onClick={() => { setSelectedId(item.id); setNotice(""); }} className={`cursor-pointer hover:bg-surface-2/60 ${active ? "bg-primary/7" : ""}`}>
                       <td className="px-3 py-2.5"><span className={`inline-flex h-5 min-w-7 items-center justify-center rounded border px-1 text-[9.5px] ${item.urgency === "P1" ? "border-red/35 bg-red/10 text-red" : item.urgency === "P2" ? "border-amber/35 bg-amber/10 text-amber" : "border-border text-muted-foreground"}`}>{item.urgency}</span></td>
-                      <td className="py-2.5 min-w-[220px]"><div className="font-medium leading-snug">{item.title}</div><div className="mt-0.5 text-[9px] text-muted-foreground tabular">{item.id} · detected 4 days ago</div></td>
+                      <td className="py-2.5 min-w-[220px]"><div className="font-medium leading-snug">{item.title}</div><div className="mt-0.5 text-[9.5px] text-muted-foreground tabular">{item.id} · detected 4 days ago</div></td>
                       <td className="py-2.5 tabular text-muted-foreground">{item.asset}</td>
                       <td className="py-2.5 text-right tabular font-medium text-green whitespace-nowrap">{lensValue(item, lens, site.powerScale)}</td>
                       <td className="py-2.5 text-right tabular">{item.payback.toFixed(1)} yr</td>
@@ -190,7 +190,7 @@ function Opportunities() {
                     </div>
                   ))}
                 </div>
-                <div className="mt-2 flex items-center gap-4 text-[9px] text-muted-foreground"><span className="flex items-center gap-1.5"><span className="size-2 bg-surface-3" /> Baseline</span><span className="flex items-center gap-1.5"><span className="size-2 bg-primary" /> Actual</span><span className="flex items-center gap-1.5"><span className="size-2 bg-amber" /> Abnormal</span></div>
+                <div className="mt-2 flex items-center gap-4 text-[9.5px] text-muted-foreground"><span className="flex items-center gap-1.5"><span className="size-2 bg-surface-3" /> Baseline</span><span className="flex items-center gap-1.5"><span className="size-2 bg-primary" /> Actual</span><span className="flex items-center gap-1.5"><span className="size-2 bg-amber" /> Abnormal</span></div>
               </div>
             </section>
 
@@ -258,7 +258,7 @@ function Opportunities() {
 function DetailMetric({ label, value, tone }: { label: string; value: string; tone?: "good" }) {
   return (
     <div className="rounded-md border border-border bg-surface-2 px-2.5 py-2">
-      <div className="text-[8.5px] uppercase tracking-wider text-muted-foreground">{label}</div>
+      <div className="text-[9.5px] uppercase tracking-wider text-muted-foreground">{label}</div>
       <div className={`mt-1 text-[10.5px] font-medium tabular ${tone === "good" ? "text-green" : ""}`}>{value}</div>
     </div>
   );
@@ -268,7 +268,7 @@ function ValueCard({ icon: Icon, label, value, detail }: { icon: typeof Activity
   return (
     <div className="rounded-lg border border-border bg-surface px-4 py-3 flex items-center gap-3">
       <div className="size-8 rounded-md border border-primary/20 bg-primary/8 flex items-center justify-center text-primary"><Icon className="size-4" /></div>
-      <div><div className="text-[9.5px] uppercase tracking-wider text-muted-foreground">{label}</div><div className="mt-0.5 text-[13px] font-medium tabular">{value}</div><div className="text-[9px] text-muted-foreground">{detail}</div></div>
+      <div><div className="text-[9.5px] uppercase tracking-wider text-muted-foreground">{label}</div><div className="mt-0.5 text-[13px] font-medium tabular">{value}</div><div className="text-[9.5px] text-muted-foreground">{detail}</div></div>
     </div>
   );
 }

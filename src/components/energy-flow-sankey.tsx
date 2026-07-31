@@ -213,13 +213,13 @@ export function EnergyFlowSankey({
 
       <aside className="rounded-md border border-border bg-surface-2/55 p-3" aria-label="Energy flow reconciliation summary">
         <div className="border-b border-border pb-3">
-          <div className="text-[9px] font-semibold uppercase tracking-[0.11em] text-muted-foreground">Reconciled load</div>
+          <div className="text-[9.5px] font-semibold uppercase tracking-[0.11em] text-muted-foreground">Reconciled load</div>
           <div className="mt-1 text-[21px] font-medium tracking-[-0.03em] tabular">{currentPower.toFixed(2)} <span className="text-[10px] text-muted-foreground">MW</span></div>
           <div className="mt-1 text-[9.5px] text-green">Balance within 0.1%</div>
         </div>
 
         <div className="border-b border-border py-3">
-          <div className="mb-2 text-[9px] font-semibold uppercase tracking-[0.11em] text-muted-foreground">Source mix</div>
+          <div className="mb-2 text-[9.5px] font-semibold uppercase tracking-[0.11em] text-muted-foreground">Source mix</div>
           <div className="space-y-1.5">
             {model.shares.map((source, index) => (
               <div key={source.name} className="flex items-center justify-between gap-2 text-[9.5px]">
@@ -245,7 +245,7 @@ export function EnergyFlowSankey({
           </div>
         </dl>
 
-        <p className="mt-3 border-t border-border pt-3 text-[9px] leading-relaxed text-muted-foreground">
+        <p className="mt-3 border-t border-border pt-3 text-[9.5px] leading-relaxed text-muted-foreground">
           Simulated allocation uses the active site, scenario, meter quality, tariff, and carbon factors.
         </p>
       </aside>

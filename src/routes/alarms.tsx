@@ -157,7 +157,7 @@ function AlarmsPage() {
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
             <div className="flex size-8 shrink-0 items-center justify-center rounded-md bg-red/12 text-red"><ShieldAlert className="size-4" /></div>
             <div className="min-w-0 flex-1">
-              <div className="flex flex-wrap items-center gap-2"><span className="text-[9.5px] font-semibold uppercase tracking-[0.13em] text-muted-foreground">Priority incident</span><span className="rounded border border-red/30 bg-surface px-1.5 py-0.5 text-[9px] text-red">{selectedGroup.incidentGroupId}</span>{documentControl && <span className="rounded border border-border bg-surface px-1.5 py-0.5 text-[9px] text-muted-foreground">{documentControl.documentNumber} · {documentControl.revision}</span>}</div>
+              <div className="flex flex-wrap items-center gap-2"><span className="text-[9.5px] font-semibold uppercase tracking-[0.13em] text-muted-foreground">Priority incident</span><span className="rounded border border-red/30 bg-surface px-1.5 py-0.5 text-[9.5px] text-red">{selectedGroup.incidentGroupId}</span>{documentControl && <span className="rounded border border-border bg-surface px-1.5 py-0.5 text-[9.5px] text-muted-foreground">{documentControl.documentNumber} · {documentControl.revision}</span>}</div>
               <p className="mt-1 text-[12px] leading-relaxed">{selectedEvent ? <><strong>{selectedEvent.minimumVoltagePct.toFixed(1)}% Un voltage sag for {selectedEvent.durationMs} ms on {selectedEvent.feederId}.</strong> Three alarms are grouped into one event chronology; probable origin is {selectedEvent.probableOrigin.toLowerCase()}.</> : <><strong>{selectedGroup.summary}.</strong> Review the member alarms and assign an accountable owner.</>}</p>
             </div>
             {selectedEvent && <Link to="/alarms/power-quality" onClick={preserveSelectedContext} className="flex h-8 shrink-0 items-center gap-1.5 rounded-md bg-primary px-3 text-[10.5px] font-medium text-primary-foreground">Open PQ investigation <Waves className="size-3.5" /></Link>}
@@ -171,7 +171,7 @@ function AlarmsPage() {
             <div className="space-y-2">
               {groups.map((group) => (
                 <button key={group.incidentGroupId} type="button" onClick={() => { setSelectedIncidentId(group.incidentGroupId); setMessage(""); }} className={`w-full rounded-md border p-3 text-left ${selectedGroup.incidentGroupId === group.incidentGroupId ? "border-primary bg-primary/8" : "border-border bg-surface-2 hover:border-border-strong"}`}>
-                  <div className="flex items-center justify-between gap-2"><span className="text-[9px] tabular text-muted-foreground">{group.incidentGroupId} · {group.firstTimestamp}</span><span className={`rounded border px-1.5 py-0.5 text-[9px] ${severityClass(group.highestSeverity)}`}>{group.highestSeverity}</span></div>
+                  <div className="flex items-center justify-between gap-2"><span className="text-[9.5px] tabular text-muted-foreground">{group.incidentGroupId} · {group.firstTimestamp}</span><span className={`rounded border px-1.5 py-0.5 text-[9.5px] ${severityClass(group.highestSeverity)}`}>{group.highestSeverity}</span></div>
                   <div className="mt-1.5 text-[10.5px] font-semibold">{group.summary}</div>
                   <div className="mt-2 flex items-center justify-between text-[9.5px] text-muted-foreground"><span>{group.primarySource} · {group.alarms.length} member alarms</span><span className={group.unacknowledged > 0 ? "text-amber" : "text-green"}>{group.unacknowledged > 0 ? `${group.unacknowledged} unacknowledged` : "acknowledged"}</span></div>
                 </button>
@@ -179,7 +179,7 @@ function AlarmsPage() {
             </div>
           </Panel>
 
-          <Panel title={`${selectedGroup.incidentGroupId} · Incident Context`} className="xl:col-span-7" actions={<span className={`rounded border px-1.5 py-0.5 text-[9px] ${severityClass(selectedGroup.highestSeverity)}`}>{selectedGroup.highestSeverity}</span>}>
+          <Panel title={`${selectedGroup.incidentGroupId} · Incident Context`} className="xl:col-span-7" actions={<span className={`rounded border px-1.5 py-0.5 text-[9.5px] ${severityClass(selectedGroup.highestSeverity)}`}>{selectedGroup.highestSeverity}</span>}>
             {selectedEvent ? (
               <div className="grid gap-3 lg:grid-cols-[1fr_260px]">
                 <div>
@@ -203,7 +203,7 @@ function AlarmsPage() {
           </Panel>
 
           <Panel title="Member Alarm Chronology" className="xl:col-span-7" actions={<span className="text-[9.5px] text-muted-foreground">one incident · multiple device conditions</span>}>
-            <div className="overflow-x-auto"><table className="w-full min-w-[760px] text-[10.5px]"><thead><tr className="border-b border-border text-left text-[9px] uppercase tracking-[0.11em] text-muted-foreground"><th className="py-2 font-normal">Severity</th><th className="py-2 font-normal">Time</th><th className="py-2 font-normal">Source</th><th className="py-2 font-normal">Condition</th><th className="py-2 font-normal">Acknowledgement</th></tr></thead><tbody className="divide-y divide-border">{selectedAlarms.map((alarm: IncidentAlarm) => <tr key={alarm.id} className="hover:bg-surface-2/60"><td className="py-2.5"><span className={`rounded border px-1.5 py-0.5 text-[9px] ${severityClass(alarm.severity)}`}>{alarm.severity}</span></td><td className="py-2.5 tabular text-muted-foreground">{alarm.timestamp}</td><td className="py-2.5"><div className="font-semibold">{alarm.source}</div><div className="text-[9px] text-muted-foreground tabular">{alarm.id}</div></td><td className="py-2.5"><div>{alarm.message}</div><div className="text-[9px] text-muted-foreground">{alarm.condition}</div></td><td className="py-2.5">{alarm.acknowledged ? <span className="flex items-center gap-1 text-[9.5px] text-green"><Check className="size-3" />Acknowledged</span> : <button type="button" onClick={() => acknowledgeAlarm(alarm.id)} className="h-7 rounded-md border border-amber/30 bg-amber/10 px-2 text-[9.5px] text-amber">Acknowledge</button>}</td></tr>)}</tbody></table></div>
+            <div className="overflow-x-auto"><table className="w-full min-w-[760px] text-[10.5px]"><thead><tr className="border-b border-border text-left text-[9.5px] uppercase tracking-[0.11em] text-muted-foreground"><th className="py-2 font-normal">Severity</th><th className="py-2 font-normal">Time</th><th className="py-2 font-normal">Source</th><th className="py-2 font-normal">Condition</th><th className="py-2 font-normal">Acknowledgement</th></tr></thead><tbody className="divide-y divide-border">{selectedAlarms.map((alarm: IncidentAlarm) => <tr key={alarm.id} className="hover:bg-surface-2/60"><td className="py-2.5"><span className={`rounded border px-1.5 py-0.5 text-[9.5px] ${severityClass(alarm.severity)}`}>{alarm.severity}</span></td><td className="py-2.5 tabular text-muted-foreground">{alarm.timestamp}</td><td className="py-2.5"><div className="font-semibold">{alarm.source}</div><div className="text-[9.5px] text-muted-foreground tabular">{alarm.id}</div></td><td className="py-2.5"><div>{alarm.message}</div><div className="text-[9.5px] text-muted-foreground">{alarm.condition}</div></td><td className="py-2.5">{alarm.acknowledged ? <span className="flex items-center gap-1 text-[9.5px] text-green"><Check className="size-3" />Acknowledged</span> : <button type="button" onClick={() => acknowledgeAlarm(alarm.id)} className="h-7 rounded-md border border-amber/30 bg-amber/10 px-2 text-[9.5px] text-amber">Acknowledge</button>}</td></tr>)}</tbody></table></div>
           </Panel>
 
           <Panel title="Power Quality Event Envelope" className="h-[390px] xl:col-span-5" actions={<span className="text-[9.5px] text-muted-foreground">30-day retained events</span>}>
@@ -226,7 +226,7 @@ function AlarmsPage() {
           <Panel title="Priority Incident Timeline" className="xl:col-span-12" actions={<span className="text-[9.5px] text-muted-foreground">{scenario.name}</span>}>
             <div className="grid gap-2 md:grid-cols-3 xl:grid-cols-6">
               {(timeline.length > 0 ? timeline : selectedAlarms.map((alarm, index) => ({ timestamp: alarm.timestamp, title: alarm.message, detail: alarm.condition, tone: index === 0 ? "warning" as const : "normal" as const }))).map((item) => (
-                <div key={`${item.timestamp}-${item.title}`} className="rounded-md border border-border bg-surface-2 p-3"><div className="flex items-center gap-2"><span className={`size-2 rounded-full ${item.tone === "critical" ? "bg-red" : item.tone === "warning" ? "bg-amber" : item.tone === "good" ? "bg-green" : "bg-muted-foreground"}`} /><span className="text-[8.5px] tabular text-muted-foreground">{item.timestamp}</span></div><div className="mt-2 text-[10px] font-semibold">{item.title}</div><p className="mt-1 text-[9px] leading-relaxed text-muted-foreground">{item.detail}</p></div>
+                <div key={`${item.timestamp}-${item.title}`} className="rounded-md border border-border bg-surface-2 p-3"><div className="flex items-center gap-2"><span className={`size-2 rounded-full ${item.tone === "critical" ? "bg-red" : item.tone === "warning" ? "bg-amber" : item.tone === "good" ? "bg-green" : "bg-muted-foreground"}`} /><span className="text-[9.5px] tabular text-muted-foreground">{item.timestamp}</span></div><div className="mt-2 text-[10px] font-semibold">{item.title}</div><p className="mt-1 text-[9.5px] leading-relaxed text-muted-foreground">{item.detail}</p></div>
               ))}
             </div>
           </Panel>
@@ -239,5 +239,5 @@ function AlarmsPage() {
 }
 
 function Info({ label, value }: { label: string; value: string }) {
-  return <div><div className="text-[8.5px] uppercase tracking-[0.1em] text-muted-foreground">{label}</div><div className="mt-0.5 text-[10px] font-medium leading-relaxed tabular">{value}</div></div>;
+  return <div><div className="text-[9.5px] uppercase tracking-[0.1em] text-muted-foreground">{label}</div><div className="mt-0.5 text-[10px] font-medium leading-relaxed tabular">{value}</div></div>;
 }
