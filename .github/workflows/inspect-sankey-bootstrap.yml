@@ -1,0 +1,41 @@
+name: Inspect ArGrid Sankey Bootstrap
+
+on:
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  actions: read
+  contents: read
+
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Wait for Sankey bootstrap
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EXPECTED_SHA: a0329a4e83de21b1b547f86c66279853a92f562f
+        run: |
+          set -euo pipefail
+          run_id=""
+          for attempt in $(seq 1 80); do
+            run_id="$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs?branch=main&per_page=60" --jq ".workflow_runs[] | select(.name == \"Bootstrap ArGrid Energy Sankey\" and .head_sha == \"${EXPECTED_SHA}\") | .id" | head -n 1)"
+            if [ -n "${run_id}" ]; then break; fi
+            sleep 3
+          done
+          test -n "${run_id}"
+          for attempt in $(seq 1 180); do
+            status="$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${run_id}" --jq '.status')"
+            if [ "${status}" = "completed" ]; then break; fi
+            sleep 4
+          done
+          gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${run_id}/jobs" --jq '.jobs[] | [.id, .name, .status, (.conclusion // "pending")] | @tsv'
+          failed_job="$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${run_id}/jobs" --jq '.jobs[] | select(.conclusion == "failure") | .id' | head -n 1)"
+          if [ -n "${failed_job}" ]; then
+            curl -sSL -H "Authorization: Bearer ${GH_TOKEN}" -H "Accept: application/vnd.github+json" "${GITHUB_API_URL}/repos/${GITHUB_REPOSITORY}/actions/jobs/${failed_job}/logs" | tail -n 220
+          fi
+          conclusion="$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${run_id}" --jq '.conclusion // "pending"')"
+          test "${conclusion}" = "success"
