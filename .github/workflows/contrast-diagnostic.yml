@@ -1,0 +1,47 @@
+name: Diagnose ArGrid Route Contrast
+
+on:
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  contrast:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          package-manager-cache: false
+
+      - name: Install current dependency graph
+        run: npm install --no-audit --no-fund
+
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Build static site
+        run: npm run build
+
+      - name: Run full-route Axe contrast audit
+        run: npm run test:a11y
+
+      - name: Upload Axe diagnostics
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: argrid-contrast-diagnostics-${{ github.run_id }}
+          path: |
+            test-results
+            playwright-report
+          if-no-files-found: warn
+          retention-days: 7
