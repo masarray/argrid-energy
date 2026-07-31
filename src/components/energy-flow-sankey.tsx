@@ -182,27 +182,29 @@ export function EnergyFlowSankey({
 
             {model.sourceItems.map((item, index) => (
               <g key={item.name}>
-                <rect x="24" y={sourceNodes[index] - sourceNodeHeights[index] / 2} width="142" height={sourceNodeHeights[index]} rx="6" fill="var(--color-surface)" stroke="var(--color-border-strong)" />
+                <rect x="24" y={sourceNodes[index] - sourceNodeHeights[index] / 2} width="142" height={sourceNodeHeights[index]} rx="6" className="sankey-endpoint-card" />
+                <rect x="28" y={sourceNodes[index] - sourceNodeHeights[index] / 2 + 1} width="137" height={sourceNodeHeights[index] - 2} rx="5" fill={item.color} className="sankey-endpoint-tint" />
                 <rect x="24" y={sourceNodes[index] - sourceNodeHeights[index] / 2} width="4" height={sourceNodeHeights[index]} rx="2" fill={item.color} />
-                <text x="39" y={sourceNodes[index] - 4} fill="var(--color-muted-foreground)" fontSize="10" fontWeight="600">{item.name}</text>
-                <text x="39" y={sourceNodes[index] + 13} fill="var(--color-foreground)" fontSize="12" fontWeight="600">{formatFlowValue(item.value, mode)}</text>
+                <text x="39" y={sourceNodes[index] - 4} className="sankey-endpoint-label" fontSize="10" fontWeight="600">{item.name}</text>
+                <text x="39" y={sourceNodes[index] + 13} className="sankey-endpoint-value" fontSize="12" fontWeight="650">{formatFlowValue(item.value, mode)}</text>
               </g>
             ))}
 
             <g>
-              <rect x="405" y="128" width="130" height="124" rx="8" fill="var(--color-surface)" stroke="var(--color-primary)" strokeOpacity="0.65" />
-              <rect x="416" y="139" width="108" height="102" rx="5" fill="var(--color-primary)" fillOpacity="0.08" stroke="var(--color-border)" />
-              <text x="470" y="176" textAnchor="middle" fill="var(--color-muted-foreground)" fontSize="8.5" fontWeight="700" letterSpacing="0.08em">{busLabel}</text>
-              <text x="470" y="200" textAnchor="middle" fill="var(--color-foreground)" fontSize="17" fontWeight="650">{formatFlowValue(model.total, mode)}</text>
-              <text x="470" y="220" textAnchor="middle" fill="var(--color-muted-foreground)" fontSize="9">20 kV busbar</text>
+              <rect x="405" y="128" width="130" height="124" rx="8" className="sankey-bus-shell" />
+              <rect x="416" y="139" width="108" height="102" rx="5" className="sankey-bus-core" />
+              <text x="470" y="176" textAnchor="middle" className="sankey-bus-label" fontSize="8.5" fontWeight="700" letterSpacing="0.08em">{busLabel}</text>
+              <text x="470" y="200" textAnchor="middle" className="sankey-bus-value" fontSize="17" fontWeight="650">{formatFlowValue(model.total, mode)}</text>
+              <text x="470" y="220" textAnchor="middle" className="sankey-bus-meta" fontSize="9">20 kV busbar</text>
             </g>
 
             {model.consumerItems.map((item, index) => (
               <g key={item.name}>
-                <rect x="744" y={consumerNodes[index] - 22} width="154" height="44" rx="6" fill="var(--color-surface)" stroke="var(--color-border-strong)" />
+                <rect x="744" y={consumerNodes[index] - 22} width="154" height="44" rx="6" className="sankey-endpoint-card" />
+                <rect x="748" y={consumerNodes[index] - 21} width="149" height="42" rx="5" fill={item.color} className="sankey-endpoint-tint" />
                 <rect x="744" y={consumerNodes[index] - 22} width="4" height="44" rx="2" fill={item.color} />
-                <text x="758" y={consumerNodes[index] - 3} fill="var(--color-muted-foreground)" fontSize="9.4" fontWeight="600">{item.name}</text>
-                <text x="758" y={consumerNodes[index] + 13} fill="var(--color-foreground)" fontSize="11" fontWeight="600">{formatFlowValue(item.value, mode)}</text>
+                <text x="758" y={consumerNodes[index] - 3} className="sankey-endpoint-label" fontSize="9.4" fontWeight="600">{item.name}</text>
+                <text x="758" y={consumerNodes[index] + 13} className="sankey-endpoint-value" fontSize="11" fontWeight="650">{formatFlowValue(item.value, mode)}</text>
               </g>
             ))}
           </svg>

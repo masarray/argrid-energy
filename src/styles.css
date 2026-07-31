@@ -373,6 +373,106 @@
   background: var(--color-green);
 }
 
+/* Public-launch P0: enterprise Sankey hierarchy and decision-led KPI emphasis. */
+.sankey-endpoint-card {
+  fill: var(--surface);
+  stroke: color-mix(in oklab, var(--foreground) 15%, var(--border));
+  stroke-width: 0.9;
+  filter: drop-shadow(0 2px 3px color-mix(in oklab, var(--foreground) 9%, transparent));
+}
+
+.sankey-endpoint-tint {
+  opacity: 0.045;
+  pointer-events: none;
+}
+
+.sankey-endpoint-label {
+  fill: var(--muted-foreground);
+}
+
+.sankey-endpoint-value {
+  fill: var(--foreground);
+}
+
+.sankey-bus-shell {
+  fill: oklch(0.19 0.014 235);
+  stroke: var(--primary);
+  stroke-width: 1.1;
+  filter: drop-shadow(0 5px 7px color-mix(in oklab, var(--foreground) 16%, transparent));
+}
+
+.sankey-bus-core {
+  fill: color-mix(in oklab, var(--primary) 9%, oklch(0.19 0.014 235));
+  stroke: color-mix(in oklab, var(--primary) 34%, oklch(0.3 0.01 235));
+  stroke-width: 0.8;
+}
+
+.sankey-bus-label,
+.sankey-bus-meta {
+  fill: oklch(0.75 0.025 225);
+}
+
+.sankey-bus-value {
+  fill: oklch(0.98 0.004 230);
+}
+
+.kpi-tile {
+  --kpi-accent: var(--color-primary);
+  transition: border-color 160ms ease, box-shadow 160ms ease, background-color 160ms ease;
+}
+
+.kpi-warning {
+  --kpi-accent: var(--color-amber);
+}
+
+.kpi-critical {
+  --kpi-accent: var(--color-red);
+}
+
+.kpi-good {
+  --kpi-accent: var(--color-green);
+}
+
+.kpi-emphasis-primary::after {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto;
+  height: 2px;
+  background: var(--kpi-accent);
+}
+
+.workspace-management .kpi-emphasis-primary {
+  border-color: color-mix(in oklab, var(--kpi-accent) 28%, var(--border)) !important;
+  background: linear-gradient(145deg, color-mix(in oklab, var(--kpi-accent) 5%, var(--surface)), var(--surface) 58%) !important;
+  box-shadow:
+    0 1px 2px color-mix(in oklab, var(--foreground) 5%, transparent),
+    0 7px 18px color-mix(in oklab, var(--kpi-accent) 7%, transparent);
+}
+
+.workspace-management .kpi-emphasis-support {
+  background: color-mix(in oklab, var(--surface) 92%, var(--surface-2)) !important;
+}
+
+.kpi-emphasis-primary .kpi-value {
+  font-size: 23px;
+}
+
+.kpi-progress-track {
+  position: absolute;
+  inset: auto 0 0;
+  height: 3px;
+  overflow: hidden;
+  background: color-mix(in oklab, var(--kpi-accent) 10%, transparent);
+}
+
+.kpi-progress-track > span {
+  display: block;
+  height: 100%;
+  border-radius: 0 999px 999px 0;
+  background: var(--kpi-accent);
+  opacity: 0.82;
+}
+
 .workspace-management main {
   background:
     linear-gradient(180deg, color-mix(in oklab, var(--background) 96%, white) 0%, var(--background) 180px);

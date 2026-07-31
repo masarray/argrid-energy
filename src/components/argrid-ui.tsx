@@ -40,6 +40,8 @@ export function KpiTile({
   trend,
   hint,
   tone = "neutral",
+  emphasis = "support",
+  progress,
 }: {
   label: string;
   value: string | number;
@@ -47,6 +49,8 @@ export function KpiTile({
   trend?: number;
   hint?: string;
   tone?: "neutral" | "warning" | "critical" | "good";
+  emphasis?: "primary" | "support";
+  progress?: number;
 }) {
   const toneClass = {
     neutral: "kpi-neutral",
@@ -62,13 +66,13 @@ export function KpiTile({
   }[tone];
 
   return (
-    <section className={`kpi-tile ${toneClass}`} aria-label={`${label}: ${value}${unit ? ` ${unit}` : ""}. State ${stateLabel}${hint ? `. ${hint}` : ""}`}>
+    <section className={`kpi-tile kpi-emphasis-${emphasis} ${toneClass}`} aria-label={`${label}: ${value}${unit ? ` ${unit}` : ""}. State ${stateLabel}${hint ? `. ${hint}` : ""}${typeof progress === "number" ? `. ${Math.round(progress)} percent of reference` : ""}`}>
       <div className="flex items-center justify-between gap-2">
         <div className="text-[9.5px] font-medium uppercase tracking-[0.11em] text-muted-foreground">{label}</div>
         <span className="kpi-state-dot" aria-hidden="true" />
       </div>
       <div className="mt-2 flex min-w-0 items-baseline gap-1.5">
-        <span className="font-display truncate text-[22px] font-medium leading-none tracking-[-0.035em] tabular">{value}</span>
+        <span className="kpi-value font-display truncate text-[22px] font-medium leading-none tracking-[-0.035em] tabular">{value}</span>
         {unit && <span className="shrink-0 text-[10.5px] text-muted-foreground">{unit}</span>}
       </div>
       <div className="mt-2 flex min-h-4 items-center gap-2 text-[9.5px] text-muted-foreground">
@@ -79,6 +83,11 @@ export function KpiTile({
         )}
         {hint && <span className="truncate">{hint}</span>}
       </div>
+      {typeof progress === "number" && (
+        <div className="kpi-progress-track" aria-hidden="true">
+          <span style={{ width: `${Math.max(3, Math.min(100, progress))}%` }} />
+        </div>
+      )}
     </section>
   );
 }
