@@ -1,0 +1,47 @@
+name: Refresh Overview visual baseline
+
+on:
+  push:
+    branches:
+      - fix/github-pages-build
+    paths:
+      - .github/workflows/refresh-overview-baseline.yml
+
+permissions:
+  contents: write
+
+jobs:
+  refresh:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout fix branch
+        uses: actions/checkout@v6
+        with:
+          ref: fix/github-pages-build
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install locked dependencies
+        run: npm ci --no-audit --no-fund
+
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Refresh intended Overview snapshot
+        run: npm run test:e2e:update -- --project=chromium --grep "management overview"
+
+      - name: Commit refreshed baseline and remove helper
+        run: |
+          git config user.name "ArGrid CI Repair"
+          git config user.email "actions@users.noreply.github.com"
+          git add tests/e2e/visual.spec.ts-snapshots/management-overview-1440x900-chromium-linux.png
+          git rm .github/workflows/refresh-overview-baseline.yml
+          git commit -m "Refresh Overview visual baseline"
+          git push origin HEAD:fix/github-pages-build
