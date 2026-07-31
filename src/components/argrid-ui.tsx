@@ -8,6 +8,7 @@ export function Panel({
   className = "",
   padded = true,
   busy = false,
+  variant = "standard",
 }: {
   title?: string;
   description?: string;
@@ -16,9 +17,10 @@ export function Panel({
   className?: string;
   padded?: boolean;
   busy?: boolean;
+  variant?: "primary" | "standard" | "quiet";
 }) {
   return (
-    <section className={`panel flex min-w-0 flex-col overflow-hidden ${className}`} aria-busy={busy || undefined}>
+    <section className={`panel panel-variant-${variant} flex min-w-0 flex-col overflow-hidden ${className}`} aria-busy={busy || undefined}>
       {(title || description || actions) && (
         <header className="panel-header flex min-h-10 items-start justify-between gap-3 border-b border-border px-4 py-2.5">
 <div className="min-w-0">

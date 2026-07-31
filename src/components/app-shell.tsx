@@ -383,58 +383,69 @@ const [guideStep, setGuideStep] = useState(() => {
         <header className="shell-command-bar min-h-[52px] shrink-0 border-b border-border bg-surface flex flex-wrap items-center px-3 lg:px-4 py-2 lg:py-0 gap-2 relative z-30">
           <button type="button" className="lg:hidden size-8 rounded-md border border-border bg-surface-2 flex items-center justify-center" onClick={() => setMobileNavOpen(true)} aria-label="Open navigation"><Menu className="size-4" /></button>
 
-          <label className="flex items-center gap-2 h-8 px-2 rounded-md border border-transparent hover:border-border hover:bg-surface-2 text-[11.5px] min-w-0">
-            <span className="size-1.5 rounded-full bg-green shrink-0" /><span className="text-muted-foreground hidden xl:inline">Site</span>
-            <select value={siteId} onChange={(event: ChangeEvent<HTMLSelectElement>) => setSiteId(event.target.value as typeof siteId)} className="max-w-[195px] bg-transparent font-medium focus:outline-none cursor-pointer truncate" aria-label="Select demo site">
-              {demoSites.map((candidate) => <option key={candidate.id} value={candidate.id} className="bg-surface text-foreground">{candidate.name}</option>)}
-            </select>
-          </label>
+          <div className="command-context-cluster">
+            <label className="command-control command-control-site flex min-w-0 items-center gap-1.5">
+              <span className="size-1.5 shrink-0 rounded-full bg-green" />
+              <span className="command-control-caption hidden 2xl:inline">Site</span>
+              <select value={siteId} onChange={(event: ChangeEvent<HTMLSelectElement>) => setSiteId(event.target.value as typeof siteId)} className="command-select max-w-[178px] truncate font-medium" aria-label="Select demo site">
+                {demoSites.map((candidate) => <option key={candidate.id} value={candidate.id} className="bg-surface text-foreground">{candidate.name}</option>)}
+              </select>
+            </label>
 
-          <label className="hidden md:flex items-center gap-1.5 h-8 px-2 rounded-md border border-transparent hover:border-border hover:bg-surface-2 text-[11.5px]">
-            <Building2 className="size-3.5 text-muted-foreground" />
-            <select value={activeWorkspace} onChange={(event: ChangeEvent<HTMLSelectElement>) => { const workspace = workspaceOptions.find((item) => item.id === event.target.value); if (workspace) void navigate({ to: workspace.to }); }} className="bg-transparent focus:outline-none cursor-pointer" aria-label="Select workspace">
-              {workspaceOptions.map((workspace) => <option key={workspace.id} value={workspace.id} className="bg-surface text-foreground">{workspace.label}</option>)}
-            </select>
-          </label>
+            <span className="command-control-divider hidden md:block" aria-hidden="true" />
 
-          <label className="h-8 px-2 rounded-md border border-transparent hover:border-border hover:bg-surface-2 text-[11.5px] text-muted-foreground flex items-center">
-            <select value={timeRange} onChange={(event: ChangeEvent<HTMLSelectElement>) => setTimeRange(event.target.value as typeof timeRange)} className="bg-transparent focus:outline-none cursor-pointer" aria-label="Select reporting period">
-              {timeRanges.map((range) => <option key={range} value={range} className="bg-surface text-foreground">{range}</option>)}
-            </select>
-          </label>
+            <label className="command-control hidden items-center gap-1.5 md:flex">
+              <Building2 className="size-3.5 shrink-0 text-muted-foreground" />
+              <span className="command-control-caption hidden 2xl:inline">Workspace</span>
+              <select value={activeWorkspace} onChange={(event: ChangeEvent<HTMLSelectElement>) => { const workspace = workspaceOptions.find((item) => item.id === event.target.value); if (workspace) void navigate({ to: workspace.to }); }} className="command-select" aria-label="Select workspace">
+                {workspaceOptions.map((workspace) => <option key={workspace.id} value={workspace.id} className="bg-surface text-foreground">{workspace.label}</option>)}
+              </select>
+            </label>
 
-          <label className="hidden xl:flex h-8 px-2 rounded-md border border-border bg-surface-2 text-[11.5px] items-center gap-1.5">
-            <Gauge className="size-3.5 text-primary" />
-            <select value={scenarioId} onChange={(event: ChangeEvent<HTMLSelectElement>) => setScenarioId(event.target.value as DemoScenarioId)} className="max-w-[160px] bg-transparent focus:outline-none cursor-pointer" aria-label="Select demo scenario">
-              {demoScenarios.map((scenario) => <option key={scenario.id} value={scenario.id} className="bg-surface text-foreground">{scenario.name}</option>)}
-            </select>
-          </label>
+            <span className="command-control-divider hidden md:block" aria-hidden="true" />
 
-          <button type="button" onClick={() => setRunning(!running)} aria-pressed={running} className={`flex items-center gap-1.5 h-8 px-2.5 rounded-md border text-[10.5px] font-medium tracking-wide ${running ? "border-primary/25 bg-primary/8 text-primary" : "border-amber/30 bg-amber/10 text-amber"}`} title={running ? "Pause simulated live telemetry" : "Resume simulated live telemetry"}>
-            {running ? <Radio className="size-3" /> : <Pause className="size-3" />}{running ? "LIVE" : "PAUSED"}
-          </button>
+            <label className="command-control flex items-center gap-1.5">
+              <span className="command-control-caption hidden xl:inline">Period</span>
+              <select value={timeRange} onChange={(event: ChangeEvent<HTMLSelectElement>) => setTimeRange(event.target.value as typeof timeRange)} className="command-select text-muted-foreground" aria-label="Select reporting period">
+                {timeRanges.map((range) => <option key={range} value={range} className="bg-surface text-foreground">{range}</option>)}
+              </select>
+            </label>
 
-          <div className="relative order-last lg:order-none w-full lg:flex-1 lg:max-w-md lg:ml-1">
-            <Search className="size-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
-            <input value={search} onChange={(event: ChangeEvent<HTMLInputElement>) => setSearch(event.target.value)} onKeyDown={(event: KeyboardEvent<HTMLInputElement>) => { if (event.key === "Escape") setSearch(""); }} placeholder="Search site, meter, incident, event, report, invoice…" className="w-full h-8 pl-8 pr-3 rounded-md bg-surface-2 border border-border text-[11.5px] placeholder:text-muted-foreground/70 focus:outline-none focus:border-primary/50" aria-label="Search demo assets" role="combobox" aria-autocomplete="list" aria-expanded={normalizedSearch.length >= 2} aria-controls="global-search-results" />
+            <span className="command-control-divider hidden xl:block" aria-hidden="true" />
+
+            <label className="command-control command-scenario-control hidden items-center gap-1.5 xl:flex">
+              <Gauge className="size-3.5 shrink-0 text-primary" />
+              <span className="command-control-caption hidden 2xl:inline">Scenario</span>
+              <select value={scenarioId} onChange={(event: ChangeEvent<HTMLSelectElement>) => setScenarioId(event.target.value as DemoScenarioId)} className="command-select max-w-[148px] font-medium" aria-label="Select demo scenario">
+                {demoScenarios.map((scenario) => <option key={scenario.id} value={scenario.id} className="bg-surface text-foreground">{scenario.name}</option>)}
+              </select>
+            </label>
+          </div>
+
+          <div className="command-search relative order-last w-full lg:order-none lg:min-w-[260px] lg:flex-1">
+            <Search className="pointer-events-none absolute left-3 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
+            <input value={search} onChange={(event: ChangeEvent<HTMLInputElement>) => setSearch(event.target.value)} onKeyDown={(event: KeyboardEvent<HTMLInputElement>) => { if (event.key === "Escape") setSearch(""); }} placeholder="Search assets, incidents, reports, invoices…" className="command-search-input w-full pl-8 pr-3 text-[11.5px] placeholder:text-muted-foreground/65" aria-label="Search demo assets" role="combobox" aria-autocomplete="list" aria-expanded={normalizedSearch.length >= 2} aria-controls="global-search-results" />
             {normalizedSearch.length >= 2 && (
-              <div id="global-search-results" role="listbox" className="absolute left-0 right-0 top-9 rounded-md border border-border-strong bg-surface overflow-hidden z-50 shadow-lg">
+              <div id="global-search-results" role="listbox" className="absolute left-0 right-0 top-10 z-50 overflow-hidden rounded-md border border-border-strong bg-surface shadow-lg">
                 {searchResults.length > 0 ? searchResults.map((result) => (
-                  <Link key={`${result.to}-${result.label}`} to={result.to} onClick={() => { if (result.context) storeIncidentContext(result.context); setSearch(""); }} role="option" aria-selected="false" className="flex items-center gap-3 px-3 py-2 text-[11.5px] hover:bg-surface-2 border-b border-border last:border-b-0">
-                    <Search className="size-3.5 text-muted-foreground" /><span className="min-w-0 flex-1"><span className="block font-medium">{result.label}</span><span className="block text-[10px] text-muted-foreground truncate">{result.detail}</span></span><ChevronRight className="size-3.5 text-muted-foreground" />
+                  <Link key={`${result.to}-${result.label}`} to={result.to} onClick={() => { if (result.context) storeIncidentContext(result.context); setSearch(""); }} role="option" aria-selected="false" className="flex items-center gap-3 border-b border-border px-3 py-2 text-[11.5px] last:border-b-0 hover:bg-surface-2">
+                    <Search className="size-3.5 text-muted-foreground" /><span className="min-w-0 flex-1"><span className="block font-medium">{result.label}</span><span className="block truncate text-[10px] text-muted-foreground">{result.detail}</span></span><ChevronRight className="size-3.5 text-muted-foreground" />
                   </Link>
                 )) : <div className="px-3 py-3 text-[11px] text-muted-foreground">No matching demo asset.</div>}
               </div>
             )}
           </div>
 
-          <div className="ml-auto flex items-center gap-1">
-            <button type="button" onClick={startGuide} className="hidden xl:flex h-8 items-center gap-1.5 rounded-md border border-primary/25 bg-primary/8 px-2.5 text-[10.5px] font-medium text-primary hover:bg-primary/12"><PlayCircle className="size-3.5" /> Guided demo</button>
-            <div className="hidden 2xl:flex items-center gap-1.5 px-2 text-[10px] text-muted-foreground tabular" title={lastUpdated.toLocaleString()}><Play className={`size-3 ${running ? "text-green" : "text-amber"}`} />{lastUpdated.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })}</div>
-            <Link to="/alarms" className="relative size-8 rounded-md hover:bg-surface-2 flex items-center justify-center" aria-label="Open alarms"><Bell className="size-4 text-muted-foreground" />{kpis.criticalAlarms > 0 && <span className="absolute top-1.5 right-1.5 size-1.5 rounded-full bg-red" />}</Link>
-            <Link to="/data-health" className="size-8 rounded-md flex items-center justify-center hover:bg-surface-2" title={`Data health ${telemetry.dataHealth.toFixed(1)}%`}><ShieldCheck className={`size-4 ${telemetry.meterQuality === "GOOD" ? "text-green" : "text-amber"}`} /></Link>
-            <div className="hidden sm:block h-4 w-px bg-border mx-1" />
-            <div className="hidden sm:flex items-center gap-2 h-8 px-2 text-[11.5px]"><div className="size-6 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center"><User className="size-3.5 text-primary" /></div><span className="text-muted-foreground">Energy Manager</span></div>
+          <div className="command-status-cluster ml-auto flex items-center gap-1">
+            <button type="button" onClick={() => setRunning(!running)} aria-pressed={running} className={`command-live-control flex h-8 items-center gap-1.5 rounded-md border px-2.5 text-[10.5px] font-medium tracking-wide ${running ? "is-live" : "is-paused"}`} title={running ? "Pause simulated live telemetry" : "Resume simulated live telemetry"}>
+              {running ? <Radio className="size-3" /> : <Pause className="size-3" />}{running ? "LIVE" : "PAUSED"}
+            </button>
+            <button type="button" onClick={startGuide} className="command-guide-button hidden h-8 items-center gap-1.5 rounded-md px-2.5 text-[10.5px] font-medium xl:flex"><PlayCircle className="size-3.5" /> Guided demo</button>
+            <div className="command-update-time hidden items-center gap-1.5 px-1.5 text-[10px] text-muted-foreground tabular 2xl:flex" title={lastUpdated.toLocaleString()}><Play className={`size-3 ${running ? "text-green" : "text-amber"}`} />{lastUpdated.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })}</div>
+            <Link to="/alarms" className="command-icon-button relative flex size-8 items-center justify-center rounded-md" aria-label="Open alarms"><Bell className="size-4 text-muted-foreground" />{kpis.criticalAlarms > 0 && <span className="absolute right-1.5 top-1.5 size-1.5 rounded-full bg-red" />}</Link>
+            <Link to="/data-health" className="command-icon-button flex size-8 items-center justify-center rounded-md" title={`Data health ${telemetry.dataHealth.toFixed(1)}%`}><ShieldCheck className={`size-4 ${telemetry.meterQuality === "GOOD" ? "text-green" : "text-amber"}`} /></Link>
+            <div className="command-status-divider mx-1 hidden h-4 w-px 2xl:block" />
+            <div className="command-user-chip hidden h-8 items-center gap-2 px-2 text-[11px] 2xl:flex"><div className="flex size-6 items-center justify-center rounded-full border border-primary/20 bg-primary/10"><User className="size-3.5 text-primary" /></div><span className="text-muted-foreground">Energy Manager</span></div>
           </div>
         </header>
 

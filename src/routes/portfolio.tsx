@@ -159,7 +159,7 @@ function Portfolio() {
         </section>
 
         <div className="grid grid-cols-1 gap-3 xl:grid-cols-12">
-          <Panel title="Performance Constellation" className="h-[390px] xl:col-span-7" actions={<span className="text-[9.5px] text-muted-foreground">bubble size = annual opportunity</span>}>
+          <Panel variant="primary" title="Performance Constellation" className="h-[390px] xl:col-span-7" actions={<span className="text-[9.5px] text-muted-foreground">bubble size = annual opportunity</span>}>
             <ResponsiveContainer width="100%" height="100%">
               <ScatterChart margin={{ top: 12, right: 18, bottom: 12, left: 0 }}>
                 <CartesianGrid stroke="var(--color-border)" strokeDasharray="2 4" />
@@ -213,7 +213,7 @@ function Portfolio() {
             </div>
           </Panel>
 
-          <Panel title={`${selected.name} · Management Profile`} className="xl:col-span-4" actions={<span className={`rounded border px-1.5 py-0.5 text-[9px] ${statusClass(selected.status)}`}>{selected.status}</span>}>
+          <Panel variant="quiet" title={`${selected.name} · Management Profile`} className="xl:col-span-4" actions={<span className={`rounded border px-1.5 py-0.5 text-[9px] ${statusClass(selected.status)}`}>{selected.status}</span>}>
             <div className="space-y-3">
               <div className="grid grid-cols-2 gap-2">
                 <Metric icon={Zap} label="MTD energy" value={`${fmtNum(selected.energyMWh)} MWh`} />

@@ -196,6 +196,7 @@ function Overview() {
 
         <div className="grid grid-cols-1 gap-3 xl:grid-cols-12">
           <Panel
+            variant="primary"
             title="Energy Flow Sankey"
             description="Live source, distribution, end-use, cost, and carbon reconciliation"
             className="xl:col-span-12"
@@ -253,7 +254,7 @@ function Overview() {
             </ResponsiveContainer>
           </Panel>
 
-          <Panel title="Value Realization" className="xl:col-span-4" actions={<Link to="/savings" className="text-[10px] text-primary hover:underline">Savings ledger →</Link>}>
+          <Panel variant="quiet" title="Value Realization" className="xl:col-span-4" actions={<Link to="/savings" className="text-[10px] text-primary hover:underline">Savings ledger →</Link>}>
             <div className="grid grid-cols-2 gap-3 border-b border-border pb-3">
               <div>
                 <div className="text-[9px] font-medium uppercase tracking-[0.1em] text-muted-foreground">Annual opportunity</div>
@@ -308,7 +309,7 @@ function Overview() {
             </div>
           </Panel>
 
-          <Panel title="Recent Operational Events" className="xl:col-span-4" actions={<Link to="/alarms" className="text-[10px] text-primary hover:underline">Event timeline →</Link>}>
+          <Panel variant="quiet" title="Recent Operational Events" className="xl:col-span-4" actions={<Link to="/alarms" className="text-[10px] text-primary hover:underline">Event timeline →</Link>}>
             <ul>
               {alarms.slice(0, 5).map((alarm) => (
                 <li key={alarm.id} className="flex items-start gap-2.5 border-b border-border py-2.5 first:pt-0 last:border-0 last:pb-0">
