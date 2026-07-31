@@ -20,17 +20,20 @@ test.describe("ArGrid full route accessibility gate", () => {
         contentType: "application/json",
       });
 
-      const blocking = results.violations.filter((violation) =>
-        violation.impact === "critical" || violation.impact === "serious",
-      );
-      const summary = blocking.map((violation) => ({
-        id: violation.id,
-        impact: violation.impact,
-        help: violation.help,
-        targets: violation.nodes.flatMap((node) => node.target),
-      }));
+      const blocking = results.violations
+        .filter((violation) => violation.impact === "critical" || violation.impact === "serious")
+        .map((violation) => ({
+          id: violation.id,
+          impact: violation.impact,
+          help: violation.help,
+          nodes: violation.nodes.map((node) => ({
+            target: node.target,
+            html: node.html,
+            failureSummary: node.failureSummary,
+          })),
+        }));
 
-      expect(summary).toEqual([]);
+      expect(blocking, `Axe blocking violations for ${route.path}:\n${JSON.stringify(blocking, null, 2)}`).toEqual([]);
     });
   }
 });
