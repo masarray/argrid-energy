@@ -1,0 +1,100 @@
+name: Fit Sankey source nodes to ribbon thickness
+
+on:
+  push:
+    branches:
+      - fix/sankey-source-node-fit
+    paths:
+      - .github/workflows/fit-sankey-source-node.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  fit-and-validate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+
+    steps:
+      - name: Checkout repair branch
+        uses: actions/checkout@v6
+        with:
+          ref: fix/sankey-source-node-fit
+          fetch-depth: 0
+
+      - name: Fit source cards to incoming ribbon thickness
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          path = Path("src/components/energy-flow-sankey.tsx")
+          text = path.read_text()
+
+          stack_anchor = '''  const sourceStack = stackCenters(model.sourceItems, 141, 98);
+          const consumerStack = stackCenters(model.consumerItems, 141, 98);'''
+          stack_replacement = '''  const sourceStack = stackCenters(model.sourceItems, 141, 98);
+          const sourceNodeHeights = sourceStack.map(({ width }) => Math.max(50, Math.min(110, Math.ceil(width + 10))));
+          const consumerStack = stackCenters(model.consumerItems, 141, 98);'''
+
+          if "sourceNodeHeights" not in text:
+              if stack_anchor not in text:
+                  raise SystemExit("Source stack anchor was not found")
+              text = text.replace(stack_anchor, stack_replacement, 1)
+
+          card_anchor = '''                <rect x="24" y={sourceNodes[index] - 25} width="142" height="50" rx="6" fill="var(--color-surface)" stroke="var(--color-border-strong)" />
+                          <rect x="24" y={sourceNodes[index] - 25} width="4" height="50" rx="2" fill={item.color} />'''
+          card_replacement = '''                <rect
+                            x="24"
+                            y={sourceNodes[index] - sourceNodeHeights[index] / 2}
+                            width="142"
+                            height={sourceNodeHeights[index]}
+                            rx="6"
+                            fill="var(--color-surface)"
+                            stroke="var(--color-border-strong)"
+                          />
+                          <rect
+                            x="24"
+                            y={sourceNodes[index] - sourceNodeHeights[index] / 2}
+                            width="4"
+                            height={sourceNodeHeights[index]}
+                            rx="2"
+                            fill={item.color}
+                          />'''
+
+          if card_anchor not in text:
+              raise SystemExit("Source card anchor was not found")
+          text = text.replace(card_anchor, card_replacement, 1)
+          path.write_text(text)
+          PY
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install locked dependencies
+        run: npm ci --no-audit --no-fund
+
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Validate source and static build
+        run: npm run check
+
+      - name: Refresh reviewed Overview baseline
+        run: npm run test:e2e:update -- --project=chromium --grep "management overview"
+
+      - name: Validate complete browser QA
+        run: npm run qa:browser
+
+      - name: Commit validated Sankey geometry
+        run: |
+          git diff --check
+          git config user.name "ArGrid Sankey Geometry"
+          git config user.email "actions@users.noreply.github.com"
+          git add src/components/energy-flow-sankey.tsx tests/e2e/visual.spec.ts-snapshots/management-overview-1440x900-chromium-linux.png
+          git rm .github/workflows/fit-sankey-source-node.yml
+          git commit -m "Fit Sankey source cards to ribbon thickness"
+          git push origin HEAD:fix/sankey-source-node-fit
