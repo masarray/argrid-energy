@@ -116,7 +116,7 @@ function statusClass(status: InvoiceStatus) {
 
 function InvoiceStatusBadge({ status }: { status: InvoiceStatus }) {
   return (
-    <span className={`inline-flex items-center rounded border px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-[0.09em] ${statusClass(status)}`}>
+    <span className={`inline-flex items-center rounded border px-1.5 py-0.5 text-[9.5px] font-semibold uppercase tracking-[0.09em] ${statusClass(status)}`}>
       {status}
     </span>
   );
@@ -260,7 +260,7 @@ function Billing() {
             <div className="min-w-0 flex-1">
               <div className="flex flex-wrap items-center gap-2">
                 <span className="text-[9.5px] font-semibold uppercase tracking-[0.13em] text-muted-foreground">Billing assurance</span>
-                <span className={`rounded border px-1.5 py-0.5 text-[9px] font-medium ${summary.blockingExceptions > 0 ? "border-amber/30 bg-amber/10 text-amber" : "border-green/30 bg-green/10 text-green"}`}>
+                <span className={`rounded border px-1.5 py-0.5 text-[9.5px] font-medium ${summary.blockingExceptions > 0 ? "border-amber/30 bg-amber/10 text-amber" : "border-green/30 bg-green/10 text-green"}`}>
                   {summary.blockingExceptions > 0 ? `${summary.blockingExceptions} blocking issue` : "Ready to issue"}
                 </span>
               </div>
@@ -335,11 +335,11 @@ function Billing() {
                   </div>
                   <div className="mt-2 flex items-end justify-between gap-3">
                     <div>
-                      <div className="text-[9px] uppercase tracking-[0.1em] text-muted-foreground">Invoice total</div>
+                      <div className="text-[9.5px] uppercase tracking-[0.1em] text-muted-foreground">Invoice total</div>
                       <div className="mt-0.5 text-[13px] font-medium tabular">{fmtIDR(invoice.total)}</div>
                     </div>
                     <div className="text-right">
-                      <div className="text-[9px] uppercase tracking-[0.1em] text-muted-foreground">Balance</div>
+                      <div className="text-[9.5px] uppercase tracking-[0.1em] text-muted-foreground">Balance</div>
                       <div className={`mt-0.5 text-[11px] font-medium tabular ${invoice.balance > 0 ? "text-amber" : "text-green"}`}>{fmtIDR(invoice.balance)}</div>
                     </div>
                   </div>
@@ -366,7 +366,7 @@ function Billing() {
                   {tab}
                 </button>
               ))}
-              <span className="ml-auto hidden text-[9px] text-muted-foreground md:inline">Tariff {selected.tariff.id}</span>
+              <span className="ml-auto hidden text-[9.5px] text-muted-foreground md:inline">Tariff {selected.tariff.id}</span>
             </div>
 
             {message && <div className="mb-3 flex items-center gap-2 rounded-md border border-primary/25 bg-primary/7 px-3 py-2 text-[10px]"><History className="size-3.5 text-primary" />{message}</div>}
@@ -375,11 +375,11 @@ function Billing() {
               <div>
                 <div className="overflow-x-auto" tabIndex={0} role="region" aria-label="Invoice charge line items">
                   <table className="w-full min-w-[760px] text-[10.5px]">
-                    <thead><tr className="border-b border-border text-left text-[9px] uppercase tracking-[0.11em] text-muted-foreground"><th className="py-2 font-normal">Code / charge</th><th className="py-2 font-normal">Source</th><th className="py-2 font-normal text-right">Quantity</th><th className="py-2 font-normal text-right">Rate</th><th className="py-2 font-normal text-right">Amount</th></tr></thead>
+                    <thead><tr className="border-b border-border text-left text-[9.5px] uppercase tracking-[0.11em] text-muted-foreground"><th className="py-2 font-normal">Code / charge</th><th className="py-2 font-normal">Source</th><th className="py-2 font-normal text-right">Quantity</th><th className="py-2 font-normal text-right">Rate</th><th className="py-2 font-normal text-right">Amount</th></tr></thead>
                     <tbody className="divide-y divide-border">
                       {selected.lines.map((line) => (
                         <tr key={line.code} className="hover:bg-surface-2/60">
-                          <td className="py-2.5"><div className="font-medium">{line.description}</div><div className="text-[9px] text-muted-foreground tabular">{line.code}</div></td>
+                          <td className="py-2.5"><div className="font-medium">{line.description}</div><div className="text-[9.5px] text-muted-foreground tabular">{line.code}</div></td>
                           <td className="py-2.5 text-muted-foreground">{line.source}</td>
                           <td className="py-2.5 text-right tabular">{fmtNum(line.quantity)} {line.unit}</td>
                           <td className="py-2.5 text-right tabular">{currencyFull.format(line.unitRate)}</td>
@@ -415,7 +415,7 @@ function Billing() {
                 </div>
 
                 <div className="h-[230px] rounded-md border border-border bg-surface-2 p-3">
-                  <div className="mb-2 flex items-center justify-between"><div className="text-[9.5px] font-semibold uppercase tracking-[0.11em] text-muted-foreground">Daily cost by time band</div><div className="text-[9px] text-muted-foreground">illustrative allocation profile</div></div>
+                  <div className="mb-2 flex items-center justify-between"><div className="text-[9.5px] font-semibold uppercase tracking-[0.11em] text-muted-foreground">Daily cost by time band</div><div className="text-[9.5px] text-muted-foreground">illustrative allocation profile</div></div>
                   <ResponsiveContainer width="100%" height="90%">
                     <BarChart data={dailyCost} margin={{ top: 4, right: 4, left: -8, bottom: 0 }} barGap={0}>
                       <CartesianGrid stroke="var(--color-border)" strokeDasharray="2 4" vertical={false} />
@@ -435,13 +435,13 @@ function Billing() {
                     <div className="mt-2 space-y-2 text-[9.5px]"><Info label="Source path" value={selected.meter.sourcePath} /><Info label="Allocation basis" value={selected.meter.allocationBasis} /><Info label="Last interval" value={selected.meter.lastInterval} /></div>
                   </div>
                   <div className="rounded-md border border-border bg-surface-2 p-3">
-                    <div className="flex items-center justify-between"><div className="flex items-center gap-2 text-[10.5px] font-semibold"><AlertTriangle className="size-3.5 text-amber" />Billing exceptions</div><span className="text-[9px] text-muted-foreground">{selected.exceptions.length} total</span></div>
+                    <div className="flex items-center justify-between"><div className="flex items-center gap-2 text-[10.5px] font-semibold"><AlertTriangle className="size-3.5 text-amber" />Billing exceptions</div><span className="text-[9.5px] text-muted-foreground">{selected.exceptions.length} total</span></div>
                     <div className="mt-2 space-y-2">
                       {selected.exceptions.length === 0 ? <div className="flex items-center gap-2 text-[10px] text-green"><CheckCircle2 className="size-3.5" />No billing exception detected.</div> : selected.exceptions.map((exception) => (
                         <div key={exception.id} className={`rounded border p-2 ${exception.blocking && exception.status === "Open" ? "border-red/30 bg-red/6" : "border-border bg-surface"}`}>
-                          <div className="flex items-center justify-between gap-2"><span className="text-[9.5px] font-medium">{exception.type}</span><span className="text-[8.5px] uppercase tracking-[0.08em] text-muted-foreground">{exception.status}</span></div>
-                          <p className="mt-1 text-[9px] leading-relaxed text-muted-foreground">{exception.description}</p>
-                          {exception.status === "Open" && <button type="button" onClick={() => acceptException(exception)} className="mt-2 h-6 rounded border border-border bg-surface px-2 text-[9px] font-medium hover:bg-surface-2">Accept in demo</button>}
+                          <div className="flex items-center justify-between gap-2"><span className="text-[9.5px] font-medium">{exception.type}</span><span className="text-[9.5px] uppercase tracking-[0.08em] text-muted-foreground">{exception.status}</span></div>
+                          <p className="mt-1 text-[9.5px] leading-relaxed text-muted-foreground">{exception.description}</p>
+                          {exception.status === "Open" && <button type="button" onClick={() => acceptException(exception)} className="mt-2 h-6 rounded border border-border bg-surface px-2 text-[9.5px] font-medium hover:bg-surface-2">Accept in demo</button>}
                         </div>
                       ))}
                     </div>
@@ -459,7 +459,7 @@ function Billing() {
                       <div key={`${entry.at}-${entry.action}`} className="relative flex gap-3 pb-4 last:pb-0">
                         {index < selected.auditTrail.length - 1 && <span className="absolute left-[5px] top-3 bottom-0 w-px bg-border" />}
                         <span className="mt-1 size-2.5 shrink-0 rounded-full border-2 border-surface bg-primary" />
-                        <div><div className="text-[10px] font-medium">{entry.action}</div><div className="mt-0.5 text-[9px] text-muted-foreground tabular">{entry.at} · {entry.actor}</div></div>
+                        <div><div className="text-[10px] font-medium">{entry.action}</div><div className="mt-0.5 text-[9.5px] text-muted-foreground tabular">{entry.at} · {entry.actor}</div></div>
                       </div>
                     ))}
                   </div>
@@ -467,12 +467,12 @@ function Billing() {
                 </div>
 
                 <div>
-                  <div className="mb-2 flex items-center justify-between"><div className="text-[9.5px] font-semibold uppercase tracking-[0.11em] text-muted-foreground">Payments</div><span className="text-[9px] text-muted-foreground">Balance {fmtIDR(selected.balance)}</span></div>
+                  <div className="mb-2 flex items-center justify-between"><div className="text-[9.5px] font-semibold uppercase tracking-[0.11em] text-muted-foreground">Payments</div><span className="text-[9.5px] text-muted-foreground">Balance {fmtIDR(selected.balance)}</span></div>
                   <div className="rounded-md border border-border bg-surface-2">
                     {selected.payments.length === 0 && (paymentOverrides[selected.id] ?? 0) === 0 ? <div className="p-3 text-[10px] text-muted-foreground">No payment has been allocated to this invoice.</div> : selected.payments.map((payment) => (
-                      <div key={payment.reference} className="flex items-center gap-3 border-b border-border p-3 last:border-0"><Landmark className="size-4 text-green" /><div className="min-w-0 flex-1"><div className="text-[10px] font-medium">{payment.method}</div><div className="text-[9px] text-muted-foreground tabular">{payment.date} · {payment.reference}</div></div><div className="text-[10.5px] font-medium text-green tabular">{currencyFull.format(payment.amount)}</div></div>
+                      <div key={payment.reference} className="flex items-center gap-3 border-b border-border p-3 last:border-0"><Landmark className="size-4 text-green" /><div className="min-w-0 flex-1"><div className="text-[10px] font-medium">{payment.method}</div><div className="text-[9.5px] text-muted-foreground tabular">{payment.date} · {payment.reference}</div></div><div className="text-[10.5px] font-medium text-green tabular">{currencyFull.format(payment.amount)}</div></div>
                     ))}
-                    {(paymentOverrides[selected.id] ?? 0) > 0 && <div className="flex items-center gap-3 border-t border-border p-3"><Landmark className="size-4 text-green" /><div className="min-w-0 flex-1"><div className="text-[10px] font-medium">Demo payment allocation</div><div className="text-[9px] text-muted-foreground">Local browser workflow</div></div><div className="text-[10.5px] font-medium text-green tabular">{currencyFull.format(paymentOverrides[selected.id])}</div></div>}
+                    {(paymentOverrides[selected.id] ?? 0) > 0 && <div className="flex items-center gap-3 border-t border-border p-3"><Landmark className="size-4 text-green" /><div className="min-w-0 flex-1"><div className="text-[10px] font-medium">Demo payment allocation</div><div className="text-[9.5px] text-muted-foreground">Local browser workflow</div></div><div className="text-[10.5px] font-medium text-green tabular">{currencyFull.format(paymentOverrides[selected.id])}</div></div>}
                   </div>
 
                   <div className="mt-3 flex flex-wrap gap-2">
@@ -480,7 +480,7 @@ function Billing() {
                     {selected.status === "Approved" && <button type="button" onClick={issueInvoice} className="flex h-8 items-center gap-1.5 rounded-md bg-primary px-3 text-[10px] font-medium text-primary-foreground"><FileCheck2 className="size-3.5" />Issue invoice</button>}
                     {["Issued", "Partially paid", "Overdue"].includes(selected.status) && selected.balance > 0 && <button type="button" onClick={recordPayment} className="flex h-8 items-center gap-1.5 rounded-md border border-border bg-surface px-3 text-[10px] font-medium hover:bg-surface-2"><CircleDollarSign className="size-3.5 text-green" />Record demo payment</button>}
                   </div>
-                  <div className="mt-3 text-[9px] leading-relaxed text-muted-foreground">Workflow changes are stored locally for demonstration. Production invoicing requires segregated approval roles, immutable audit records, ERP posting controls, document numbering governance, and jurisdiction-specific tax validation.</div>
+                  <div className="mt-3 text-[9.5px] leading-relaxed text-muted-foreground">Workflow changes are stored locally for demonstration. Production invoicing requires segregated approval roles, immutable audit records, ERP posting controls, document numbering governance, and jurisdiction-specific tax validation.</div>
                 </div>
               </div>
             )}
@@ -500,11 +500,11 @@ function Billing() {
 
 function Metric({ icon: Icon, label, value, tone = "neutral" }: { icon: typeof Receipt; label: string; value: string; tone?: "neutral" | "good" | "warning" | "critical" }) {
   const toneClass = tone === "good" ? "text-green" : tone === "warning" ? "text-amber" : tone === "critical" ? "text-red" : "text-foreground";
-  return <div className="flex items-center gap-2.5"><div className="flex size-8 shrink-0 items-center justify-center rounded-md border border-border bg-surface-2"><Icon className={`size-3.5 ${toneClass}`} /></div><div className="min-w-0"><div className="text-[8.5px] font-medium uppercase tracking-[0.1em] text-muted-foreground">{label}</div><div className={`mt-0.5 truncate text-[12px] font-semibold tabular ${toneClass}`}>{value}</div></div></div>;
+  return <div className="flex items-center gap-2.5"><div className="flex size-8 shrink-0 items-center justify-center rounded-md border border-border bg-surface-2"><Icon className={`size-3.5 ${toneClass}`} /></div><div className="min-w-0"><div className="text-[9.5px] font-medium uppercase tracking-[0.1em] text-muted-foreground">{label}</div><div className={`mt-0.5 truncate text-[12px] font-semibold tabular ${toneClass}`}>{value}</div></div></div>;
 }
 
 function Info({ label, value }: { label: string; value: string }) {
-  return <div><div className="text-[8.5px] font-medium uppercase tracking-[0.1em] text-muted-foreground">{label}</div><div className="mt-0.5 text-[10px] leading-relaxed">{value}</div></div>;
+  return <div><div className="text-[9.5px] font-medium uppercase tracking-[0.1em] text-muted-foreground">{label}</div><div className="mt-0.5 text-[10px] leading-relaxed">{value}</div></div>;
 }
 
 function TotalRow({ label, value }: { label: string; value: number }) {
@@ -512,5 +512,5 @@ function TotalRow({ label, value }: { label: string; value: number }) {
 }
 
 function TrustCard({ icon: Icon, label, value, detail }: { icon: typeof FileText; label: string; value: string; detail: string }) {
-  return <div className="flex items-center gap-3 rounded-lg border border-border bg-surface px-3 py-3"><div className="flex size-8 shrink-0 items-center justify-center rounded-md bg-primary/8"><Icon className="size-4 text-primary" /></div><div className="min-w-0"><div className="text-[8.5px] font-medium uppercase tracking-[0.1em] text-muted-foreground">{label}</div><div className="mt-0.5 truncate text-[10.5px] font-semibold">{value}</div><div className="mt-0.5 truncate text-[9px] text-muted-foreground">{detail}</div></div></div>;
+  return <div className="flex items-center gap-3 rounded-lg border border-border bg-surface px-3 py-3"><div className="flex size-8 shrink-0 items-center justify-center rounded-md bg-primary/8"><Icon className="size-4 text-primary" /></div><div className="min-w-0"><div className="text-[9.5px] font-medium uppercase tracking-[0.1em] text-muted-foreground">{label}</div><div className="mt-0.5 truncate text-[10.5px] font-semibold">{value}</div><div className="mt-0.5 truncate text-[9.5px] text-muted-foreground">{detail}</div></div></div>;
 }

@@ -142,7 +142,7 @@ export function WorkspaceState({
     <section className={`workspace-state ${toneClass} ${compact ? "workspace-state-compact" : ""}`} role={tone === "critical" ? "alert" : "status"}>
       <span className="workspace-state-mark" aria-hidden="true" />
       <div className="min-w-0 flex-1">
-        {eyebrow && <div className="text-[9px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">{eyebrow}</div>}
+        {eyebrow && <div className="text-[9.5px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">{eyebrow}</div>}
         <h2 className="mt-1 text-[13px] font-semibold tracking-tight text-foreground">{title}</h2>
         <p className="mt-1 text-[10.5px] leading-relaxed text-muted-foreground">{description}</p>
       </div>
@@ -178,5 +178,5 @@ export function StatusPill({ status }: { status: string }) {
     "Persistence Monitoring": "bg-green/10 text-green border-green/25",
   };
   const cls = map[status] || "bg-surface-2 text-muted-foreground border-border";
-  return <span className={`inline-flex items-center rounded border px-1.5 py-0.5 text-[9px] font-medium uppercase tracking-[0.09em] ${cls}`}>{status}</span>;
+  return <span className={`inline-flex items-center rounded border px-1.5 py-0.5 text-[9.5px] font-medium uppercase tracking-[0.09em] ${cls}`}>{status}</span>;
 }

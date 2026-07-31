@@ -453,7 +453,12 @@ const [guideStep, setGuideStep] = useState(() => {
           <div className="px-4 lg:px-6 py-3.5 flex flex-wrap items-end justify-between gap-3">
             <div>
               <div className="flex items-center gap-2 text-[10px] uppercase tracking-[0.14em] text-muted-foreground"><span>{site.region}</span><ChevronRight className="size-3" /><span>{operationsWorkspace ? "Operations workspace" : activeWorkspace === "finance" ? "Finance workspace" : "Management workspace"}</span></div>
-              <h1 className="font-display text-[20px] font-medium tracking-tight leading-tight mt-1">{title}</h1>
+              <div className="mt-1 flex flex-wrap items-center gap-2">
+                <h1 className="font-display text-[20px] font-medium tracking-tight leading-tight">{title}</h1>
+                <span className="demo-environment-badge" title="Synthetic demonstration data. No production system is connected.">
+                  <Database className="size-3" /> Demo · simulation only
+                </span>
+              </div>
               {subtitle && <div className="text-[11.5px] text-muted-foreground mt-0.5">{subtitle}</div>}
             </div>
             {toolbar && <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto sm:justify-end">{toolbar}</div>}

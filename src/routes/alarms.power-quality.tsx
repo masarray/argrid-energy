@@ -245,8 +245,8 @@ function PowerQualityInvestigation() {
               {events.map((event) => <option key={event.id} value={event.id}>{event.id} · {event.type} · {event.feederId}</option>)}
             </select>
           </label>
-          <span className={`rounded border px-2 py-1 text-[9px] ${severityClass(selected.severity)}`}>{selected.severity}</span>
-          <span className={`rounded border px-2 py-1 text-[9px] ${statusClass(selected.status)}`}>{selected.status}</span>
+          <span className={`rounded border px-2 py-1 text-[9.5px] ${severityClass(selected.severity)}`}>{selected.severity}</span>
+          <span className={`rounded border px-2 py-1 text-[9.5px] ${statusClass(selected.status)}`}>{selected.status}</span>
           <span className="ml-auto text-[9.5px] text-muted-foreground">{selected.timestamp} · {scenario.name}</span>
         </div>
 
@@ -265,7 +265,7 @@ function PowerQualityInvestigation() {
             <div className="min-w-0 flex-1">
               <div className="flex flex-wrap items-center gap-2">
                 <span className="text-[9.5px] font-semibold uppercase tracking-[0.13em] text-muted-foreground">Probable origin</span>
-                <span className="rounded border border-amber/30 bg-surface px-1.5 py-0.5 text-[9px] text-amber">{selected.confidencePct}% confidence</span>
+                <span className="rounded border border-amber/30 bg-surface px-1.5 py-0.5 text-[9.5px] text-amber">{selected.confidencePct}% confidence</span>
               </div>
               <p className="mt-1 text-[12px] leading-relaxed"><strong>{selected.probableOrigin}.</strong> {selected.operationalImpact}</p>
             </div>
@@ -285,7 +285,7 @@ function PowerQualityInvestigation() {
               {tab}
             </button>
           ))}
-          <span className="ml-auto hidden pr-2 text-[9px] text-muted-foreground lg:inline">Event, feeder, cursor, and report evidence remain synchronized.</span>
+          <span className="ml-auto hidden pr-2 text-[9.5px] text-muted-foreground lg:inline">Event, feeder, cursor, and report evidence remain synchronized.</span>
         </div>
 
         {message && <div className="flex items-center gap-2 rounded-md border border-primary/25 bg-primary/8 px-3 py-2 text-[10px]"><History className="size-3.5 text-primary" />{message}</div>}
@@ -361,7 +361,7 @@ function PowerQualityInvestigation() {
                   </button>
                   <button type="button" onClick={restartReplay} className="flex size-7 items-center justify-center rounded-md border border-border bg-surface" aria-label="Restart event replay"><RotateCcw className="size-3" /></button>
                   <input type="range" min={REPLAY_MIN_MS} max={REPLAY_MAX_MS} value={cursorMs} onChange={(event) => { setCursorMs(Number(event.target.value)); setPlaying(false); }} className="min-w-0 flex-1" aria-label="Power-quality replay cursor" />
-                  <select value={replaySpeed} onChange={(event) => setReplaySpeed(Number(event.target.value))} className="h-7 rounded border border-border bg-surface px-1 text-[9px]" aria-label="Replay speed">
+                  <select value={replaySpeed} onChange={(event) => setReplaySpeed(Number(event.target.value))} className="h-7 rounded border border-border bg-surface px-1 text-[9.5px]" aria-label="Replay speed">
                     <option value={0.5}>0.5×</option><option value={1}>1×</option><option value={2}>2×</option>
                   </select>
                   <span className="w-14 text-right text-[9.5px] tabular text-primary">{Math.round(cursorMs)} ms</span>
@@ -372,7 +372,7 @@ function PowerQualityInvestigation() {
                 {timeline.map((item) => (
                   <div key={item.timestamp} className="flex gap-2 rounded-md border border-border bg-surface-2 px-3 py-2">
                     <span className={`mt-1 size-2 shrink-0 rounded-full ${item.tone === "critical" ? "bg-red" : item.tone === "warning" ? "bg-amber" : item.tone === "good" ? "bg-green" : "bg-muted-foreground"}`} />
-                    <div className="min-w-0 flex-1"><div className="flex items-center justify-between gap-2"><span className="text-[10px] font-medium">{item.title}</span><span className="text-[8.5px] tabular text-muted-foreground">{item.timestamp}</span></div><p className="mt-0.5 text-[9px] leading-relaxed text-muted-foreground">{item.detail}</p></div>
+                    <div className="min-w-0 flex-1"><div className="flex items-center justify-between gap-2"><span className="text-[10px] font-medium">{item.title}</span><span className="text-[9.5px] tabular text-muted-foreground">{item.timestamp}</span></div><p className="mt-0.5 text-[9.5px] leading-relaxed text-muted-foreground">{item.detail}</p></div>
                   </div>
                 ))}
               </div>
@@ -409,10 +409,10 @@ function PowerQualityInvestigation() {
             <Panel title="Synchronized Meter Evidence" className="xl:col-span-12">
               <div className="overflow-x-auto">
                 <table className="w-full min-w-[980px] text-[10.5px]">
-                  <thead><tr className="border-b border-border text-left text-[9px] uppercase tracking-[0.11em] text-muted-foreground"><th className="py-2 font-normal">Meter / location</th><th className="py-2 font-normal">Direction</th><th className="py-2 font-normal text-right">Minimum RMS</th><th className="py-2 font-normal text-right">Duration</th><th className="py-2 font-normal text-right">Start offset</th><th className="py-2 font-normal text-right">Sync error</th><th className="py-2 font-normal">Evidence</th></tr></thead>
+                  <thead><tr className="border-b border-border text-left text-[9.5px] uppercase tracking-[0.11em] text-muted-foreground"><th className="py-2 font-normal">Meter / location</th><th className="py-2 font-normal">Direction</th><th className="py-2 font-normal text-right">Minimum RMS</th><th className="py-2 font-normal text-right">Duration</th><th className="py-2 font-normal text-right">Start offset</th><th className="py-2 font-normal text-right">Sync error</th><th className="py-2 font-normal">Evidence</th></tr></thead>
                   <tbody className="divide-y divide-border">
                     {selected.correlatedMeters.map((meter) => (
-                      <tr key={meter.meterId} className="hover:bg-surface-2/60"><td className="py-2.5"><div className="font-semibold tabular">{meter.meterId}</div><div className="text-[9px] text-muted-foreground">{meter.location}</div></td><td className="py-2.5"><span className={`rounded border px-1.5 py-0.5 text-[9px] ${directionClass(meter.direction)}`}>{meter.direction}</span></td><td className={`py-2.5 text-right font-semibold tabular ${meter.minimumVoltagePct < 90 ? "text-red" : "text-amber"}`}>{meter.minimumVoltagePct.toFixed(1)}% Un</td><td className="py-2.5 text-right tabular">{meter.durationMs} ms</td><td className="py-2.5 text-right tabular">+{meter.startOffsetMs} ms</td><td className="py-2.5 text-right tabular">±{meter.timeSyncErrorMs.toFixed(1)} ms</td><td className="max-w-[390px] py-2.5 text-[9.5px] leading-relaxed text-muted-foreground">{meter.evidence}</td></tr>
+                      <tr key={meter.meterId} className="hover:bg-surface-2/60"><td className="py-2.5"><div className="font-semibold tabular">{meter.meterId}</div><div className="text-[9.5px] text-muted-foreground">{meter.location}</div></td><td className="py-2.5"><span className={`rounded border px-1.5 py-0.5 text-[9.5px] ${directionClass(meter.direction)}`}>{meter.direction}</span></td><td className={`py-2.5 text-right font-semibold tabular ${meter.minimumVoltagePct < 90 ? "text-red" : "text-amber"}`}>{meter.minimumVoltagePct.toFixed(1)}% Un</td><td className="py-2.5 text-right tabular">{meter.durationMs} ms</td><td className="py-2.5 text-right tabular">+{meter.startOffsetMs} ms</td><td className="py-2.5 text-right tabular">±{meter.timeSyncErrorMs.toFixed(1)} ms</td><td className="max-w-[390px] py-2.5 text-[9.5px] leading-relaxed text-muted-foreground">{meter.evidence}</td></tr>
                     ))}
                   </tbody>
                 </table>
@@ -427,7 +427,7 @@ function PowerQualityInvestigation() {
               <div className="grid gap-2 md:grid-cols-2">
                 {selected.equipmentResponses.length > 0 ? selected.equipmentResponses.map((equipment) => (
                   <article key={equipment.assetId} className="rounded-md border border-border bg-surface-2 p-3">
-                    <div className="flex items-start justify-between gap-2"><div><div className="text-[9px] tabular text-muted-foreground">{equipment.assetId}</div><div className="mt-0.5 text-[11px] font-semibold">{equipment.assetName}</div></div><span className={`rounded border px-1.5 py-0.5 text-[9px] ${responseClass(equipment.stateAfterEvent)}`}>{equipment.stateAfterEvent}</span></div>
+                    <div className="flex items-start justify-between gap-2"><div><div className="text-[9.5px] tabular text-muted-foreground">{equipment.assetId}</div><div className="mt-0.5 text-[11px] font-semibold">{equipment.assetName}</div></div><span className={`rounded border px-1.5 py-0.5 text-[9.5px] ${responseClass(equipment.stateAfterEvent)}`}>{equipment.stateAfterEvent}</span></div>
                     <p className="mt-2 text-[10px] leading-relaxed">{equipment.response}</p>
                     <div className="mt-3 grid grid-cols-2 gap-2"><Info label="Restart time" value={equipment.restartSeconds > 0 ? `${equipment.restartSeconds.toFixed(1)} s` : "None"} /><Info label="Consequence" value={equipment.productionConsequence} /></div>
                   </article>
@@ -453,7 +453,7 @@ function PowerQualityInvestigation() {
                   { rank: 3, title: "Utility-origin upstream sag", confidence: 18, evidence: "Incomer residual remains above 91% and starts after the local trigger, weakening an upstream-origin hypothesis." },
                 ].map((hypothesis) => (
                   <div key={hypothesis.rank} className={`rounded-md border p-3 ${hypothesis.rank === 1 ? "border-primary/30 bg-primary/8" : "border-border bg-surface-2"}`}>
-                    <div className="flex items-center gap-2"><span className="flex size-5 items-center justify-center rounded-full border border-border bg-surface text-[9px] tabular">{hypothesis.rank}</span><span className="flex-1 text-[10.5px] font-semibold">{hypothesis.title}</span><span className="text-[10px] tabular text-primary">{hypothesis.confidence}%</span></div>
+                    <div className="flex items-center gap-2"><span className="flex size-5 items-center justify-center rounded-full border border-border bg-surface text-[9.5px] tabular">{hypothesis.rank}</span><span className="flex-1 text-[10.5px] font-semibold">{hypothesis.title}</span><span className="text-[10px] tabular text-primary">{hypothesis.confidence}%</span></div>
                     <p className="mt-2 pl-7 text-[9.5px] leading-relaxed text-muted-foreground">{hypothesis.evidence}</p>
                   </div>
                 ))}
@@ -469,7 +469,7 @@ function PowerQualityInvestigation() {
                   ["Electrical path reviewed", true, `${selected.feederId} selected in one-line context`],
                   ["Field inspection completed", selected.status === "Confirmed" || selected.status === "Closed", selected.status === "Confirmed" || selected.status === "Closed" ? "Inspection evidence accepted" : "Pending physical inspection"],
                 ].map(([label, passed, detail]) => (
-                  <div key={String(label)} className="flex items-start gap-2 text-[10px]"><span className={`mt-0.5 flex size-4 shrink-0 items-center justify-center rounded-full border ${passed ? "border-green/30 bg-green/10 text-green" : "border-amber/30 bg-amber/10 text-amber"}`}>{passed ? "✓" : "!"}</span><div><div className="font-medium">{label}</div><div className="text-[9px] text-muted-foreground">{detail}</div></div></div>
+                  <div key={String(label)} className="flex items-start gap-2 text-[10px]"><span className={`mt-0.5 flex size-4 shrink-0 items-center justify-center rounded-full border ${passed ? "border-green/30 bg-green/10 text-green" : "border-amber/30 bg-amber/10 text-amber"}`}>{passed ? "✓" : "!"}</span><div><div className="font-medium">{label}</div><div className="text-[9.5px] text-muted-foreground">{detail}</div></div></div>
                 ))}
               </div>
               <button type="button" onClick={advanceStatus} disabled={selected.status === "Closed"} className="mt-4 h-9 w-full rounded-md bg-primary text-[10.5px] font-medium text-primary-foreground disabled:opacity-40">Advance investigation status</button>
@@ -505,12 +505,12 @@ function PowerQualityInvestigation() {
 }
 
 function Info({ label, value }: { label: string; value: string }) {
-  return <div><div className="text-[8.5px] uppercase tracking-[0.1em] text-muted-foreground">{label}</div><div className="mt-0.5 text-[10px] font-medium leading-relaxed tabular">{value}</div></div>;
+  return <div><div className="text-[9.5px] uppercase tracking-[0.1em] text-muted-foreground">{label}</div><div className="mt-0.5 text-[10px] font-medium leading-relaxed tabular">{value}</div></div>;
 }
 
 function Metric({ icon: Icon, label, value, tone = "neutral" }: { icon: typeof Activity; label: string; value: string; tone?: "neutral" | "good" | "warning" }) {
   const toneClass = tone === "good" ? "text-green" : tone === "warning" ? "text-amber" : "text-foreground";
-  return <div className="rounded-md border border-border bg-surface-2 p-2.5"><div className="flex items-center gap-1.5 text-[8.5px] uppercase tracking-[0.1em] text-muted-foreground"><Icon className={`size-3.5 ${toneClass}`} />{label}</div><div className={`mt-1 text-[11px] font-semibold tabular ${toneClass}`}>{value}</div></div>;
+  return <div className="rounded-md border border-border bg-surface-2 p-2.5"><div className="flex items-center gap-1.5 text-[9.5px] uppercase tracking-[0.1em] text-muted-foreground"><Icon className={`size-3.5 ${toneClass}`} />{label}</div><div className={`mt-1 text-[11px] font-semibold tabular ${toneClass}`}>{value}</div></div>;
 }
 
 function ActionCard({ icon: Icon, title, body, onClick }: { icon: typeof Activity; title: string; body: string; onClick: () => void }) {

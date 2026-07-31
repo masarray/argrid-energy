@@ -79,7 +79,7 @@ function InsightItem({
         <Icon className="size-4" strokeWidth={1.8} />
       </div>
       <div className="min-w-0 flex-1">
-        <div className="text-[9px] font-semibold uppercase tracking-[0.1em] text-muted-foreground">{title}</div>
+        <div className="text-[9.5px] font-semibold uppercase tracking-[0.1em] text-muted-foreground">{title}</div>
         <div className="mt-0.5 text-[14px] font-medium tracking-[-0.02em] tabular">{value}</div>
         <p className="mt-1 text-[9.5px] leading-relaxed text-muted-foreground">{detail}</p>
         <Link to={to} className="mt-1.5 inline-flex items-center gap-1 text-[9.5px] font-medium text-primary hover:underline">
@@ -240,10 +240,10 @@ function Analytics() {
                   ))}
                 </div>
               </div>
-              <div className="mt-2 grid gap-[3px] pl-[42px] text-[8.5px] text-muted-foreground tabular" style={{ gridTemplateColumns: "repeat(24, minmax(0, 1fr))" }}>
+              <div className="mt-2 grid gap-[3px] pl-[42px] text-[9.5px] text-muted-foreground tabular" style={{ gridTemplateColumns: "repeat(24, minmax(0, 1fr))" }}>
                 {Array.from({ length: 24 }, (_, hour) => <div key={hour} className="text-center">{hour % 3 === 0 ? hour : ""}</div>)}
               </div>
-              <div className="mt-2 flex items-center justify-between border-t border-border pt-2 text-[9px] text-muted-foreground">
+              <div className="mt-2 flex items-center justify-between border-t border-border pt-2 text-[9.5px] text-muted-foreground">
                 <span>Lowest interval <strong className="font-medium text-foreground tabular">{minHeat.toFixed(2)} MW</strong></span>
                 <span>Peak interval <strong className="font-medium text-foreground tabular">{maxHeat.toFixed(2)} MW</strong></span>
               </div>

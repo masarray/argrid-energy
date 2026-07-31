@@ -237,8 +237,8 @@ function Sustainability() {
           <Panel title="Emission-factor Registry" className="xl:col-span-12" actions={<span className="text-[9.5px] text-muted-foreground">configured factors · version and applicability retained</span>}>
             <div className="overflow-x-auto">
               <table className="w-full min-w-[980px] text-[10.5px]">
-                <thead><tr className="border-b border-border text-left text-[9px] uppercase tracking-[0.11em] text-muted-foreground"><th className="py-2 font-normal">Factor ID</th><th className="py-2 font-normal">Activity</th><th className="py-2 font-normal">Scope</th><th className="py-2 font-normal text-right">Factor</th><th className="py-2 font-normal">Unit</th><th className="py-2 font-normal">Version</th><th className="py-2 font-normal">Effective period</th><th className="py-2 font-normal">Quality</th></tr></thead>
-                <tbody className="divide-y divide-border">{inventory.factors.map((factor) => <tr key={factor.id} className="hover:bg-surface-2/60"><td className="py-2.5 tabular text-muted-foreground">{factor.id}</td><td className="py-2.5 font-medium">{factor.activity}<div className="text-[9px] font-normal text-muted-foreground">{factor.source}</div></td><td className="py-2.5">{factor.scope}</td><td className="py-2.5 text-right tabular">{factor.factor}</td><td className="py-2.5">{factor.unit}</td><td className="py-2.5 tabular">{factor.version}</td><td className="py-2.5 tabular">{factor.effectiveFrom} → {factor.effectiveTo}</td><td className="py-2.5"><span className="rounded border border-border bg-surface-2 px-1.5 py-0.5 text-[9px]">{factor.quality}</span></td></tr>)}</tbody>
+                <thead><tr className="border-b border-border text-left text-[9.5px] uppercase tracking-[0.11em] text-muted-foreground"><th className="py-2 font-normal">Factor ID</th><th className="py-2 font-normal">Activity</th><th className="py-2 font-normal">Scope</th><th className="py-2 font-normal text-right">Factor</th><th className="py-2 font-normal">Unit</th><th className="py-2 font-normal">Version</th><th className="py-2 font-normal">Effective period</th><th className="py-2 font-normal">Quality</th></tr></thead>
+                <tbody className="divide-y divide-border">{inventory.factors.map((factor) => <tr key={factor.id} className="hover:bg-surface-2/60"><td className="py-2.5 tabular text-muted-foreground">{factor.id}</td><td className="py-2.5 font-medium">{factor.activity}<div className="text-[9.5px] font-normal text-muted-foreground">{factor.source}</div></td><td className="py-2.5">{factor.scope}</td><td className="py-2.5 text-right tabular">{factor.factor}</td><td className="py-2.5">{factor.unit}</td><td className="py-2.5 tabular">{factor.version}</td><td className="py-2.5 tabular">{factor.effectiveFrom} → {factor.effectiveTo}</td><td className="py-2.5"><span className="rounded border border-border bg-surface-2 px-1.5 py-0.5 text-[9.5px]">{factor.quality}</span></td></tr>)}</tbody>
               </table>
             </div>
           </Panel>
@@ -307,7 +307,7 @@ function Sustainability() {
             <div className="space-y-3">
               {inventory.instruments.map((instrument) => (
                 <div key={instrument.id} className="rounded-md border border-border bg-surface-2 p-3">
-                  <div className="flex items-center justify-between gap-3"><div><div className="text-[9px] tabular text-muted-foreground">{instrument.id}</div><div className="mt-0.5 text-[11px] font-medium">{instrument.type}</div></div><span className={`rounded border px-1.5 py-0.5 text-[9px] ${instrument.status === "Review required" ? "border-amber/30 bg-amber/8 text-amber" : instrument.status === "Retired" ? "border-green/30 bg-green/8 text-green" : "border-border bg-surface text-muted-foreground"}`}>{instrument.status}</span></div>
+                  <div className="flex items-center justify-between gap-3"><div><div className="text-[9.5px] tabular text-muted-foreground">{instrument.id}</div><div className="mt-0.5 text-[11px] font-medium">{instrument.type}</div></div><span className={`rounded border px-1.5 py-0.5 text-[9.5px] ${instrument.status === "Review required" ? "border-amber/30 bg-amber/8 text-amber" : instrument.status === "Retired" ? "border-green/30 bg-green/8 text-green" : "border-border bg-surface text-muted-foreground"}`}>{instrument.status}</span></div>
                   <div className="mt-3 grid grid-cols-3 gap-2 text-[9.5px]"><Info label="Volume" value={`${fmtNum(instrument.volumeMWh)} MWh`} /><Info label="Allocated" value={`${fmtNum(instrument.allocatedMWh)} MWh`} /><Info label="Remaining" value={`${fmtNum(instrument.remainingMWh)} MWh`} /></div>
                   <div className="mt-2 text-[9.5px] leading-relaxed text-muted-foreground">{instrument.vintage} · {instrument.geography}<br />{instrument.evidence}</div>
                 </div>
@@ -316,20 +316,20 @@ function Sustainability() {
           </Panel>
 
           <Panel title="Renewable-attribute Register" className="xl:col-span-12">
-            <div className="overflow-x-auto"><table className="w-full min-w-[980px] text-[10.5px]"><thead><tr className="border-b border-border text-left text-[9px] uppercase tracking-[0.11em] text-muted-foreground"><th className="py-2 font-normal">Instrument</th><th className="py-2 font-normal">Type</th><th className="py-2 font-normal">Vintage / geography</th><th className="py-2 text-right font-normal">Volume</th><th className="py-2 text-right font-normal">Allocated</th><th className="py-2 text-right font-normal">Remaining</th><th className="py-2 font-normal">Evidence</th><th className="py-2 font-normal">Status</th></tr></thead><tbody className="divide-y divide-border">{inventory.instruments.map((instrument) => <tr key={instrument.id}><td className="py-2.5 tabular text-muted-foreground">{instrument.id}</td><td className="py-2.5 font-medium">{instrument.type}</td><td className="py-2.5">{instrument.vintage}<div className="text-[9px] text-muted-foreground">{instrument.geography}</div></td><td className="py-2.5 text-right tabular">{fmtNum(instrument.volumeMWh)} MWh</td><td className="py-2.5 text-right tabular">{fmtNum(instrument.allocatedMWh)} MWh</td><td className="py-2.5 text-right tabular">{fmtNum(instrument.remainingMWh)} MWh</td><td className="py-2.5 text-[9.5px] text-muted-foreground">{instrument.evidence}</td><td className="py-2.5">{instrument.status}</td></tr>)}</tbody></table></div>
+            <div className="overflow-x-auto"><table className="w-full min-w-[980px] text-[10.5px]"><thead><tr className="border-b border-border text-left text-[9.5px] uppercase tracking-[0.11em] text-muted-foreground"><th className="py-2 font-normal">Instrument</th><th className="py-2 font-normal">Type</th><th className="py-2 font-normal">Vintage / geography</th><th className="py-2 text-right font-normal">Volume</th><th className="py-2 text-right font-normal">Allocated</th><th className="py-2 text-right font-normal">Remaining</th><th className="py-2 font-normal">Evidence</th><th className="py-2 font-normal">Status</th></tr></thead><tbody className="divide-y divide-border">{inventory.instruments.map((instrument) => <tr key={instrument.id}><td className="py-2.5 tabular text-muted-foreground">{instrument.id}</td><td className="py-2.5 font-medium">{instrument.type}</td><td className="py-2.5">{instrument.vintage}<div className="text-[9.5px] text-muted-foreground">{instrument.geography}</div></td><td className="py-2.5 text-right tabular">{fmtNum(instrument.volumeMWh)} MWh</td><td className="py-2.5 text-right tabular">{fmtNum(instrument.allocatedMWh)} MWh</td><td className="py-2.5 text-right tabular">{fmtNum(instrument.remainingMWh)} MWh</td><td className="py-2.5 text-[9.5px] text-muted-foreground">{instrument.evidence}</td><td className="py-2.5">{instrument.status}</td></tr>)}</tbody></table></div>
           </Panel>
         </div>
       )}
 
       {activeTab === "Assurance" && (
         <div className="mt-3 grid grid-cols-1 gap-3 xl:grid-cols-12">
-          <Panel title="Inventory Assurance Gate" className="xl:col-span-7" actions={<span className={`rounded border px-1.5 py-0.5 text-[9px] ${assuranceClass(inventory.assuranceState)}`}>{inventory.assuranceState}</span>}>
+          <Panel title="Inventory Assurance Gate" className="xl:col-span-7" actions={<span className={`rounded border px-1.5 py-0.5 text-[9.5px] ${assuranceClass(inventory.assuranceState)}`}>{inventory.assuranceState}</span>}>
             <div className="space-y-2">
               {inventory.checks.map((check) => (
                 <div key={check.id} className="grid grid-cols-[auto_1fr_auto] items-start gap-3 rounded-md border border-border bg-surface-2 p-3">
                   <span className={`mt-0.5 flex size-5 items-center justify-center rounded-full border text-[10px] ${check.passed ? "border-green/30 bg-green/8 text-green" : "border-red/30 bg-red/8 text-red"}`}>{check.passed ? "✓" : "!"}</span>
-                  <div><div className="text-[10.5px] font-medium">{check.label}</div><div className="mt-0.5 text-[9.5px] leading-relaxed text-muted-foreground">{check.detail}</div><div className="mt-1 text-[9px] text-muted-foreground">Owner: {check.owner}</div></div>
-                  <span className={`rounded border px-1.5 py-0.5 text-[8.5px] ${check.blocking ? "border-amber/30 text-amber" : "border-border text-muted-foreground"}`}>{check.blocking ? "Blocking" : "Review"}</span>
+                  <div><div className="text-[10.5px] font-medium">{check.label}</div><div className="mt-0.5 text-[9.5px] leading-relaxed text-muted-foreground">{check.detail}</div><div className="mt-1 text-[9.5px] text-muted-foreground">Owner: {check.owner}</div></div>
+                  <span className={`rounded border px-1.5 py-0.5 text-[9.5px] ${check.blocking ? "border-amber/30 text-amber" : "border-border text-muted-foreground"}`}>{check.blocking ? "Blocking" : "Review"}</span>
                 </div>
               ))}
             </div>
@@ -359,9 +359,9 @@ function Sustainability() {
 }
 
 function Info({ label, value }: { label: string; value: string }) {
-  return <div><div className="text-[8.5px] uppercase tracking-[0.1em] text-muted-foreground">{label}</div><div className="mt-0.5 text-[10px] font-medium leading-relaxed tabular">{value}</div></div>;
+  return <div><div className="text-[9.5px] uppercase tracking-[0.1em] text-muted-foreground">{label}</div><div className="mt-0.5 text-[10px] font-medium leading-relaxed tabular">{value}</div></div>;
 }
 
 function Metric({ label, value, tone }: { label: string; value: string; tone?: "good" | "warn" }) {
-  return <div className="rounded-md border border-border bg-surface-2 p-3"><div className="text-[9px] uppercase tracking-[0.11em] text-muted-foreground">{label}</div><div className={`mt-1 text-[14px] font-medium tabular ${tone === "good" ? "text-green" : tone === "warn" ? "text-amber" : ""}`}>{value}</div></div>;
+  return <div className="rounded-md border border-border bg-surface-2 p-3"><div className="text-[9.5px] uppercase tracking-[0.11em] text-muted-foreground">{label}</div><div className={`mt-1 text-[14px] font-medium tabular ${tone === "good" ? "text-green" : tone === "warn" ? "text-amber" : ""}`}>{value}</div></div>;
 }

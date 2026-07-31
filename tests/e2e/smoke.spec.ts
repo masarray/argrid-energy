@@ -7,6 +7,7 @@ test.describe("ArGrid browser smoke", () => {
     await openWorkspace(page, "/");
     await expectWorkspaceHeading(page, "Enterprise Overview");
     await expect(page.locator(".workspace-management")).toBeVisible();
+    await expect(page.getByText("Demo · simulation only", { exact: true })).toBeVisible();
 
     await page.getByRole("link", { name: "Electrical Network" }).click();
     await expectWorkspaceHeading(page, "Electrical Network");
@@ -77,4 +78,21 @@ test.describe("ArGrid browser smoke", () => {
     await page.getByRole("button", { name: "Play deterministic event replay" }).click();
     await expect(page.getByRole("button", { name: "Pause event replay" })).toBeVisible();
   });
+
+  test("portfolio benchmark rows support keyboard selection", async ({ page }) => {
+    await prepareDemo(page, { scenario: "normal" });
+    await openWorkspace(page, "/portfolio");
+    await expectWorkspaceHeading(page, "Enterprise Portfolio");
+
+    const gresikRow = page.getByLabel("Select Gresik Process Utilities");
+    await gresikRow.focus();
+    await page.keyboard.press("Enter");
+    await expect(page.locator(".portfolio-identity").getByText("Gresik Process Utilities", { exact: true })).toBeVisible();
+
+    const batamRow = page.getByLabel("Select Batam Electronics Campus");
+    await batamRow.focus();
+    await page.keyboard.press("Space");
+    await expect(page.locator(".portfolio-identity").getByText("Batam Electronics Campus", { exact: true })).toBeVisible();
+  });
+
 });

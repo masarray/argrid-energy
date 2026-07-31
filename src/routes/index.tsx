@@ -180,7 +180,7 @@ function Overview() {
             <div className="min-w-0 flex-1">
               <div className="flex flex-wrap items-center gap-2">
                 <span className="text-[9.5px] font-semibold uppercase tracking-[0.13em] text-muted-foreground">Priority decision</span>
-                <span className="rounded border border-amber/30 bg-amber/10 px-1.5 py-0.5 text-[9px] font-medium text-amber">89% confidence</span>
+                <span className="rounded border border-amber/30 bg-amber/10 px-1.5 py-0.5 text-[9.5px] font-medium text-amber">89% confidence</span>
               </div>
               <p className="mt-1 text-[12px] leading-relaxed">
                 Contract demand is projected to reach <strong className="font-medium tabular">{projectedDemand.toFixed(2)} MW ({projectedPct.toFixed(0)}%)</strong> in {minutesToLimit} minutes. Chiller Plant and Compressor Room contribute 41% of the increase, creating an estimated <strong className="font-medium text-amber">{fmtIDR(demandExposure)}</strong> exposure.
@@ -245,15 +245,15 @@ function Overview() {
             </div>
             <div className="grid grid-cols-3 gap-3 border-t border-border pt-3">
               <div>
-                <div className="text-[8.5px] font-medium uppercase tracking-[0.1em] text-muted-foreground">Projected margin</div>
+                <div className="text-[9.5px] font-medium uppercase tracking-[0.1em] text-muted-foreground">Projected margin</div>
                 <div className={`mt-1 text-[13px] font-medium tabular ${projectedMargin < 0 ? "text-red" : "text-amber"}`}>{projectedMargin.toFixed(2)} MW</div>
               </div>
               <div>
-                <div className="text-[8.5px] font-medium uppercase tracking-[0.1em] text-muted-foreground">Time to limit</div>
+                <div className="text-[9.5px] font-medium uppercase tracking-[0.1em] text-muted-foreground">Time to limit</div>
                 <div className="mt-1 flex items-center gap-1 text-[13px] font-medium tabular"><Clock3 className="size-3.5 text-muted-foreground" />{minutesToLimit} min</div>
               </div>
               <div>
-                <div className="text-[8.5px] font-medium uppercase tracking-[0.1em] text-muted-foreground">Exposure</div>
+                <div className="text-[9.5px] font-medium uppercase tracking-[0.1em] text-muted-foreground">Exposure</div>
                 <div className="mt-1 text-[13px] font-medium text-amber tabular">{fmtIDR(demandExposure)}</div>
               </div>
             </div>
@@ -288,11 +288,11 @@ function Overview() {
           <Panel variant="quiet" title="Value Realization" className="xl:col-span-4" actions={<Link to="/savings" className="text-[10px] text-primary hover:underline">Savings ledger →</Link>}>
             <div className="grid grid-cols-2 gap-3 border-b border-border pb-3">
               <div>
-                <div className="text-[9px] font-medium uppercase tracking-[0.1em] text-muted-foreground">Annual opportunity</div>
+                <div className="text-[9.5px] font-medium uppercase tracking-[0.1em] text-muted-foreground">Annual opportunity</div>
                 <div className="mt-1 text-[16px] font-medium tabular">{fmtIDR(annualOpportunity)}</div>
               </div>
               <div>
-                <div className="text-[9px] font-medium uppercase tracking-[0.1em] text-muted-foreground">High confidence</div>
+                <div className="text-[9.5px] font-medium uppercase tracking-[0.1em] text-muted-foreground">High confidence</div>
                 <div className="mt-1 text-[16px] font-medium text-green tabular">{fmtIDR(highConfidenceOpportunity)}</div>
               </div>
             </div>
@@ -314,7 +314,7 @@ function Overview() {
             <div className="overflow-x-auto">
               <table className="w-full text-[11px]">
                 <thead>
-                  <tr className="border-b border-border text-left text-[9px] font-medium uppercase tracking-[0.1em] text-muted-foreground">
+                  <tr className="border-b border-border text-left text-[9.5px] font-medium uppercase tracking-[0.1em] text-muted-foreground">
                     <th className="pb-2 font-medium">Asset</th>
                     <th className="pb-2 font-medium">State</th>
                     <th className="pb-2 text-right font-medium">Load</th>
@@ -327,7 +327,7 @@ function Overview() {
                     const impact = feeder.status === "critical" ? "Production risk" : feeder.status === "warning" ? "Avoidable cost" : "Monitor";
                     return (
                       <tr key={feeder.id} className="hover:bg-surface-2/65">
-                        <td className="py-2.5"><div className="font-medium">{feeder.name}</div><div className="text-[9px] text-muted-foreground tabular">{feeder.id}</div></td>
+                        <td className="py-2.5"><div className="font-medium">{feeder.name}</div><div className="text-[9.5px] text-muted-foreground tabular">{feeder.id}</div></td>
                         <td className="py-2.5"><span className={`inline-flex items-center gap-1.5 ${feeder.status === "critical" ? "text-red" : feeder.status === "warning" ? "text-amber" : "text-green"}`}><span className="size-1.5 rounded-full bg-current" />{feeder.status}</span></td>
                         <td className="py-2.5 text-right tabular">{fmtNum(feeder.kw * site.powerScale)} kW</td>
                         <td className="py-2.5 text-right tabular">{((feeder.kw / totalFeederPower) * 100).toFixed(1)}%</td>
@@ -347,7 +347,7 @@ function Overview() {
                   <SeverityDot level={alarm.severity} />
                   <div className="min-w-0 flex-1">
                     <div className="text-[10.5px] leading-snug">{alarm.message}</div>
-                    <div className="mt-1 flex items-center gap-1.5 text-[9px] text-muted-foreground tabular">
+                    <div className="mt-1 flex items-center gap-1.5 text-[9.5px] text-muted-foreground tabular">
                       <span>{alarm.source}</span><span>·</span><span>{alarm.ts.split(" ")[1]}</span>
                       {!alarm.ack && <span className="ml-auto font-medium uppercase tracking-[0.08em] text-amber">Unacknowledged</span>}
                     </div>
@@ -361,15 +361,15 @@ function Overview() {
         <section className="grid gap-3 md:grid-cols-3">
           <div className="flex items-center gap-3 rounded-lg border border-border bg-surface px-4 py-3">
             <BadgeCheck className="size-4 text-green" />
-            <div><div className="text-[9px] font-medium uppercase tracking-[0.1em] text-muted-foreground">Data confidence</div><div className="mt-0.5 text-[12px] font-medium tabular">{telemetry.dataHealth.toFixed(1)}% trusted</div></div>
+            <div><div className="text-[9.5px] font-medium uppercase tracking-[0.1em] text-muted-foreground">Data confidence</div><div className="mt-0.5 text-[12px] font-medium tabular">{telemetry.dataHealth.toFixed(1)}% trusted</div></div>
           </div>
           <div className="flex items-center gap-3 rounded-lg border border-border bg-surface px-4 py-3">
             <TrendingDown className="size-4 text-green" />
-            <div><div className="text-[9px] font-medium uppercase tracking-[0.1em] text-muted-foreground">Energy intensity</div><div className="mt-0.5 text-[12px] font-medium tabular">6.8% below baseline</div></div>
+            <div><div className="text-[9.5px] font-medium uppercase tracking-[0.1em] text-muted-foreground">Energy intensity</div><div className="mt-0.5 text-[12px] font-medium tabular">6.8% below baseline</div></div>
           </div>
           <div className="flex items-center gap-3 rounded-lg border border-border bg-surface px-4 py-3">
             <Leaf className="size-4 text-green" />
-            <div><div className="text-[9px] font-medium uppercase tracking-[0.1em] text-muted-foreground">Avoided emissions</div><div className="mt-0.5 text-[12px] font-medium tabular">842 tCO₂e YTD</div></div>
+            <div><div className="text-[9.5px] font-medium uppercase tracking-[0.1em] text-muted-foreground">Avoided emissions</div><div className="mt-0.5 text-[12px] font-medium tabular">842 tCO₂e YTD</div></div>
           </div>
         </section>
 
