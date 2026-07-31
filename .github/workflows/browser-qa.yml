@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
 
 concurrency:
   group: browser-qa-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
@@ -15,19 +15,13 @@ concurrency:
 
 jobs:
   browser-qa:
-    name: Apply and validate P2 chart showcase polish
-    runs-on: ubuntu-24.04
-    timeout-minutes: 30
+    name: Chromium E2E, visual regression, and accessibility
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
 
     steps:
-      - name: Checkout P2 branch
+      - name: Checkout repository
         uses: actions/checkout@v6
-        with:
-          ref: polish/p2-chart-portfolio-showcase
-          fetch-depth: 0
-
-      - name: Apply deterministic P2 patch
-        run: python scripts/apply-p2-polish.py
 
       - name: Setup Node.js
         uses: actions/setup-node@v6
@@ -41,32 +35,17 @@ jobs:
       - name: Install Chromium and system dependencies
         run: npx playwright install --with-deps chromium
 
-      - name: Validate source and static build
-        run: npm run check
+      - name: Build static site
+        run: npm run build
 
-      - name: Refresh reviewed P2 visual baselines
-        run: npm run test:e2e:update -- --project=chromium --grep "management overview|portfolio remains"
-
-      - name: Run complete browser QA
+      - name: Run browser QA
         run: npm run qa:browser
-
-      - name: Restore workflow and commit validated P2
-        run: |
-          git fetch origin main
-          git show origin/main:.github/workflows/browser-qa.yml > .github/workflows/browser-qa.yml
-          git rm scripts/apply-p2-polish.py
-          git diff --check
-          git config user.name "ArGrid P2 Polish"
-          git config user.email "actions@users.noreply.github.com"
-          git add .github/workflows/browser-qa.yml src/components/argrid-ui.tsx src/routes/index.tsx src/routes/portfolio.tsx src/styles.css tests/e2e/visual.spec.ts-snapshots/management-overview-1440x900-chromium-linux.png tests/e2e/visual.spec.ts-snapshots/portfolio-1280x800-chromium-linux.png
-          git commit -m "Polish chart system and portfolio showcase"
-          git push origin HEAD:polish/p2-chart-portfolio-showcase
 
       - name: Upload browser diagnostics on failure
         if: failure()
         uses: actions/upload-artifact@v7
         with:
-          name: argrid-p2-browser-qa-${{ github.run_id }}
+          name: argrid-browser-qa-${{ github.run_id }}
           path: |
             playwright-report
             test-results

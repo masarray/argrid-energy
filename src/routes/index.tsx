@@ -7,6 +7,8 @@ import {
   BarChart,
   CartesianGrid,
   Line,
+  ReferenceArea,
+  ReferenceDot,
   ReferenceLine,
   ResponsiveContainer,
   Tooltip,
@@ -24,7 +26,7 @@ import {
   TrendingDown,
 } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
-import { KpiTile, Panel, SeverityDot } from "@/components/argrid-ui";
+import { ChartLegend, KpiTile, Panel, SeverityDot } from "@/components/argrid-ui";
 import { EnergyFlowSankey } from "@/components/energy-flow-sankey";
 import { ExportPdfButton } from "@/components/export-pdf-button";
 import {
@@ -122,6 +124,7 @@ function Overview() {
       })),
     [site.powerScale],
   );
+  const latestDemandPoint = demandTrend[demandTrend.length - 1];
 
   const totalFeederPower = feeders.reduce((sum, feeder) => sum + feeder.kw, 0);
   const abnormalConsumers = [...feeders]
@@ -205,7 +208,20 @@ function Overview() {
             <EnergyFlowSankey currentPower={telemetry.currentPower} scenarioId={scenarioId} dataHealth={telemetry.dataHealth} />
           </Panel>
 
-          <Panel title="Demand & Cost Outlook" className="h-[315px] xl:col-span-4" actions={<span className="text-[9.5px] text-muted-foreground tabular">Limit {telemetry.demandLimit.toFixed(1)} MW</span>}>
+          <Panel
+            title="Demand & Cost Outlook"
+            className="h-[315px] xl:col-span-4"
+            actions={
+              <ChartLegend
+                unit="MW"
+                items={[
+                  { label: "Actual", color: "var(--color-primary)" },
+                  { label: "Forecast", color: "var(--color-amber)", dashed: true },
+                  { label: "Limit", color: "var(--color-red)", dashed: true },
+                ]}
+              />
+            }
+          >
             <div className="h-[205px]">
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={demandTrend} margin={{ top: 8, right: 8, left: -12, bottom: 0 }}>
@@ -219,9 +235,11 @@ function Overview() {
                   <XAxis dataKey="t" {...chartAxis} interval={7} />
                   <YAxis {...chartAxis} width={36} domain={[0, Math.ceil(telemetry.demandLimit + 1)]} />
                   <Tooltip {...tooltipStyle} formatter={(value: number | string) => [`${Number(value).toFixed(2)} MW`]} />
+                  <ReferenceArea y1={telemetry.demandLimit * 0.94} y2={telemetry.demandLimit} fill="var(--color-amber)" fillOpacity={0.07} ifOverflow="extendDomain" />
                   <ReferenceLine y={telemetry.demandLimit} stroke="var(--color-red)" strokeDasharray="5 4" label={{ value: "Contract", fill: "var(--color-red)", fontSize: 9, position: "insideTopRight" }} />
                   <Area type="monotone" dataKey="load" name="Actual demand" stroke="var(--color-primary)" strokeWidth={1.8} fill="url(#demandFill)" />
                   <Line type="monotone" dataKey="forecast" name="Projected" stroke="var(--color-amber)" strokeWidth={1.6} strokeDasharray="5 3" dot={false} />
+                  <ReferenceDot x={latestDemandPoint.t} y={latestDemandPoint.load} r={3.4} fill="var(--color-primary)" stroke="var(--color-surface)" strokeWidth={1.5} />
                 </AreaChart>
               </ResponsiveContainer>
             </div>
@@ -241,7 +259,20 @@ function Overview() {
             </div>
           </Panel>
 
-          <Panel title="Energy Performance vs Normalized Target" className="h-[315px] xl:col-span-8" actions={<span className="text-[9.5px] text-muted-foreground">daily kWh · weather and production adjusted</span>}>
+          <Panel
+            title="Energy Performance vs Normalized Target"
+            className="h-[315px] xl:col-span-8"
+            actions={
+              <ChartLegend
+                unit="kWh"
+                items={[
+                  { label: "Actual", color: "var(--color-primary)" },
+                  { label: "Normalized target", color: "var(--color-surface-3)", muted: true },
+                ]}
+                note="weather + production adjusted"
+              />
+            }
+          >
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={performanceTrend} margin={{ top: 8, right: 8, left: -4, bottom: 0 }} barGap={4}>
                 <CartesianGrid stroke="var(--color-border)" strokeDasharray="2 4" vertical={false} />

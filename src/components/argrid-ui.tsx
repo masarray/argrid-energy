@@ -35,6 +35,34 @@ export function Panel({
   );
 }
 
+export function ChartLegend({
+  items,
+  unit,
+  note,
+}: {
+  items: Array<{ label: string; color: string; dashed?: boolean; muted?: boolean }>;
+  unit?: string;
+  note?: string;
+}) {
+  const accessibleLabel = [unit ? `Unit ${unit}` : "", ...items.map((item) => item.label), note ?? ""].filter(Boolean).join(", ");
+  return (
+    <div className="chart-legend" aria-label={accessibleLabel}>
+      {unit && <span className="chart-legend-unit">{unit}</span>}
+      {items.map((item) => (
+        <span key={item.label} className={`chart-legend-item ${item.muted ? "is-muted" : ""}`}>
+          <span
+            className={`chart-legend-swatch ${item.dashed ? "is-dashed" : ""}`}
+            style={{ backgroundColor: item.dashed ? "transparent" : item.color, borderTopColor: item.color }}
+            aria-hidden="true"
+          />
+          {item.label}
+        </span>
+      ))}
+      {note && <span className="chart-legend-note">{note}</span>}
+    </div>
+  );
+}
+
 export function KpiTile({
   label,
   value,
