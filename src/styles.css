@@ -473,6 +473,215 @@
   opacity: 0.82;
 }
 
+/* Public-launch P1: calm command hierarchy and three panel emphasis levels. */
+.shell-command-bar {
+  gap: 8px;
+  background: color-mix(in oklab, var(--surface) 96%, var(--surface-2));
+  box-shadow: 0 1px 0 color-mix(in oklab, var(--foreground) 4%, transparent);
+}
+
+.command-context-cluster {
+  display: flex;
+  min-width: 0;
+  height: 34px;
+  align-items: center;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  background: color-mix(in oklab, var(--surface-2) 78%, var(--surface));
+  padding: 2px;
+  box-shadow: inset 0 1px 0 color-mix(in oklab, white 58%, transparent);
+}
+
+.command-control {
+  min-width: 0;
+  height: 28px;
+  border-radius: 5px;
+  padding: 0 8px;
+  color: var(--muted-foreground);
+  transition: color 140ms ease, background-color 140ms ease;
+}
+
+.command-control:hover,
+.command-control:focus-within {
+  background: var(--surface);
+  color: var(--foreground);
+}
+
+.command-control-caption {
+  flex: none;
+  font-size: 8px;
+  font-weight: 650;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: color-mix(in oklab, var(--muted-foreground) 78%, transparent);
+}
+
+.command-select {
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  color: var(--foreground);
+  font-size: 11px;
+  line-height: 1;
+  outline: none;
+}
+
+.command-control-divider {
+  width: 1px;
+  height: 18px;
+  flex: none;
+  background: color-mix(in oklab, var(--border) 82%, transparent);
+}
+
+.command-scenario-control {
+  background: color-mix(in oklab, var(--primary) 5%, transparent);
+}
+
+.command-search-input {
+  height: 34px;
+  border: 1px solid color-mix(in oklab, var(--border-strong) 72%, var(--border));
+  border-radius: 7px;
+  background: var(--surface);
+  color: var(--foreground);
+  outline: none;
+  box-shadow:
+    0 1px 2px color-mix(in oklab, var(--foreground) 4%, transparent),
+    inset 0 0 0 1px transparent;
+  transition: border-color 140ms ease, box-shadow 140ms ease;
+}
+
+.command-search-input:hover {
+  border-color: var(--border-strong);
+}
+
+.command-search-input:focus {
+  border-color: color-mix(in oklab, var(--primary) 62%, var(--border));
+  box-shadow:
+    0 1px 2px color-mix(in oklab, var(--foreground) 4%, transparent),
+    0 0 0 3px color-mix(in oklab, var(--primary) 10%, transparent);
+}
+
+.command-status-cluster {
+  flex: none;
+}
+
+.command-live-control {
+  transition: background-color 140ms ease, border-color 140ms ease;
+}
+
+.command-live-control.is-live {
+  border-color: color-mix(in oklab, var(--green) 28%, var(--border));
+  background: color-mix(in oklab, var(--green) 7%, var(--surface));
+  color: var(--green);
+}
+
+.command-live-control.is-paused {
+  border-color: color-mix(in oklab, var(--amber) 34%, var(--border));
+  background: color-mix(in oklab, var(--amber) 9%, var(--surface));
+  color: var(--amber);
+}
+
+.command-guide-button {
+  border: 1px solid color-mix(in oklab, var(--primary) 22%, var(--border));
+  background: color-mix(in oklab, var(--primary) 5%, var(--surface));
+  color: var(--primary);
+}
+
+.command-guide-button:hover {
+  background: color-mix(in oklab, var(--primary) 9%, var(--surface));
+}
+
+.command-icon-button {
+  transition: background-color 140ms ease;
+}
+
+.command-icon-button:hover {
+  background: var(--surface-2);
+}
+
+.command-status-divider {
+  background: var(--border);
+}
+
+.command-user-chip {
+  border-radius: 6px;
+  background: color-mix(in oklab, var(--surface-2) 62%, transparent);
+}
+
+.panel {
+  position: relative;
+}
+
+.workspace-management .panel-variant-primary {
+  border-color: color-mix(in oklab, var(--primary) 24%, var(--border)) !important;
+  box-shadow:
+    0 1px 2px color-mix(in oklab, var(--foreground) 5%, transparent),
+    0 10px 28px color-mix(in oklab, var(--primary) 5%, transparent) !important;
+}
+
+.workspace-management .panel-variant-primary::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto;
+  z-index: 2;
+  height: 2px;
+  background: linear-gradient(90deg, var(--primary), color-mix(in oklab, var(--primary) 28%, transparent) 62%, transparent);
+}
+
+.workspace-management .panel-variant-primary .panel-header {
+  background: linear-gradient(90deg, color-mix(in oklab, var(--primary) 6%, var(--surface)), color-mix(in oklab, var(--surface) 96%, var(--surface-2)) 52%);
+}
+
+.panel-variant-primary .panel-header h2 {
+  font-size: 12px;
+}
+
+.workspace-management .panel-variant-quiet {
+  border-color: color-mix(in oklab, var(--border) 72%, transparent) !important;
+  background: color-mix(in oklab, var(--surface) 76%, var(--surface-2)) !important;
+  box-shadow: none !important;
+}
+
+.workspace-management .panel-variant-quiet .panel-header {
+  border-bottom-color: color-mix(in oklab, var(--border) 72%, transparent);
+  background: transparent;
+}
+
+.workspace-management .panel-variant-quiet .panel-header h2 {
+  color: color-mix(in oklab, var(--foreground) 88%, var(--muted-foreground));
+}
+
+.workspace-operations .panel-variant-primary {
+  border-color: color-mix(in oklab, var(--primary) 42%, var(--border)) !important;
+  box-shadow: inset 0 2px 0 color-mix(in oklab, var(--primary) 72%, transparent);
+}
+
+.workspace-operations .panel-variant-quiet {
+  border-color: color-mix(in oklab, var(--border) 70%, transparent) !important;
+  background: color-mix(in oklab, var(--surface) 82%, var(--surface-2)) !important;
+}
+
+@media (max-width: 1279px) {
+  .command-search {
+    flex-basis: 100%;
+  }
+}
+
+@media (max-width: 767px) {
+  .command-context-cluster {
+    flex: 1 1 auto;
+    max-width: calc(100% - 154px);
+  }
+
+  .command-control {
+    padding-inline: 6px;
+  }
+
+  .command-control-site .command-select {
+    max-width: 132px;
+  }
+}
+
 .workspace-management main {
   background:
     linear-gradient(180deg, color-mix(in oklab, var(--background) 96%, white) 0%, var(--background) 180px);
