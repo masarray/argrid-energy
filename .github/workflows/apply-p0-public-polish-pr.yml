@@ -1,0 +1,62 @@
+name: Apply P0 public polish from PR
+
+on:
+  pull_request:
+    branches:
+      - main
+    types:
+      - opened
+      - reopened
+      - synchronize
+
+permissions:
+  contents: write
+
+jobs:
+  apply-and-validate:
+    if: github.head_ref == 'polish/p0-public-launch'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout polish branch
+        uses: actions/checkout@v6
+        with:
+          ref: polish/p0-public-launch
+          fetch-depth: 0
+
+      - name: Apply deterministic P0 patch
+        run: python scripts/apply-p0-public-polish.py
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install locked dependencies
+        run: npm ci --no-audit --no-fund
+
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Validate source and static build
+        run: npm run check
+
+      - name: Refresh Overview visual baseline
+        run: npm run test:e2e:update -- --project=chromium --grep "management overview"
+
+      - name: Validate complete browser QA
+        run: npm run qa:browser
+
+      - name: Commit validated P0 polish
+        run: |
+          git diff --check
+          git config user.name "ArGrid Public Polish"
+          git config user.email "actions@users.noreply.github.com"
+          git add src/components/energy-flow-sankey.tsx src/components/argrid-ui.tsx src/routes/index.tsx src/styles.css tests/e2e/visual.spec.ts-snapshots/management-overview-1440x900-chromium-linux.png
+          git rm .github/workflows/apply-p0-public-polish.yml
+          git rm .github/workflows/apply-p0-public-polish-pr.yml
+          git rm scripts/apply-p0-public-polish.py
+          git commit -m "Polish Sankey and KPI hierarchy for public launch"
+          git push origin HEAD:polish/p0-public-launch
