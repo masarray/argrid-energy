@@ -31,40 +31,24 @@ jobs:
           path = Path("src/components/energy-flow-sankey.tsx")
           text = path.read_text()
 
-          stack_anchor = '''  const sourceStack = stackCenters(model.sourceItems, 141, 98);
-          const consumerStack = stackCenters(model.consumerItems, 141, 98);'''
-          stack_replacement = '''  const sourceStack = stackCenters(model.sourceItems, 141, 98);
-          const sourceNodeHeights = sourceStack.map(({ width }) => Math.max(50, Math.min(110, Math.ceil(width + 10))));
-          const consumerStack = stackCenters(model.consumerItems, 141, 98);'''
+          stack_line = "  const sourceStack = stackCenters(model.sourceItems, 141, 98);"
+          height_line = "  const sourceNodeHeights = sourceStack.map(({ width }) => Math.max(50, Math.min(110, Math.ceil(width + 10))));"
+          if height_line not in text:
+              if stack_line not in text:
+                  raise SystemExit("Source stack line was not found")
+              text = text.replace(stack_line, f"{stack_line}\n{height_line}", 1)
 
-          if "sourceNodeHeights" not in text:
-              if stack_anchor not in text:
-                  raise SystemExit("Source stack anchor was not found")
-              text = text.replace(stack_anchor, stack_replacement, 1)
+          card_line = '                <rect x="24" y={sourceNodes[index] - 25} width="142" height="50" rx="6" fill="var(--color-surface)" stroke="var(--color-border-strong)" />'
+          fitted_card_line = '                <rect x="24" y={sourceNodes[index] - sourceNodeHeights[index] / 2} width="142" height={sourceNodeHeights[index]} rx="6" fill="var(--color-surface)" stroke="var(--color-border-strong)" />'
+          accent_line = '                <rect x="24" y={sourceNodes[index] - 25} width="4" height="50" rx="2" fill={item.color} />'
+          fitted_accent_line = '                <rect x="24" y={sourceNodes[index] - sourceNodeHeights[index] / 2} width="4" height={sourceNodeHeights[index]} rx="2" fill={item.color} />'
 
-          card_anchor = '''                <rect x="24" y={sourceNodes[index] - 25} width="142" height="50" rx="6" fill="var(--color-surface)" stroke="var(--color-border-strong)" />
-                          <rect x="24" y={sourceNodes[index] - 25} width="4" height="50" rx="2" fill={item.color} />'''
-          card_replacement = '''                <rect
-                            x="24"
-                            y={sourceNodes[index] - sourceNodeHeights[index] / 2}
-                            width="142"
-                            height={sourceNodeHeights[index]}
-                            rx="6"
-                            fill="var(--color-surface)"
-                            stroke="var(--color-border-strong)"
-                          />
-                          <rect
-                            x="24"
-                            y={sourceNodes[index] - sourceNodeHeights[index] / 2}
-                            width="4"
-                            height={sourceNodeHeights[index]}
-                            rx="2"
-                            fill={item.color}
-                          />'''
+          if fitted_card_line not in text:
+              if card_line not in text or accent_line not in text:
+                  raise SystemExit("Source card lines were not found")
+              text = text.replace(card_line, fitted_card_line, 1)
+              text = text.replace(accent_line, fitted_accent_line, 1)
 
-          if card_anchor not in text:
-              raise SystemExit("Source card anchor was not found")
-          text = text.replace(card_anchor, card_replacement, 1)
           path.write_text(text)
           PY
 
