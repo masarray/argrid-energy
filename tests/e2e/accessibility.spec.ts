@@ -1,39 +1,50 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
-import { openWorkspace, prepareDemo } from "./support";
+import { openWorkspace, prepareDemo, type DemoScenario } from "./support";
 
-const representativeWorkspaces = [
-  { name: "enterprise overview", path: "/", scenario: "normal" as const },
-  { name: "electrical operations", path: "/electrical", scenario: "voltage-sag" as const },
-  { name: "billing assurance", path: "/billing", scenario: "billing-exception" as const },
-  { name: "data health", path: "/data-health", scenario: "billing-exception" as const },
+const workspaces: Array<{ name: string; path: string; scenario: DemoScenario }> = [
+  { name: "overview", path: "/", scenario: "normal" },
+  { name: "portfolio", path: "/portfolio", scenario: "peak-demand" },
+  { name: "analytics", path: "/analytics", scenario: "efficiency-loss" },
+  { name: "demand", path: "/demand", scenario: "peak-demand" },
+  { name: "opportunities", path: "/opportunities", scenario: "efficiency-loss" },
+  { name: "savings", path: "/savings", scenario: "efficiency-loss" },
+  { name: "electrical", path: "/electrical", scenario: "voltage-sag" },
+  { name: "alarms", path: "/alarms", scenario: "voltage-sag" },
+  { name: "power-quality", path: "/alarms/power-quality", scenario: "voltage-sag" },
+  { name: "reports", path: "/reports", scenario: "normal" },
+  { name: "billing", path: "/billing", scenario: "billing-exception" },
+  { name: "sustainability", path: "/sustainability", scenario: "normal" },
+  { name: "data-health", path: "/data-health", scenario: "billing-exception" },
 ];
 
-for (const workspace of representativeWorkspaces) {
-  test(`${workspace.name} has no serious or critical automated accessibility violations`, async ({ page }, testInfo) => {
-    await prepareDemo(page, { scenario: workspace.scenario });
-    await openWorkspace(page, workspace.path);
+test.describe("ArGrid route accessibility", () => {
+  test.skip(({ browserName }) => browserName !== "chromium", "Run Axe once in Chromium; workflow smoke tests cover every engine.");
 
-    const results = await new AxeBuilder({ page })
-      .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"])
-      .disableRules(["color-contrast"])
-      .analyze();
+  for (const workspace of workspaces) {
+    test(`${workspace.name} passes the blocking WCAG audit`, async ({ page }, testInfo) => {
+      await prepareDemo(page, { scenario: workspace.scenario });
+      await openWorkspace(page, workspace.path);
 
-    await testInfo.attach("axe-results.json", {
-      body: JSON.stringify(results, null, 2),
-      contentType: "application/json",
+      const results = await new AxeBuilder({ page })
+        .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"])
+        .analyze();
+
+      await testInfo.attach("axe-results.json", {
+        body: JSON.stringify(results, null, 2),
+        contentType: "application/json",
+      });
+
+      const blocking = results.violations
+        .filter((violation) => ["serious", "critical"].includes(violation.impact ?? ""))
+        .map((violation) => ({
+          id: violation.id,
+          impact: violation.impact,
+          help: violation.help,
+          targets: violation.nodes.flatMap((node) => node.target),
+        }));
+
+      expect(blocking).toEqual([]);
     });
-
-    const blocking = results.violations.filter((violation) =>
-      violation.impact === "critical" || violation.impact === "serious",
-    );
-    const summary = blocking.map((violation) => ({
-      id: violation.id,
-      impact: violation.impact,
-      help: violation.help,
-      targets: violation.nodes.flatMap((node) => node.target),
-    }));
-
-    expect(summary).toEqual([]);
-  });
-}
+  }
+});
