@@ -1,0 +1,53 @@
+name: ArGrid Performance Budget
+
+on:
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: performance-budget-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lighthouse:
+    name: Lighthouse desktop performance and quality budgets
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install locked dependencies
+        run: npm ci --no-audit --no-fund
+
+      - name: Build static site
+        run: npm run build
+
+      - name: Resolve Chrome executable
+        run: echo "CHROME_PATH=$(command -v google-chrome || command -v google-chrome-stable || command -v chromium)" >> "$GITHUB_ENV"
+
+      - name: Run Lighthouse budgets
+        run: npm run qa:performance
+
+      - name: Upload Lighthouse diagnostics on failure
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: argrid-lighthouse-${{ github.run_id }}
+          path: |
+            .lighthouseci
+            lighthouse-report
+          if-no-files-found: ignore
+          retention-days: 14
