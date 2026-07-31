@@ -1,4 +1,4 @@
-name: ArGrid Browser QA
+name: ArGrid Extended Browser QA
 
 on:
   pull_request:
@@ -10,14 +10,14 @@ permissions:
   contents: read
 
 concurrency:
-  group: browser-qa-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  group: extended-browser-qa-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
 jobs:
   browser-qa:
-    name: Chromium E2E, visual regression, and accessibility
+    name: Cross-browser smoke, visual matrix, and accessibility
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    timeout-minutes: 40
 
     steps:
       - name: Checkout repository
@@ -32,13 +32,13 @@ jobs:
       - name: Install locked dependencies
         run: npm ci --no-audit --no-fund
 
-      - name: Install Chromium and system dependencies
-        run: npx playwright install --with-deps chromium
+      - name: Install Chromium Firefox WebKit and system dependencies
+        run: npx playwright install --with-deps chromium firefox webkit
 
       - name: Build static site
         run: npm run build
 
-      - name: Run browser QA
+      - name: Run cross-browser and visual QA
         run: npm run qa:browser
 
       - name: Upload browser diagnostics on failure
@@ -49,5 +49,38 @@ jobs:
           path: |
             playwright-report
             test-results
+          if-no-files-found: ignore
+          retention-days: 14
+
+  lighthouse:
+    name: Lighthouse performance and quality budgets
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install locked dependencies
+        run: npm ci --no-audit --no-fund
+
+      - name: Build static site
+        run: npm run build
+
+      - name: Run Lighthouse budgets
+        run: npm run qa:lighthouse
+
+      - name: Upload Lighthouse reports on failure
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: argrid-lighthouse-${{ github.run_id }}
+          path: .lighthouseci/reports
           if-no-files-found: ignore
           retention-days: 14
