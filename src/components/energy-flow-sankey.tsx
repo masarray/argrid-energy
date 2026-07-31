@@ -118,6 +118,7 @@ export function EnergyFlowSankey({
   const sourceNodes = [76, 190, 304];
   const consumerNodes = [38, 101, 164, 227, 290, 353];
   const sourceStack = stackCenters(model.sourceItems, 141, 98);
+  const sourceNodeHeights = sourceStack.map(({ width }) => Math.max(50, Math.min(110, Math.ceil(width + 10))));
   const consumerStack = stackCenters(model.consumerItems, 141, 98);
   const busLabel = mode === "power" ? "MAIN DISTRIBUTION BUS" : mode === "cost" ? "BLENDED ENERGY VALUE" : "ATTRIBUTED EMISSIONS";
 
@@ -181,8 +182,8 @@ export function EnergyFlowSankey({
 
             {model.sourceItems.map((item, index) => (
               <g key={item.name}>
-                <rect x="24" y={sourceNodes[index] - 25} width="142" height="50" rx="6" fill="var(--color-surface)" stroke="var(--color-border-strong)" />
-                <rect x="24" y={sourceNodes[index] - 25} width="4" height="50" rx="2" fill={item.color} />
+                <rect x="24" y={sourceNodes[index] - sourceNodeHeights[index] / 2} width="142" height={sourceNodeHeights[index]} rx="6" fill="var(--color-surface)" stroke="var(--color-border-strong)" />
+                <rect x="24" y={sourceNodes[index] - sourceNodeHeights[index] / 2} width="4" height={sourceNodeHeights[index]} rx="2" fill={item.color} />
                 <text x="39" y={sourceNodes[index] - 4} fill="var(--color-muted-foreground)" fontSize="10" fontWeight="600">{item.name}</text>
                 <text x="39" y={sourceNodes[index] + 13} fill="var(--color-foreground)" fontSize="12" fontWeight="600">{formatFlowValue(item.value, mode)}</text>
               </g>
