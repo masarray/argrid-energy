@@ -1,0 +1,140 @@
+name: Apply ArGrid Full QA Findings
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/apply-full-qa-fixes.yml
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout full QA branch
+        uses: actions/checkout@v6
+        with:
+          ref: agent/full-browser-matrix-performance-20260731
+          fetch-depth: 0
+
+      - name: Apply audited accessibility fixes
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          opportunities = Path("src/routes/opportunities.tsx")
+          text = opportunities.read_text()
+          text = text.replace(
+              '<select value={confidence} onChange={(event) => setConfidence(event.target.value)} className="h-8 rounded-md border border-border bg-surface-2 px-2 text-[10.5px]">',
+              '<select value={confidence} onChange={(event) => setConfidence(event.target.value)} className="h-8 rounded-md border border-border bg-surface-2 px-2 text-[10.5px]" aria-label="Filter opportunities by confidence">',
+          )
+          text = text.replace(
+              '<select value={status} onChange={(event) => setStatus(event.target.value)} className="h-8 rounded-md border border-border bg-surface-2 px-2 text-[10.5px]">',
+              '<select value={status} onChange={(event) => setStatus(event.target.value)} className="h-8 rounded-md border border-border bg-surface-2 px-2 text-[10.5px]" aria-label="Filter opportunities by workflow status">',
+          )
+          opportunities.write_text(text)
+
+          shape_component = '''
+
+type AccessibleScatterPointProps = {
+  cx?: number;
+  cy?: number;
+  size?: number;
+  fill?: string;
+  stroke?: string;
+  strokeWidth?: number;
+};
+
+function AccessibleScatterPoint({
+  cx = 0,
+  cy = 0,
+  size = 64,
+  fill = "currentColor",
+  stroke = "none",
+  strokeWidth = 0,
+}: AccessibleScatterPointProps) {
+  const radius = Math.max(4, Math.sqrt(Math.max(size, 1) / Math.PI));
+  return <circle cx={cx} cy={cy} r={radius} fill={fill} stroke={stroke} strokeWidth={strokeWidth} aria-hidden="true" focusable="false" />;
+}
+'''
+
+          portfolio = Path("src/routes/portfolio.tsx")
+          text = portfolio.read_text()
+          marker = '''function statusColor(status: PortfolioSiteStatus) {
+  if (status === "Critical") return "var(--color-red)";
+  if (status === "Watch") return "var(--color-amber)";
+  return "var(--color-green)";
+}
+'''
+          if "function AccessibleScatterPoint" not in text:
+              text = text.replace(marker, marker + shape_component)
+          text = text.replace(
+              '<Scatter data={sites} onClick={(point: PortfolioSite) => setSelectedId(point.id)}>',
+              '<Scatter data={sites} onClick={(point: PortfolioSite) => setSelectedId(point.id)} shape={<AccessibleScatterPoint />}>',
+          )
+          text = text.replace(
+              '<div className="overflow-x-auto">\n              <table className="w-full min-w-[920px] text-[10.5px]">',
+              '<div className="overflow-x-auto" tabIndex={0} role="region" aria-label="Portfolio site benchmark matrix">\n              <table className="w-full min-w-[920px] text-[10.5px]">',
+          )
+          portfolio.write_text(text)
+
+          alarms = Path("src/routes/alarms.tsx")
+          text = alarms.read_text()
+          marker = '''function severityClass(severity: EventSeverity) {
+  if (severity === "Critical") return "border-red/30 bg-red/10 text-red";
+  if (severity === "Warning") return "border-amber/30 bg-amber/10 text-amber";
+  return "border-primary/30 bg-primary/10 text-primary";
+}
+'''
+          if "function AccessibleScatterPoint" not in text:
+              text = text.replace(marker, marker + shape_component)
+          text = text.replace(
+              '<Scatter data={scatter.filter((event) => event.severity === "Critical")} fill="var(--color-red)" />',
+              '<Scatter data={scatter.filter((event) => event.severity === "Critical")} fill="var(--color-red)" shape={<AccessibleScatterPoint />} />',
+          )
+          text = text.replace(
+              '<Scatter data={scatter.filter((event) => event.severity === "Warning")} fill="var(--color-amber)" />',
+              '<Scatter data={scatter.filter((event) => event.severity === "Warning")} fill="var(--color-amber)" shape={<AccessibleScatterPoint />} />',
+          )
+          text = text.replace(
+              '<Scatter data={scatter.filter((event) => event.severity === "Info")} fill="var(--color-cyan)" />',
+              '<Scatter data={scatter.filter((event) => event.severity === "Info")} fill="var(--color-cyan)" shape={<AccessibleScatterPoint />} />',
+          )
+          text = text.replace(
+              '<div className="overflow-x-auto"><table className="w-full min-w-[760px] text-[10.5px]">',
+              '<div className="overflow-x-auto" tabIndex={0} role="region" aria-label="Member alarm chronology"><table className="w-full min-w-[760px] text-[10.5px]">',
+          )
+          alarms.write_text(text)
+          PY
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          package-manager-cache: false
+
+      - name: Install current dependency graph
+        run: npm install --no-audit --no-fund
+
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Validate source and build
+        run: npm run check
+
+      - name: Validate full-route Axe gate
+        run: npm run test:a11y
+
+      - name: Commit validated accessibility fixes
+        run: |
+          git diff --check
+          git config user.name "ArGrid Full QA"
+          git config user.email "actions@users.noreply.github.com"
+          git add src/routes/opportunities.tsx src/routes/portfolio.tsx src/routes/alarms.tsx
+          git commit -m "Fix full-route contrast semantics and keyboard accessibility"
+          git pull --rebase origin agent/full-browser-matrix-performance-20260731
+          git push origin HEAD:agent/full-browser-matrix-performance-20260731
