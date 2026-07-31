@@ -31,6 +31,11 @@
     linear-gradient(90deg, var(--color-border) 1px, transparent 1px);
   background-size: 28px 28px;
   mask-image: linear-gradient(to right, transparent, black 14%, black 86%, transparent);
+  -webkit-mask-image: linear-gradient(to right, transparent, black 14%, black 86%, transparent);
+}
+
+.panel-energy-flow .energy-flow-canvas svg {
+  height: 220px !important;
 }
 
 .energy-flow-path {
@@ -48,7 +53,7 @@
 }
 
 .energy-flow-node {
-  cursor: pointer;
+  cursor: default;
   transition: opacity 150ms ease, transform 150ms ease;
   transform-box: fill-box;
   transform-origin: center;
