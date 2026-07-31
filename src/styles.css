@@ -682,6 +682,272 @@
   }
 }
 
+/* Public-launch P2: coherent chart chrome and portfolio showcase details. */
+.chart-legend {
+  display: flex;
+  min-width: 0;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 4px 9px;
+  color: var(--muted-foreground);
+  font-size: 8.8px;
+  line-height: 1;
+}
+
+.chart-legend-unit {
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--surface-2);
+  padding: 3px 5px;
+  color: var(--foreground);
+  font-size: 8px;
+  font-weight: 650;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.chart-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+}
+
+.chart-legend-item.is-muted {
+  opacity: 0.72;
+}
+
+.chart-legend-swatch {
+  width: 12px;
+  height: 2px;
+  flex: none;
+  border-radius: 999px;
+}
+
+.chart-legend-swatch.is-dashed {
+  height: 0;
+  border-top-width: 1.5px;
+  border-top-style: dashed;
+  border-radius: 0;
+}
+
+.chart-legend-note {
+  white-space: nowrap;
+  color: color-mix(in oklab, var(--muted-foreground) 76%, transparent);
+  font-size: 8.4px;
+}
+
+.portfolio-geo-strip {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  border: 1px solid color-mix(in oklab, var(--border) 80%, transparent);
+  border-radius: 8px;
+  background: color-mix(in oklab, var(--surface) 76%, var(--surface-2));
+  padding: 9px 12px;
+}
+
+.portfolio-geo-heading {
+  display: flex;
+  min-width: 180px;
+  align-items: center;
+  gap: 9px;
+}
+
+.portfolio-geo-icon,
+.portfolio-identity-mark {
+  display: inline-flex;
+  width: 28px;
+  height: 28px;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid color-mix(in oklab, var(--primary) 18%, var(--border));
+  border-radius: 6px;
+  background: color-mix(in oklab, var(--primary) 7%, var(--surface));
+  color: var(--primary);
+}
+
+.portfolio-geo-eyebrow {
+  font-size: 8.5px;
+  font-weight: 650;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+  color: var(--muted-foreground);
+}
+
+.portfolio-geo-summary {
+  margin-top: 2px;
+  font-size: 10px;
+  color: var(--foreground);
+}
+
+.portfolio-geo-regions {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  align-items: stretch;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.portfolio-region-group {
+  min-width: 0;
+  border-left: 1px solid var(--border);
+  padding-left: 10px;
+}
+
+.portfolio-region-label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  color: var(--muted-foreground);
+  font-size: 8.5px;
+  font-weight: 600;
+}
+
+.portfolio-region-sites {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px;
+  margin-top: 4px;
+}
+
+.portfolio-region-site {
+  display: inline-flex;
+  height: 22px;
+  align-items: center;
+  gap: 4px;
+  border: 1px solid transparent;
+  border-radius: 5px;
+  padding: 0 6px;
+  color: var(--muted-foreground);
+  font-size: 8.8px;
+  transition: border-color 140ms ease, background-color 140ms ease, color 140ms ease;
+}
+
+.portfolio-region-site:hover,
+.portfolio-region-site.is-selected {
+  border-color: var(--border);
+  background: var(--surface);
+  color: var(--foreground);
+}
+
+.portfolio-region-site.is-selected {
+  border-color: color-mix(in oklab, var(--primary) 28%, var(--border));
+  box-shadow: inset 0 -1px 0 color-mix(in oklab, var(--primary) 54%, transparent);
+}
+
+.portfolio-region-dot {
+  width: 5px;
+  height: 5px;
+  flex: none;
+  border-radius: 999px;
+}
+
+.portfolio-constellation {
+  position: relative;
+  height: 100%;
+}
+
+.portfolio-quadrant-label {
+  position: absolute;
+  z-index: 2;
+  pointer-events: none;
+  border: 1px solid color-mix(in oklab, var(--border) 72%, transparent);
+  border-radius: 4px;
+  background: color-mix(in oklab, var(--surface) 88%, transparent);
+  padding: 3px 5px;
+  color: color-mix(in oklab, var(--muted-foreground) 84%, transparent);
+  font-size: 7.8px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  backdrop-filter: blur(2px);
+}
+
+.portfolio-quadrant-label.is-cost-risk { left: 12%; top: 7%; }
+.portfolio-quadrant-label.is-priority { right: 4%; top: 7%; color: color-mix(in oklab, var(--red) 74%, var(--muted-foreground)); }
+.portfolio-quadrant-label.is-leading { left: 12%; bottom: 12%; color: color-mix(in oklab, var(--green) 70%, var(--muted-foreground)); }
+.portfolio-quadrant-label.is-opportunity { right: 4%; bottom: 12%; color: color-mix(in oklab, var(--amber) 72%, var(--muted-foreground)); }
+
+.portfolio-benchmark-row {
+  transition: background-color 120ms ease;
+}
+
+.portfolio-benchmark-row-selected td:first-child {
+  box-shadow: inset 2px 0 0 var(--primary);
+}
+
+.benchmark-cell {
+  display: inline-flex;
+  min-width: 72px;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+}
+
+.benchmark-mini-bar {
+  display: block;
+  width: 58px;
+  height: 2px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--surface-3);
+}
+
+.benchmark-mini-bar > span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--primary);
+}
+
+.benchmark-mini-bar-good > span { background: var(--green); }
+.benchmark-mini-bar-warning > span { background: var(--amber); }
+.benchmark-mini-bar-critical > span { background: var(--red); }
+
+.portfolio-identity {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  border-bottom: 1px solid color-mix(in oklab, var(--border) 78%, transparent);
+  padding-bottom: 10px;
+}
+
+@media (max-width: 1023px) {
+  .portfolio-geo-strip {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .portfolio-geo-regions {
+    width: 100%;
+    justify-content: flex-start;
+  }
+}
+
+@media (max-width: 640px) {
+  .chart-legend-note {
+    display: none;
+  }
+
+  .portfolio-geo-regions {
+    flex-direction: column;
+  }
+
+  .portfolio-region-group {
+    border-left: 0;
+    border-top: 1px solid var(--border);
+    padding-top: 6px;
+    padding-left: 0;
+  }
+}
+
 .workspace-management main {
   background:
     linear-gradient(180deg, color-mix(in oklab, var(--background) 96%, white) 0%, var(--background) 180px);

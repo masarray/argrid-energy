@@ -5,6 +5,7 @@ import {
   AreaChart,
   CartesianGrid,
   Cell,
+  ReferenceDot,
   ReferenceLine,
   ResponsiveContainer,
   Scatter,
@@ -29,7 +30,7 @@ import {
   Zap,
 } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
-import { KpiTile, Panel } from "@/components/argrid-ui";
+import { ChartLegend, KpiTile, Panel } from "@/components/argrid-ui";
 import { fmtIDR, fmtNum } from "@/lib/argrid-data";
 import { demoSites, useDemoSimulation } from "@/lib/demo-simulation";
 import { buildPortfolioSites, getPortfolioTrend, type PortfolioSite, type PortfolioSiteStatus } from "@/lib/portfolio-health";
@@ -92,6 +93,14 @@ function PortfolioTooltip({ active, payload }: { active?: boolean; payload?: Arr
   );
 }
 
+type ScatterHaloProps = { cx?: number; cy?: number; size?: number };
+
+function SelectedSiteHalo({ cx, cy, size }: ScatterHaloProps) {
+  if (typeof cx !== "number" || typeof cy !== "number") return null;
+  const radius = Math.sqrt(Math.max(size ?? 90, 1) / Math.PI) + 5;
+  return <circle cx={cx} cy={cy} r={radius} fill="none" stroke="var(--color-primary)" strokeWidth={2} opacity={0.78} />;
+}
+
 function Portfolio() {
   const navigate = useNavigate();
   const { siteId, setSiteId, scenarioId, scenario } = useDemoSimulation();
@@ -99,6 +108,12 @@ function Portfolio() {
   const [selectedId, setSelectedId] = useState<PortfolioSite["id"]>(siteId);
   const selected = sites.find((site) => site.id === selectedId) ?? sites[0];
   const trend = useMemo(() => getPortfolioTrend(), []);
+  const latestPortfolioPoint = trend[trend.length - 1];
+  const regionGroups = useMemo(() => {
+    const groups = new Map<string, PortfolioSite[]>();
+    sites.forEach((site) => groups.set(site.region, [...(groups.get(site.region) ?? []), site]));
+    return Array.from(groups.entries());
+  }, [sites]);
 
   const totals = sites.reduce(
     (sum, site) => ({
@@ -158,25 +173,81 @@ function Portfolio() {
           </div>
         </section>
 
+        <section className="portfolio-geo-strip" aria-label="Portfolio geographic footprint">
+          <div className="portfolio-geo-heading">
+            <span className="portfolio-geo-icon"><MapPinned className="size-3.5" /></span>
+            <div><div className="portfolio-geo-eyebrow">Portfolio footprint</div><div className="portfolio-geo-summary">{sites.length} connected sites across {regionGroups.length} operating regions</div></div>
+          </div>
+          <div className="portfolio-geo-regions">
+            {regionGroups.map(([region, regionSites]) => (
+              <div key={region} className="portfolio-region-group">
+                <div className="portfolio-region-label"><span>{region}</span><span className="tabular">{regionSites.length}</span></div>
+                <div className="portfolio-region-sites">
+                  {regionSites.map((site) => (
+                    <button key={site.id} type="button" onClick={() => setSelectedId(site.id)} className={`portfolio-region-site ${selected.id === site.id ? "is-selected" : ""}`} aria-pressed={selected.id === site.id} title={`${site.name} · ${site.status}`}>
+                      <span className="portfolio-region-dot" style={{ backgroundColor: statusColor(site.status) }} />
+                      <span>{site.name.split(" ")[0]}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+
         <div className="grid grid-cols-1 gap-3 xl:grid-cols-12">
-          <Panel variant="primary" title="Performance Constellation" className="h-[390px] xl:col-span-7" actions={<span className="text-[9.5px] text-muted-foreground">bubble size = annual opportunity</span>}>
-            <ResponsiveContainer width="100%" height="100%">
-              <ScatterChart margin={{ top: 12, right: 18, bottom: 12, left: 0 }}>
-                <CartesianGrid stroke="var(--color-border)" strokeDasharray="2 4" />
-                <XAxis type="number" dataKey="energyIntensityIndex" name="Intensity" domain={[78, 118]} {...chartAxis} label={{ value: "Energy intensity index · lower is better", position: "insideBottom", offset: -4, fill: "var(--color-muted-foreground)", fontSize: 9 }} />
-                <YAxis type="number" dataKey="budgetVariancePct" name="Budget variance" domain={[-8, 12]} width={48} {...chartAxis} tickFormatter={(value: number) => `${value}%`} />
-                <ZAxis type="number" dataKey="opportunityValueIDR" range={[90, 520]} />
-                <ReferenceLine x={100} stroke="var(--color-border-strong)" strokeDasharray="4 4" />
-                <ReferenceLine y={0} stroke="var(--color-border-strong)" strokeDasharray="4 4" />
-                <Tooltip content={<PortfolioTooltip />} />
-                <Scatter data={sites} onClick={(point: PortfolioSite) => setSelectedId(point.id)}>
-                  {sites.map((site) => <Cell key={site.id} fill={statusColor(site.status)} stroke={site.selected || selected.id === site.id ? "var(--color-foreground)" : "var(--color-surface)"} strokeWidth={site.selected || selected.id === site.id ? 2 : 1} />)}
-                </Scatter>
-              </ScatterChart>
-            </ResponsiveContainer>
+          <Panel
+            variant="primary"
+            title="Performance Constellation"
+            className="h-[390px] xl:col-span-7"
+            actions={
+              <ChartLegend
+                items={[
+                  { label: "On target", color: "var(--color-green)" },
+                  { label: "Watch", color: "var(--color-amber)" },
+                  { label: "Critical", color: "var(--color-red)" },
+                ]}
+                note="bubble = annual opportunity"
+              />
+            }
+          >
+            <div className="portfolio-constellation">
+              <span className="portfolio-quadrant-label is-leading">Leading benchmark</span>
+              <span className="portfolio-quadrant-label is-cost-risk">Efficient · cost risk</span>
+              <span className="portfolio-quadrant-label is-opportunity">Efficiency opportunity</span>
+              <span className="portfolio-quadrant-label is-priority">Priority intervention</span>
+              <ResponsiveContainer width="100%" height="100%">
+                <ScatterChart margin={{ top: 20, right: 18, bottom: 12, left: 0 }}>
+                  <CartesianGrid stroke="var(--color-border)" strokeDasharray="2 4" />
+                  <XAxis type="number" dataKey="energyIntensityIndex" name="Intensity" domain={[78, 118]} {...chartAxis} label={{ value: "Energy intensity index · lower is better", position: "insideBottom", offset: -4, fill: "var(--color-muted-foreground)", fontSize: 9 }} />
+                  <YAxis type="number" dataKey="budgetVariancePct" name="Budget variance" domain={[-8, 12]} width={48} {...chartAxis} tickFormatter={(value: number) => `${value}%`} />
+                  <ZAxis type="number" dataKey="opportunityValueIDR" range={[90, 520]} />
+                  <ReferenceLine x={100} stroke="var(--color-border-strong)" strokeDasharray="4 4" />
+                  <ReferenceLine y={0} stroke="var(--color-border-strong)" strokeDasharray="4 4" />
+                  <Tooltip content={<PortfolioTooltip />} />
+                  <Scatter data={sites} onClick={(point: PortfolioSite) => setSelectedId(point.id)} isAnimationActive={false}>
+                    {sites.map((site) => <Cell key={site.id} fill={statusColor(site.status)} stroke={selected.id === site.id ? "var(--color-foreground)" : "var(--color-surface)"} strokeWidth={selected.id === site.id ? 2.4 : 1} />)}
+                  </Scatter>
+                  <Scatter data={[selected]} shape={<SelectedSiteHalo />} isAnimationActive={false} />
+                </ScatterChart>
+              </ResponsiveContainer>
+            </div>
           </Panel>
 
-          <Panel title="Cost, Budget & Verified Value" className="h-[390px] xl:col-span-5" actions={<span className="text-[9.5px] text-muted-foreground">IDR billions · monthly</span>}>
+          <Panel
+            title="Cost, Budget & Verified Value"
+            className="h-[390px] xl:col-span-5"
+            actions={
+              <ChartLegend
+                unit="IDR B"
+                items={[
+                  { label: "Actual", color: "var(--color-primary)" },
+                  { label: "Budget", color: "var(--color-muted-foreground)", dashed: true },
+                  { label: "Verified", color: "var(--color-green)" },
+                ]}
+              />
+            }
+          >
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={trend} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
                 <defs><linearGradient id="portfolioActual" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="var(--color-primary)" stopOpacity={0.18} /><stop offset="100%" stopColor="var(--color-primary)" stopOpacity={0.01} /></linearGradient></defs>
@@ -187,6 +258,7 @@ function Portfolio() {
                 <Area type="monotone" dataKey="actual" name="Actual cost" stroke="var(--color-primary)" strokeWidth={1.8} fill="url(#portfolioActual)" />
                 <Area type="monotone" dataKey="budget" name="Budget" stroke="var(--color-muted-foreground)" strokeDasharray="4 4" fill="transparent" />
                 <Area type="monotone" dataKey="verified" name="Verified savings" stroke="var(--color-green)" strokeWidth={1.8} fill="transparent" />
+                <ReferenceDot x={latestPortfolioPoint.month} y={latestPortfolioPoint.actual} r={3.4} fill="var(--color-primary)" stroke="var(--color-surface)" strokeWidth={1.5} />
               </AreaChart>
             </ResponsiveContainer>
           </Panel>
@@ -197,14 +269,14 @@ function Portfolio() {
                 <thead><tr className="border-b border-border text-left text-[9px] uppercase tracking-[0.11em] text-muted-foreground"><th className="py-2 font-normal">Site</th><th className="py-2 font-normal">Status</th><th className="py-2 font-normal text-right">Intensity</th><th className="py-2 font-normal text-right">Demand</th><th className="py-2 font-normal text-right">Budget</th><th className="py-2 font-normal text-right">Renewable</th><th className="py-2 font-normal text-right">Data confidence</th><th className="py-2 font-normal text-right">Opportunity</th></tr></thead>
                 <tbody className="divide-y divide-border">
                   {[...sites].sort((a, b) => a.energyIntensityIndex - b.energyIntensityIndex).map((site, index) => (
-                    <tr key={site.id} onClick={() => setSelectedId(site.id)} className={`cursor-pointer hover:bg-surface-2/70 ${selected.id === site.id ? "bg-primary/5" : ""}`}>
+                    <tr key={site.id} onClick={() => setSelectedId(site.id)} aria-selected={selected.id === site.id} className={`portfolio-benchmark-row cursor-pointer hover:bg-surface-2/70 ${selected.id === site.id ? "portfolio-benchmark-row-selected bg-primary/5" : ""}`}>
                       <td className="py-2.5"><div className="flex items-center gap-2"><span className="flex size-5 items-center justify-center rounded border border-border bg-surface-2 text-[9px] tabular">{index + 1}</span><div><div className="font-semibold">{site.name}</div><div className="text-[9px] text-muted-foreground">{site.type} · {site.region}</div></div></div></td>
                       <td className="py-2.5"><span className={`inline-flex rounded border px-1.5 py-0.5 text-[9px] ${statusClass(site.status)}`}>{site.status}</span></td>
-                      <td className="py-2.5 text-right tabular"><span className={site.energyIntensityIndex <= site.targetIntensityIndex ? "text-green" : "text-amber"}>{site.energyIntensityIndex}</span><span className="text-muted-foreground"> / {site.targetIntensityIndex}</span></td>
-                      <td className="py-2.5 text-right tabular">{site.demandUtilizationPct.toFixed(1)}%</td>
+                      <td className="py-2.5 text-right"><div className="benchmark-cell"><div className="tabular"><span className={site.energyIntensityIndex <= site.targetIntensityIndex ? "text-green" : "text-amber"}>{site.energyIntensityIndex}</span><span className="text-muted-foreground"> / {site.targetIntensityIndex}</span></div><MiniBar value={(site.energyIntensityIndex / 120) * 100} tone={site.energyIntensityIndex <= site.targetIntensityIndex ? "good" : "warning"} /></div></td>
+                      <td className="py-2.5 text-right"><div className="benchmark-cell"><div className="tabular">{site.demandUtilizationPct.toFixed(1)}%</div><MiniBar value={site.demandUtilizationPct} tone={site.demandUtilizationPct >= 95 ? "critical" : site.demandUtilizationPct >= 85 ? "warning" : "primary"} /></div></td>
                       <td className={`py-2.5 text-right tabular ${site.budgetVariancePct > 2 ? "text-red" : site.budgetVariancePct < 0 ? "text-green" : ""}`}>{site.budgetVariancePct >= 0 ? "+" : ""}{site.budgetVariancePct.toFixed(1)}%</td>
                       <td className="py-2.5 text-right tabular">{site.renewableSharePct.toFixed(1)}%</td>
-                      <td className="py-2.5 text-right tabular">{site.dataConfidencePct.toFixed(1)}%</td>
+                      <td className="py-2.5 text-right"><div className="benchmark-cell"><div className="tabular">{site.dataConfidencePct.toFixed(1)}%</div><MiniBar value={site.dataConfidencePct} tone={site.dataConfidencePct >= 97 ? "good" : "warning"} /></div></td>
                       <td className="py-2.5 text-right font-semibold tabular">{fmtIDR(site.opportunityValueIDR)}</td>
                     </tr>
                   ))}
@@ -213,8 +285,13 @@ function Portfolio() {
             </div>
           </Panel>
 
-          <Panel variant="quiet" title={`${selected.name} · Management Profile`} className="xl:col-span-4" actions={<span className={`rounded border px-1.5 py-0.5 text-[9px] ${statusClass(selected.status)}`}>{selected.status}</span>}>
+          <Panel variant="quiet" title="Management Profile" className="xl:col-span-4" actions={<span className="text-[9px] uppercase tracking-[0.1em] text-muted-foreground">Selected site</span>}>
             <div className="space-y-3">
+              <div className="portfolio-identity">
+                <span className="portfolio-identity-mark"><Building2 className="size-4" /></span>
+                <div className="min-w-0 flex-1"><div className="truncate text-[12px] font-semibold">{selected.name}</div><div className="mt-0.5 truncate text-[9.5px] text-muted-foreground">{selected.type} · {selected.region}</div></div>
+                <span className={`shrink-0 rounded border px-1.5 py-0.5 text-[9px] ${statusClass(selected.status)}`}>{selected.status}</span>
+              </div>
               <div className="grid grid-cols-2 gap-2">
                 <Metric icon={Zap} label="MTD energy" value={`${fmtNum(selected.energyMWh)} MWh`} />
                 <Metric icon={CircleDollarSign} label="MTD cost" value={fmtIDR(selected.mtdCostIDR)} />
@@ -244,6 +321,10 @@ function Portfolio() {
       </div>
     </AppShell>
   );
+}
+
+function MiniBar({ value, tone = "primary" }: { value: number; tone?: "primary" | "good" | "warning" | "critical" }) {
+  return <span className={`benchmark-mini-bar benchmark-mini-bar-${tone}`} aria-hidden="true"><span style={{ width: `${Math.max(4, Math.min(100, value))}%` }} /></span>;
 }
 
 function Metric({ icon: Icon, label, value, tone = "neutral" }: { icon: typeof Building2; label: string; value: string; tone?: "neutral" | "good" | "warning" | "critical" }) {
