@@ -161,11 +161,11 @@ function Overview() {
     >
       <div ref={exportRef} className="space-y-3">
         <section className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
-          <KpiTile label="Active Power" value={telemetry.currentPower.toFixed(2)} unit="MW" trend={kpis.currentPowerTrend} hint="live site load" />
+          <KpiTile label="Active Power" value={telemetry.currentPower.toFixed(2)} unit="MW" trend={kpis.currentPowerTrend} hint="live site load" emphasis="primary" progress={(telemetry.currentPower / telemetry.demandLimit) * 100} />
+          <KpiTile label="Demand Utilization" value={demandPct.toFixed(1)} unit="%" hint={`${telemetry.peakDemand.toFixed(2)} / ${telemetry.demandLimit.toFixed(1)} MW`} tone={demandPct > 92 ? "critical" : "warning"} emphasis="primary" progress={demandPct} />
+          <KpiTile label="Verified Savings" value={fmtIDR(verifiedSavings)} trend={8.4} hint="year to date" tone="good" emphasis="primary" progress={(verifiedSavings / annualOpportunity) * 100} />
           <KpiTile label={`${periodLabel} Energy`} value={fmtNum(telemetry.todayEnergy)} unit="kWh" trend={kpis.todayEnergyTrend} hint={comparisonHint} />
           <KpiTile label="MTD Cost" value={fmtIDR(telemetry.todayCost * (timeRange === "This month" ? 1 : 25 / periodMultiplier))} trend={kpis.todayCostTrend} hint="forecast adjusted" />
-          <KpiTile label="Demand Utilization" value={demandPct.toFixed(1)} unit="%" hint={`${telemetry.peakDemand.toFixed(2)} / ${telemetry.demandLimit.toFixed(1)} MW`} tone={demandPct > 92 ? "critical" : "warning"} />
-          <KpiTile label="Verified Savings" value={fmtIDR(verifiedSavings)} trend={8.4} hint="year to date" tone="good" />
           <KpiTile label="Critical Alarms" value={kpis.criticalAlarms} hint={`${kpis.activeAlarms} active events`} tone={kpis.criticalAlarms > 0 ? "critical" : "neutral"} />
         </section>
 
