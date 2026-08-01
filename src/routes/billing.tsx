@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useMemo, useRef, useState, type ChangeEvent } from "react";
+import { useEffect, useMemo, useState, type ChangeEvent } from "react";
 import {
   Area,
   AreaChart,
@@ -36,7 +36,7 @@ import {
 } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
 import { KpiTile, Panel } from "@/components/argrid-ui";
-import { ExportPdfButton } from "@/components/export-pdf-button";
+import { A4DocumentPreview, buildInvoicePages } from "@/components/a4-document-preview";
 import { fmtIDR, fmtNum } from "@/lib/argrid-data";
 import {
   buildInvoices,
@@ -124,10 +124,11 @@ function InvoiceStatusBadge({ status }: { status: InvoiceStatus }) {
 
 function Billing() {
   const { site, scenarioId, scenario, telemetry } = useDemoSimulation();
-  const exportRef = useRef<HTMLDivElement>(null);
   const [selectedId, setSelectedId] = useState("INV-2026-06-001");
   const [activeTab, setActiveTab] = useState<InvoiceTab>("Invoice");
   const [message, setMessage] = useState("");
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [generatedAt] = useState(() => new Date().toLocaleString("en-GB", { dateStyle: "medium", timeStyle: "short" }));
   const [statusOverrides, setStatusOverrides] = useState<Record<string, InvoiceStatus>>(() => {
     try {
       return JSON.parse(window.localStorage.getItem("argrid-billing-status-overrides") ?? "{}") as Record<string, InvoiceStatus>;
@@ -185,6 +186,7 @@ function Billing() {
   );
 
   const selected = invoices.find((invoice) => invoice.id === selectedId) ?? invoices[0];
+  const invoicePages = useMemo(() => buildInvoicePages({ invoice: selected, generatedAt }), [generatedAt, selected]);
   const summary = useMemo(() => getBillingSummary(invoices), [invoices]);
   const chargeComposition = useMemo(() => getChargeComposition(invoices), [invoices]);
   const collectionHistory = useMemo(() => getCollectionHistory(site.powerScale), [site.powerScale]);
@@ -225,6 +227,7 @@ function Billing() {
   };
 
   return (
+    <>
     <AppShell
       title="Billing & Invoicing"
       subtitle="Closed period June 2026 · tenant allocation, invoice assurance, and collection"
@@ -233,16 +236,13 @@ function Billing() {
           <div className="flex h-8 items-center gap-1.5 rounded-md border border-border bg-surface px-2.5 text-[10px] text-muted-foreground" title={scenario.description}>
             <Gauge className="size-3.5 text-primary" /> {telemetry.tariffBand} · {currencyFull.format(telemetry.energyRateIDR)}/kWh
           </div>
-          <ExportPdfButton
-            targetRef={exportRef}
-            title="Billing & Invoicing — June 2026"
-            subtitle="Tenant allocation, tariff trace, data quality, and collection"
-            filename={`argrid-billing-${new Date().toISOString().slice(0, 10)}.pdf`}
-          />
+          <button type="button" onClick={() => setPreviewOpen(true)} className="flex h-8 items-center gap-1.5 rounded-md border border-primary/40 bg-primary/10 px-2.5 text-[11px] font-medium text-primary hover:bg-primary/15">
+            <FileText className="size-3.5" /> Preview A4 invoice
+          </button>
         </>
       }
     >
-      <div ref={exportRef} className="space-y-3">
+      <div className="space-y-3">
         <section className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
           <KpiTile label="Period Billed" value={fmtIDR(summary.billed)} hint="closed June cycle" tone="good" />
           <KpiTile label="Collected" value={fmtIDR(summary.collected)} hint={`${summary.collectionPct.toFixed(1)}% collection`} tone="good" />
@@ -495,6 +495,14 @@ function Billing() {
         </div>
       </div>
     </AppShell>
+    <A4DocumentPreview
+      open={previewOpen}
+      onClose={() => setPreviewOpen(false)}
+      title={`Energy Invoice · ${selected.tenantName}`}
+      documentId={selected.id}
+      pages={invoicePages}
+    />
+    </>
   );
 }
 
