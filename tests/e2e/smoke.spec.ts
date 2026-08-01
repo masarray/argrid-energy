@@ -95,4 +95,36 @@ test.describe("ArGrid browser smoke", () => {
     await expect(page.locator(".portfolio-identity").getByText("Batam Electronics Campus", { exact: true })).toBeVisible();
   });
 
+
+  test("report center provides a real paginated A4 print preview", async ({ page }) => {
+    await prepareDemo(page, { scenario: "normal" });
+    await openWorkspace(page, "/reports");
+    await expectWorkspaceHeading(page, "Report Center");
+
+    await page.getByRole("button", { name: "Open A4 preview" }).click();
+    const preview = page.getByRole("dialog", { name: /A4 print preview/ });
+    await expect(preview).toBeVisible();
+    await expect(preview.getByText("5 pages", { exact: true })).toBeVisible();
+    await expect(preview.locator("[data-document-page]")).toHaveCount(5);
+    await expect(preview.getByRole("button", { name: "Zoom in" })).toBeVisible();
+    await expect(preview.getByRole("button", { name: "Zoom out" })).toBeVisible();
+    await expect(preview.getByRole("button", { name: "Print / Save PDF" })).toBeVisible();
+    await preview.getByRole("button", { name: "Close print preview" }).click();
+    await expect(preview).toBeHidden();
+  });
+
+  test("billing opens a multi-page print-ready A4 invoice", async ({ page }) => {
+    await prepareDemo(page, { scenario: "normal" });
+    await openWorkspace(page, "/billing");
+    await expectWorkspaceHeading(page, "Billing & Invoicing");
+
+    await page.getByRole("button", { name: "Preview A4 invoice" }).click();
+    const preview = page.getByRole("dialog", { name: /Energy Invoice.*A4 print preview/ });
+    await expect(preview).toBeVisible();
+    await expect(preview.getByText("3 pages", { exact: true })).toBeVisible();
+    await expect(preview.locator("[data-document-page]")).toHaveCount(3);
+    await expect(preview.getByText("SAMPLE INVOICE · NOT A TAX INVOICE").first()).toBeVisible();
+    await expect(preview.getByText("Payment instruction", { exact: true })).toBeVisible();
+  });
+
 });

@@ -25,10 +25,9 @@ import {
 } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
 import { KpiTile, Panel } from "@/components/argrid-ui";
+import { A4DocumentPreview, buildEnergyReportPages } from "@/components/a4-document-preview";
 import { useDemoSimulation } from "@/lib/demo-simulation";
 import {
-  buildExecutiveSustainabilityReport,
-  downloadReport,
   evaluateReportGate,
   getReportLibrary,
   getSustainabilityInventory,
@@ -126,6 +125,8 @@ function ReportCenter() {
   const [activeTab, setActiveTab] = useState<Tab>("Report Preview");
   const [reviewConfirmed, setReviewConfirmed] = useState(false);
   const [message, setMessage] = useState("");
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [generatedAt] = useState(() => new Date().toLocaleString("en-GB", { dateStyle: "medium", timeStyle: "short" }));
 
   useEffect(() => {
     window.localStorage.setItem("argrid-report-status-overrides", JSON.stringify(statusOverrides));
@@ -153,8 +154,6 @@ function ReportCenter() {
     ...item,
     fill: item.status === "Published" ? "var(--color-green)" : item.status === "Approved" ? "var(--color-primary)" : item.status === "Review required" ? "var(--color-amber)" : "var(--color-muted-foreground)",
   }));
-  const directlyExportable = selected.category === "Executive" || selected.category === "Carbon";
-
   const advanceWorkflow = () => {
     const next = nextStatus(selected.status);
     if (!next) return;
@@ -170,17 +169,13 @@ function ReportCenter() {
     setMessage(`${selected.id} moved to ${next}. Demo workflow state is stored locally; no external distribution occurred.`);
   };
 
-  const exportSelected = () => {
-    if (!directlyExportable) {
-      setMessage(`Open the ${selected.category} source workspace to export its domain-specific evidence package.`);
-      return;
-    }
-    const html = buildExecutiveSustainabilityReport(selected, inventory);
-    downloadReport(`${selected.id}-${selected.title.replaceAll(" ", "-")}.html`, html);
-    setMessage(`${selected.id} exported as a printable governed HTML report.`);
-  };
+  const reportPages = useMemo(
+    () => buildEnergyReportPages({ report: selected, inventory, site: site.name, scenario: scenario.name, generatedAt }),
+    [generatedAt, inventory, scenario.name, selected, site.name],
+  );
 
   return (
+    <>
     <AppShell
       title="Report Center"
       subtitle="Governed energy, carbon, billing, PQ, savings, and data-quality reporting"
@@ -191,10 +186,10 @@ function ReportCenter() {
           </div>
           <button
             type="button"
-            onClick={exportSelected}
+            onClick={() => setPreviewOpen(true)}
             className="flex h-8 items-center gap-1.5 rounded-md border border-border bg-surface px-2.5 text-[10px] font-medium hover:bg-surface-2"
           >
-            <FileDown className="size-3.5" /> {directlyExportable ? "Export report" : "Open export source"}
+            <FileDown className="size-3.5" /> Open A4 preview
           </button>
         </div>
       }
@@ -389,6 +384,14 @@ function ReportCenter() {
         Demonstration boundary: report states and schedules are browser-local. ArGrid does not send email, file regulatory submissions, publish customer documents, or contact an external document-management system.
       </div>
     </AppShell>
+    <A4DocumentPreview
+      open={previewOpen}
+      onClose={() => setPreviewOpen(false)}
+      title={selected.title}
+      documentId={selected.id}
+      pages={reportPages}
+    />
+    </>
   );
 }
 
