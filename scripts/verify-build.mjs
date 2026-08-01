@@ -34,6 +34,28 @@ if (expectedBase !== "/") {
   assert(!/\b(?:src|href)=["']\/assets\//.test(indexHtml), "Found a root-relative /assets URL that would break GitHub Pages");
 }
 
+const requiredSocialMarkup = [
+  '<link rel="canonical" href="https://masarray.github.io/argrid-energy/">',
+  '<meta property="og:type" content="website">',
+  '<meta property="og:title" content="ArGrid Energy Management System">',
+  '<meta property="og:description"',
+  '<meta property="og:url" content="https://masarray.github.io/argrid-energy/">',
+  '<meta property="og:image" content="https://opengraph.githubassets.com/',
+  '<meta property="og:image:secure_url" content="https://opengraph.githubassets.com/',
+  '<meta property="og:image:type" content="image/png">',
+  '<meta property="og:image:width" content="1280">',
+  '<meta property="og:image:height" content="640">',
+  '<meta name="twitter:card" content="summary_large_image">',
+];
+
+for (const markup of requiredSocialMarkup) {
+  assert(indexHtml.includes(markup), `Built index is missing required social metadata: ${markup}`);
+}
+
+const ogImageMatch = indexHtml.match(/<meta property="og:image" content="([^"]+)">/);
+assert(ogImageMatch, "Built index is missing an Open Graph image URL");
+assert(ogImageMatch[1].startsWith("https://"), "Open Graph image must use an absolute HTTPS URL");
+
 const assetReferences = [...indexHtml.matchAll(/\b(?:src|href)=["']([^"']+)["']/g)]
   .map((match) => match[1])
   .filter((reference) => reference.startsWith(expectedBase) && !reference.endsWith("/"));
@@ -44,4 +66,4 @@ for (const reference of assetReferences) {
   assert(existsSync(path.join("dist", relativePath)), `Built asset is referenced but missing: ${reference}`);
 }
 
-console.log(`Verified ${expectedRoutes.length} routes, ${assetReferences.length} built assets, and base ${expectedBase}`);
+console.log(`Verified ${expectedRoutes.length} routes, ${assetReferences.length} built assets, social preview metadata, and base ${expectedBase}`);
