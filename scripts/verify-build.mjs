@@ -34,6 +34,43 @@ if (expectedBase !== "/") {
   assert(!/\b(?:src|href)=["']\/assets\//.test(indexHtml), "Found a root-relative /assets URL that would break GitHub Pages");
 }
 
+const metaTags = [...indexHtml.matchAll(/<meta\b[^>]*>/gi)].map((match) => match[0]);
+const linkTags = [...indexHtml.matchAll(/<link\b[^>]*>/gi)].map((match) => match[0]);
+
+function findMeta(attribute, key) {
+  return metaTags.find((tag) => tag.includes(`${attribute}="${key}"`));
+}
+
+function requireMeta(attribute, key, expectedContent) {
+  const tag = findMeta(attribute, key);
+  assert(tag, `Built index is missing ${attribute}=${key}`);
+  assert(tag.includes(`content="${expectedContent}"`), `Built index has an unexpected value for ${key}`);
+  return tag;
+}
+
+const canonicalTag = linkTags.find((tag) => tag.includes('rel="canonical"'));
+assert(canonicalTag, "Built index is missing its canonical link");
+assert(canonicalTag.includes('href="https://masarray.github.io/argrid-energy/"'), "Canonical URL is incorrect");
+
+requireMeta("property", "og:type", "website");
+requireMeta("property", "og:title", "ArGrid Energy Management System");
+requireMeta("property", "og:url", "https://masarray.github.io/argrid-energy/");
+requireMeta("property", "og:image:type", "image/png");
+requireMeta("property", "og:image:width", "1280");
+requireMeta("property", "og:image:height", "640");
+requireMeta("name", "twitter:card", "summary_large_image");
+assert(findMeta("property", "og:description"), "Built index is missing og:description");
+
+const ogImageTag = findMeta("property", "og:image");
+assert(ogImageTag, "Built index is missing an Open Graph image URL");
+const ogImageMatch = ogImageTag.match(/content=["']([^"']+)["']/);
+assert(ogImageMatch, "Open Graph image tag has no content value");
+assert(ogImageMatch[1].startsWith("https://"), "Open Graph image must use an absolute HTTPS URL");
+assert(ogImageMatch[1].includes("opengraph.githubassets.com/"), "Open Graph image is not using the configured public social-preview endpoint");
+
+const secureImageTag = findMeta("property", "og:image:secure_url");
+assert(secureImageTag?.includes(`content="${ogImageMatch[1]}"`), "Secure Open Graph image URL must match og:image");
+
 const assetReferences = [...indexHtml.matchAll(/\b(?:src|href)=["']([^"']+)["']/g)]
   .map((match) => match[1])
   .filter((reference) => reference.startsWith(expectedBase) && !reference.endsWith("/"));
@@ -44,4 +81,4 @@ for (const reference of assetReferences) {
   assert(existsSync(path.join("dist", relativePath)), `Built asset is referenced but missing: ${reference}`);
 }
 
-console.log(`Verified ${expectedRoutes.length} routes, ${assetReferences.length} built assets, and base ${expectedBase}`);
+console.log(`Verified ${expectedRoutes.length} routes, ${assetReferences.length} built assets, social preview metadata, and base ${expectedBase}`);
