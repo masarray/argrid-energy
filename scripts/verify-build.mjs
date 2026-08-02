@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, readFileSync, statSync } from "node:fs";
 import path from "node:path";
 
 const expectedRoutes = [
@@ -48,28 +48,43 @@ function requireMeta(attribute, key, expectedContent) {
   return tag;
 }
 
+const canonicalUrl = "https://masarray.github.io/argrid-energy/";
+const expectedOgImageUrl = "https://masarray.github.io/argrid-energy/og/argrid-og-premium-v1-1200x630.png";
+const expectedOgAssetPath = path.join("dist", "og", "argrid-og-premium-v1-1200x630.png");
+
 const canonicalTag = linkTags.find((tag) => tag.includes('rel="canonical"'));
 assert(canonicalTag, "Built index is missing its canonical link");
-assert(canonicalTag.includes('href="https://masarray.github.io/argrid-energy/"'), "Canonical URL is incorrect");
+assert(canonicalTag.includes(`href="${canonicalUrl}"`), "Canonical URL is incorrect");
 
 requireMeta("property", "og:type", "website");
-requireMeta("property", "og:title", "ArGrid Energy Management System");
-requireMeta("property", "og:url", "https://masarray.github.io/argrid-energy/");
+requireMeta("property", "og:title", "ArGrid — Industrial Energy Management System");
+requireMeta("property", "og:url", canonicalUrl);
+requireMeta("property", "og:image", expectedOgImageUrl);
+requireMeta("property", "og:image:secure_url", expectedOgImageUrl);
 requireMeta("property", "og:image:type", "image/png");
-requireMeta("property", "og:image:width", "1280");
-requireMeta("property", "og:image:height", "640");
+requireMeta("property", "og:image:width", "1200");
+requireMeta("property", "og:image:height", "630");
 requireMeta("name", "twitter:card", "summary_large_image");
+requireMeta("name", "twitter:image", expectedOgImageUrl);
+
 assert(findMeta("property", "og:description"), "Built index is missing og:description");
+assert(findMeta("property", "og:image:alt"), "Built index is missing og:image:alt");
+assert(findMeta("name", "twitter:description"), "Built index is missing twitter:description");
+assert(findMeta("name", "twitter:image:alt"), "Built index is missing twitter:image:alt");
 
-const ogImageTag = findMeta("property", "og:image");
-assert(ogImageTag, "Built index is missing an Open Graph image URL");
-const ogImageMatch = ogImageTag.match(/content=["']([^"']+)["']/);
-assert(ogImageMatch, "Open Graph image tag has no content value");
-assert(ogImageMatch[1].startsWith("https://"), "Open Graph image must use an absolute HTTPS URL");
-assert(ogImageMatch[1].includes("opengraph.githubassets.com/"), "Open Graph image is not using the configured public social-preview endpoint");
+assert(existsSync(expectedOgAssetPath), `Built Open Graph image is missing: ${expectedOgAssetPath}`);
+const ogImageStats = statSync(expectedOgAssetPath);
+assert(ogImageStats.size > 0, "Built Open Graph image is empty");
+assert(ogImageStats.size <= 5 * 1024 * 1024, "Built Open Graph image exceeds the 5 MB social-preview safety limit");
 
-const secureImageTag = findMeta("property", "og:image:secure_url");
-assert(secureImageTag?.includes(`content="${ogImageMatch[1]}"`), "Secure Open Graph image URL must match og:image");
+const png = readFileSync(expectedOgAssetPath);
+assert(
+  png.subarray(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a])),
+  "Open Graph image is not a valid PNG",
+);
+assert(png.length >= 24, "Open Graph PNG is too small to contain an IHDR header");
+assert(png.readUInt32BE(16) === 1200, "Open Graph PNG width must be 1200 px");
+assert(png.readUInt32BE(20) === 630, "Open Graph PNG height must be 630 px");
 
 const assetReferences = [...indexHtml.matchAll(/\b(?:src|href)=["']([^"']+)["']/g)]
   .map((match) => match[1])
@@ -81,4 +96,7 @@ for (const reference of assetReferences) {
   assert(existsSync(path.join("dist", relativePath)), `Built asset is referenced but missing: ${reference}`);
 }
 
-console.log(`Verified ${expectedRoutes.length} routes, ${assetReferences.length} built assets, social preview metadata, and base ${expectedBase}`);
+console.log(
+  `Verified ${expectedRoutes.length} routes, ${assetReferences.length} built assets, ` +
+    `a 1200x630 PNG social preview, and base ${expectedBase}`,
+);
