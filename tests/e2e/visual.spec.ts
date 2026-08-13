@@ -2,6 +2,8 @@ import { expect, test } from "@playwright/test";
 import { openWorkspace, prepareDemo, settleVisual } from "./support";
 
 test.describe("ArGrid visual regression", () => {
+  test.skip(({ browserName }) => browserName !== "chromium", "Reviewed pixel baselines are Chromium-only.");
+
   test("management overview at 1440×900", async ({ page }) => {
     await prepareDemo(page, { scenario: "normal" });
     await openWorkspace(page, "/");

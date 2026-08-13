@@ -4,6 +4,12 @@ node_modules/
 # Production build
 dist/
 
+# Browser and performance QA artifacts
+playwright-report/
+test-results/
+.lighthouseci/
+lighthouse-report/
+
 # Tool caches
 .tanstack/
 *.tsbuildinfo
